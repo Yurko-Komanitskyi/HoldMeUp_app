@@ -1,0 +1,12 @@
+{
+  "brand": "ClimbCore",
+  "home": {
+    "nav": {
+      "features": "Функції",
+      "pricing": "Ціни",
+      "about": "Про нас",
+      "login": "Увійти",
+      "getStarted": "Почати"
+    }
+  }
+}

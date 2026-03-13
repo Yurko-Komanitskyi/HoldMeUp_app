@@ -1,0 +1,12 @@
+{
+  "brand": "ClimbCore",
+  "home": {
+    "nav": {
+      "features": "Features",
+      "pricing": "Pricing",
+      "about": "About",
+      "login": "Log in",
+      "getStarted": "Get Started"
+    }
+  }
+}
