@@ -1,12 +1,123 @@
 {
-  "brand": "ClimbCore",
+  "tabs": {
+    "home": "Home",
+    "routes": "Routes",
+    "addRoute": "Add",
+    "ascents": "Ascents",
+    "profile": "Profile",
+    "gymStats": "Stats"
+  },
   "home": {
-    "nav": {
-      "features": "Features",
-      "pricing": "Pricing",
-      "about": "About",
-      "login": "Log in",
-      "getStarted": "Get Started"
+    "logAscent": "Log Ascent",
+    "logAscentSub": "Pick a route and record your climb",
+    "weekStats": "This week",
+    "statAscents": "Ascents",
+    "statSuccess": "Successful",
+    "statFlash": "Flash",
+    "featuredRoutes": "Active Routes",
+    "allRoutes": "All Routes",
+    "recentAscents": "Recent Ascents",
+    "noAscents": "No ascents yet",
+    "noAscentsHint": "Log your first ascent",
+    "logFirst": "Log First",
+    "noRoutesInGym": "No routes in gym",
+    "pickRoute": "Pick a Route",
+    "routesInGym": "{{count}} routes in gym",
+    "searchRoute": "Search route...",
+    "noRoutesFound": "No routes found",
+    "unknownSector": "Unknown sector"
+  },
+  "routes": {
+    "title": "Routes",
+    "searchPlaceholder": "Search by name, grade...",
+    "allGrades": "All grades",
+    "statusAll": "All",
+    "statusActive": "Active",
+    "statusArchived": "Archived",
+    "clearFilters": "Clear filters",
+    "noRoutes": "No routes",
+    "nothingFound": "Nothing found",
+    "tryFilters": "Try changing filters or search query",
+    "noRoutesInGym": "No routes in this gym yet",
+    "selectGymFirst": "Select a gym from the header first",
+    "styleBoulder": "Boulder",
+    "styleLead": "Lead",
+    "styleTopRope": "Top Rope",
+    "styleSpeed": "Speed",
+    "statusLabel": {
+      "active": "Active",
+      "archived": "Archived",
+      "draft": "Draft"
     }
+  },
+  "ascents": {
+    "title": "Ascents",
+    "addAscent": "Ascent",
+    "periodCount": "in selected period",
+    "period": {
+      "7d": "7 days",
+      "30d": "1 month",
+      "90d": "3 months",
+      "180d": "6 months",
+      "all": "All time"
+    },
+    "statTotal": "Total",
+    "statSuccess": "Success",
+    "statFlash": "Flash",
+    "statMax": "Max.",
+    "weeklyActivity": "Weekly Activity",
+    "gradeProgress": "Grade Progress",
+    "typeBreakdown": "Ascent Breakdown",
+    "filter": {
+      "all": "All",
+      "FLASH": "Flash",
+      "ONSIGHT": "Onsight",
+      "REDPOINT": "Redpoint",
+      "REPEAT": "Repeat"
+    },
+    "noAscents": "No ascents yet",
+    "logFirst": "Log your first ascent",
+    "noTypeAscents": "No {{type}} ascents",
+    "pickRouteTitle": "Pick a Route",
+    "routesCount": "{{count}} routes in gym",
+    "searchRoute": "Search route...",
+    "noRoutesFound": "No routes found",
+    "unknownSector": "Unknown sector"
+  },
+  "gymStats": {
+    "title": "Statistics",
+    "activeRoutes": "Active Routes",
+    "totalRoutes": "of {{total}} total",
+    "clients": "Clients",
+    "staffCount": "{{count}} staff",
+    "sectors": "Sectors",
+    "archived": "Archived",
+    "routesBySector": "Routes by Sector",
+    "staffSection": "Staff ({{count}})",
+    "selectGym": "Select a Gym",
+    "selectGymHint": "Select a gym from the header to view statistics",
+    "unknown": "Unknown",
+    "roles": {
+      "owner": "Owner",
+      "manager": "Manager",
+      "setter": "Setter",
+      "customer": "Customer"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "defaultName": "Climber",
+    "accountSection": "Account",
+    "editProfile": "Edit Profile",
+    "settingsSection": "Settings",
+    "darkTheme": "Dark Theme",
+    "language": "Language",
+    "langUA": "Ukrainian",
+    "langEN": "English",
+    "moreSettings": "More Settings",
+    "logout": "Log Out",
+    "statAscents": "Ascents",
+    "statFlash": "Flash",
+    "statSuccess": "Successful"
   }
 }

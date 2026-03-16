@@ -1,88 +1,132 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios';
 import { authSecureStore } from '@/entities/auth/model/authSecureStore';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? '';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? '';
 
 export type ApiError = {
   status: number;
   message: string;
+  errorCode?: string;
+  errors?: Record<string, string>;
 };
 
-export type RefreshCallback = () => Promise<string | null>;
-export type AuthFailureCallback = () => void;
-
-let refreshCallback: RefreshCallback | null = null;
-let authFailureCallback: AuthFailureCallback | null = null;
-
-export function setRefreshCallback(fn: RefreshCallback | null): void {
-  refreshCallback = fn;
-}
-
-export function setAuthFailureCallback(fn: AuthFailureCallback | null): void {
-  authFailureCallback = fn;
-}
-
-type RequestConfigWithRetry = InternalAxiosRequestConfig & {
-  _retriedRefresh?: boolean;
-};
-
-export const apiClient = axios.create({
-  baseURL: API_URL,
+/**
+ * Окремий клієнт для auth-запитів (login, refresh, logout).
+ * НЕ має interceptors — жодних циклів чи рекурсії.
+ */
+export const authAxios = axios.create({
+  baseURL: BASE_URL,
   withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
-apiClient.interceptors.request.use(
-  async (config) => {
-    const token = await authSecureStore.getAccessToken();
-    if (token) {
-      config.headers = config.headers ?? {};
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+/**
+ * Основний API-клієнт.
+ * Автоматично додає access token і обробляє 401 через refresh.
+ */
+export const apiClient = axios.create({
+  baseURL: BASE_URL,
+  withCredentials: true,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+// ─── Mutex для refresh ──────────────────────────────────────────────────────
+
+let isRefreshing = false;
+let refreshQueue: Array<{
+  resolve: (token: string) => void;
+  reject: (err: unknown) => void;
+}> = [];
+
+function flushQueue(error: unknown, token: string | null): void {
+  refreshQueue.forEach(({ resolve, reject }) => {
+    if (error || !token) reject(error);
+    else resolve(token);
+  });
+  refreshQueue = [];
+}
+
+// ─── SignOut callback ────────────────────────────────────────────────────────
+
+let signOutCallback: (() => void) | null = null;
+
+export function setSignOutCallback(fn: (() => void) | null): void {
+  signOutCallback = fn;
+}
+
+// ─── Interceptors ────────────────────────────────────────────────────────────
+
+type RetryableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
+
+apiClient.interceptors.request.use(async (config) => {
+  const token = await authSecureStore.getAccessToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config as RequestConfigWithRetry | undefined;
-    const status = error.response?.status ?? 0;
-    const message = error.response?.data?.message ?? error.message ?? 'Unknown error';
+    const config = error.config as RetryableConfig | undefined;
+    const status: number = error.response?.status ?? 0;
+    const message: string = error.response?.data?.message ?? error.message ?? 'Unknown error';
 
-    if (status === 401) {
-      const requestUrl = originalRequest?.url ?? '';
-      const isRefreshRequest =
-        typeof requestUrl === 'string' && requestUrl.includes('/api/v1/auth/refresh');
-
-      if (isRefreshRequest) {
-        if (authFailureCallback) {
-          authFailureCallback();
-        }
-        return Promise.reject({ status, message } satisfies ApiError);
-      }
-
-      if (refreshCallback && originalRequest && !originalRequest._retriedRefresh) {
-        originalRequest._retriedRefresh = true;
-        try {
-          const newToken = await refreshCallback();
-          if (newToken) {
-            originalRequest.headers.Authorization = `Bearer ${newToken}`;
-            return apiClient.request(originalRequest);
-          }
-        } catch {
-          // ignore refresh error, fall through to auth failure
-        }
-      }
-
-      if (authFailureCallback) {
-        authFailureCallback();
-      }
+    if (status !== 401) {
+      return Promise.reject({
+        status,
+        message,
+        errorCode: error.response?.data?.errorCode,
+        errors:    error.response?.data?.errors,
+      } satisfies ApiError);
     }
 
-    return Promise.reject({ status, message } satisfies ApiError);
+    // Вже пробували — не зациклювати
+    if (config?._retry) {
+      return Promise.reject({ status, message } satisfies ApiError);
+    }
+
+    // Refresh вже виконується — стаємо в чергу
+    if (isRefreshing) {
+      return new Promise<string>((resolve, reject) => {
+        refreshQueue.push({ resolve, reject });
+      }).then((newToken) => {
+        config!.headers.Authorization = `Bearer ${newToken}`;
+        config!._retry = true;
+        return apiClient(config!);
+      });
+    }
+
+    config!._retry = true;
+    isRefreshing = true;
+
+    try {
+      const refreshToken = await authSecureStore.getRefreshToken();
+      if (!refreshToken) throw new Error('No refresh token');
+
+      // authAxios — без interceptors, без циклів
+      const { data } = await authAxios.post<{ token: string; refreshToken: string }>(
+        '/api/v1/auth/refresh',
+        undefined,
+        { headers: { Authorization: `Bearer ${refreshToken}` } }
+      );
+
+      await authSecureStore.saveAccessToken(data.token);
+      await authSecureStore.saveRefreshToken(data.refreshToken);
+
+      flushQueue(null, data.token);
+      config!.headers.Authorization = `Bearer ${data.token}`;
+      return apiClient(config!);
+    } catch {
+      flushQueue(new Error('Refresh failed'), null);
+      // Токени невалідні — очищаємо і сигналізуємо в UI
+      await authSecureStore.logout();
+      signOutCallback?.();
+      return Promise.reject({
+        status: 401,
+        message: 'Сесія закінчилась. Будь ласка, увійдіть знову.',
+      } satisfies ApiError);
+    } finally {
+      isRefreshing = false;
+    }
   }
 );

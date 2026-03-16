@@ -5,6 +5,22 @@ export interface LoginInput {
   password: string;
 }
 
+export interface RegisterInput {
+  email:     string;
+  password:  string;
+  firstName: string;
+  lastName?: string;
+}
+
+export interface UpdateMeInput {
+  firstName?: string;
+  lastName?:  string;
+  email?:     string;
+  password?:  string;
+  oldPassword?: string;
+  photo?: { id: string };
+}
+
 export interface AuthTokensResponse {
   token: string;
   refreshToken: string;

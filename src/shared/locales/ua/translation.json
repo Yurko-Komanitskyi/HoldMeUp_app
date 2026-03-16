@@ -1,12 +1,123 @@
 {
-  "brand": "ClimbCore",
+  "tabs": {
+    "home": "Головна",
+    "routes": "Маршрути",
+    "addRoute": "Додати",
+    "ascents": "Пролази",
+    "profile": "Профіль",
+    "gymStats": "Статистика"
+  },
   "home": {
-    "nav": {
-      "features": "Функції",
-      "pricing": "Ціни",
-      "about": "Про нас",
-      "login": "Увійти",
-      "getStarted": "Почати"
+    "logAscent": "Записати пролаз",
+    "logAscentSub": "Оберіть маршрут і зафіксуй результат",
+    "weekStats": "Цього тижня",
+    "statAscents": "Пролазів",
+    "statSuccess": "Успішних",
+    "statFlash": "Flash",
+    "featuredRoutes": "Активні маршрути",
+    "allRoutes": "Усі маршрути",
+    "recentAscents": "Останні пролази",
+    "noAscents": "Пролазів ще немає",
+    "noAscentsHint": "Зафіксуй свій перший пролаз",
+    "logFirst": "Записати перший",
+    "noRoutesInGym": "У залі немає маршрутів",
+    "pickRoute": "Оберіть маршрут",
+    "routesInGym": "{{count}} маршрутів у залі",
+    "searchRoute": "Пошук маршруту...",
+    "noRoutesFound": "Маршрутів не знайдено",
+    "unknownSector": "Невідомий сектор"
+  },
+  "routes": {
+    "title": "Маршрути",
+    "searchPlaceholder": "Пошук за назвою, категорією...",
+    "allGrades": "Всі категорії",
+    "statusAll": "Всі",
+    "statusActive": "Активні",
+    "statusArchived": "Архів",
+    "clearFilters": "Скинути фільтри",
+    "noRoutes": "Маршрутів немає",
+    "nothingFound": "Нічого не знайдено",
+    "tryFilters": "Спробуй змінити фільтри або пошуковий запит",
+    "noRoutesInGym": "У цьому залі ще немає маршрутів",
+    "selectGymFirst": "Спершу оберіть зал у верхньому меню",
+    "styleBoulder": "Болдер",
+    "styleLead": "Лід",
+    "styleTopRope": "Верхня",
+    "styleSpeed": "Швидкість",
+    "statusLabel": {
+      "active": "Активний",
+      "archived": "Архів",
+      "draft": "Чернетка"
     }
+  },
+  "ascents": {
+    "title": "Пролази",
+    "addAscent": "Пролаз",
+    "periodCount": "за вибраний період",
+    "period": {
+      "7d": "7 днів",
+      "30d": "1 місяць",
+      "90d": "3 місяці",
+      "180d": "6 місяців",
+      "all": "Весь час"
+    },
+    "statTotal": "Всього",
+    "statSuccess": "Успіх",
+    "statFlash": "Flash",
+    "statMax": "Макс.",
+    "weeklyActivity": "Активність тижня",
+    "gradeProgress": "Прогрес рівня",
+    "typeBreakdown": "Розподіл пролазів",
+    "filter": {
+      "all": "Усі",
+      "FLASH": "Flash",
+      "ONSIGHT": "Onsight",
+      "REDPOINT": "Redpoint",
+      "REPEAT": "Repeat"
+    },
+    "noAscents": "Пролазів поки немає",
+    "logFirst": "Зафіксуй свій перший пролаз",
+    "noTypeAscents": "Немає пролазів типу {{type}}",
+    "pickRouteTitle": "Оберіть маршрут",
+    "routesCount": "{{count}} маршрутів у залі",
+    "searchRoute": "Пошук маршруту...",
+    "noRoutesFound": "Маршрутів не знайдено",
+    "unknownSector": "Невідомий сектор"
+  },
+  "gymStats": {
+    "title": "Статистика",
+    "activeRoutes": "Активних маршрутів",
+    "totalRoutes": "з {{total}} загалом",
+    "clients": "Клієнтів",
+    "staffCount": "{{count}} персонал",
+    "sectors": "Секторів",
+    "archived": "В архіві",
+    "routesBySector": "Маршрути по секторах",
+    "staffSection": "Персонал ({{count}})",
+    "selectGym": "Оберіть зал",
+    "selectGymHint": "Для перегляду статистики оберіть зал у заголовку",
+    "unknown": "Невідомий",
+    "roles": {
+      "owner": "Власник",
+      "manager": "Менеджер",
+      "setter": "Траса-сетер",
+      "customer": "Клієнт"
+    }
+  },
+  "profile": {
+    "title": "Профіль",
+    "defaultName": "Скелелаз",
+    "accountSection": "Акаунт",
+    "editProfile": "Редагувати профіль",
+    "settingsSection": "Налаштування",
+    "darkTheme": "Темна тема",
+    "language": "Мова",
+    "langUA": "Українська",
+    "langEN": "English",
+    "moreSettings": "Додаткові налаштування",
+    "logout": "Вийти з акаунта",
+    "statAscents": "Пролазів",
+    "statFlash": "Flash",
+    "statSuccess": "Успішних"
   }
 }
