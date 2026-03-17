@@ -1,5 +1,4 @@
-import type { Gym } from '@/entities/gym';
-import type { User } from '@/entities/user';
+import type { Gym, User } from '@/shared/model/types';
 
 export const GymMemberRole = {
   OWNER: 'OWNER',

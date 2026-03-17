@@ -14,7 +14,14 @@ export function RouteSkeletonCard() {
       }}
       className="border-border bg-card">
       <Skeleton style={{ width: 6, borderTopLeftRadius: 16, borderBottomLeftRadius: 16 }} />
-      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14 }}>
+      <View
+        style={{
+          flex: 1,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+          paddingHorizontal: 14,
+        }}>
         <Skeleton style={{ width: 44, height: 44, borderRadius: 12 }} />
         <View style={{ flex: 1, gap: 8 }}>
           <Skeleton style={{ height: 14, width: '65%', borderRadius: 6 }} />

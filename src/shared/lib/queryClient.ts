@@ -3,7 +3,6 @@ import type { ApiError } from '@/shared/api/axios';
 
 function shouldRetry(failureCount: number, error: unknown): boolean {
   const err = error as ApiError | undefined;
-  // Не ретраємо auth помилки — вони вже оброблені interceptor'ом
   if (err?.status === 401 || err?.status === 403) return false;
   return failureCount < 2;
 }

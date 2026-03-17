@@ -1,7 +1,6 @@
 import { apiClient, authAxios } from '@/shared/api/axios';
-import type { User } from '@/entities/user/model/types';
+import type { User } from '@/shared/model/types';
 import {
-  mapAuthUserDtoToUser,
   type AuthTokensResponse,
   type AuthUserDto,
   type LoginInput,
@@ -12,33 +11,34 @@ import {
 
 const AUTH_BASE = '/api/v1/auth';
 
-/**
- * Логін — через authAxios (без auth interceptors, токен ще не потрібен)
- */
+export const authKeys = {
+  all: ['auth'] as const,
+  me: () => [...authKeys.all, 'me'] as const,
+  login: () => [...authKeys.all, 'login'] as const,
+  logout: () => [...authKeys.all, 'logout'] as const,
+  register: () => [...authKeys.all, 'register'] as const,
+  forgotPassword: () => [...authKeys.all, 'forgotPassword'] as const,
+  updateMe: () => [...authKeys.all, 'updateMe'] as const,
+  deleteMe: () => [...authKeys.all, 'deleteMe'] as const,
+};
+
 async function login(input: LoginInput): Promise<LoginResult> {
   const { data } = await authAxios.post<AuthTokensResponse>(`${AUTH_BASE}/email/login`, input);
   return {
     token: data.token,
     refreshToken: data.refreshToken,
     tokenExpires: data.tokenExpires,
-    user: mapAuthUserDtoToUser(data.user),
+    user: data.user,
   };
 }
 
-/**
- * Серверний logout — через apiClient (надсилає access token для blacklist)
- * Не критично якщо не вдасться
- */
 async function logout(): Promise<void> {
   await apiClient.post(`${AUTH_BASE}/logout`);
 }
 
-/**
- * Отримати поточного юзера — потребує валідного токена
- */
 async function getMe(): Promise<User> {
   const { data } = await apiClient.get<AuthUserDto>(`${AUTH_BASE}/me`);
-  return mapAuthUserDtoToUser(data);
+  return data;
 }
 
 async function register(input: RegisterInput): Promise<void> {
@@ -51,7 +51,7 @@ async function forgotPassword(email: string): Promise<void> {
 
 async function updateMe(input: UpdateMeInput): Promise<User> {
   const { data } = await apiClient.patch<AuthUserDto>(`${AUTH_BASE}/me`, input);
-  return mapAuthUserDtoToUser(data);
+  return data;
 }
 
 async function deleteMe(): Promise<void> {

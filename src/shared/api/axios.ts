@@ -10,27 +10,18 @@ export type ApiError = {
   errors?: Record<string, string>;
 };
 
-/**
- * Окремий клієнт для auth-запитів (login, refresh, logout).
- * НЕ має interceptors — жодних циклів чи рекурсії.
- */
 export const authAxios = axios.create({
   baseURL: BASE_URL,
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 });
 
-/**
- * Основний API-клієнт.
- * Автоматично додає access token і обробляє 401 через refresh.
- */
 export const apiClient = axios.create({
   baseURL: BASE_URL,
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 });
 
-// ─── Mutex для refresh ──────────────────────────────────────────────────────
 
 let isRefreshing = false;
 let refreshQueue: Array<{
@@ -46,15 +37,11 @@ function flushQueue(error: unknown, token: string | null): void {
   refreshQueue = [];
 }
 
-// ─── SignOut callback ────────────────────────────────────────────────────────
-
 let signOutCallback: (() => void) | null = null;
 
 export function setSignOutCallback(fn: (() => void) | null): void {
   signOutCallback = fn;
 }
-
-// ─── Interceptors ────────────────────────────────────────────────────────────
 
 type RetryableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 
@@ -80,12 +67,10 @@ apiClient.interceptors.response.use(
       } satisfies ApiError);
     }
 
-    // Вже пробували — не зациклювати
     if (config?._retry) {
       return Promise.reject({ status, message } satisfies ApiError);
     }
 
-    // Refresh вже виконується — стаємо в чергу
     if (isRefreshing) {
       return new Promise<string>((resolve, reject) => {
         refreshQueue.push({ resolve, reject });
@@ -103,7 +88,6 @@ apiClient.interceptors.response.use(
       const refreshToken = await authSecureStore.getRefreshToken();
       if (!refreshToken) throw new Error('No refresh token');
 
-      // authAxios — без interceptors, без циклів
       const { data } = await authAxios.post<{ token: string; refreshToken: string }>(
         '/api/v1/auth/refresh',
         undefined,
@@ -118,7 +102,6 @@ apiClient.interceptors.response.use(
       return apiClient(config!);
     } catch {
       flushQueue(new Error('Refresh failed'), null);
-      // Токени невалідні — очищаємо і сигналізуємо в UI
       await authSecureStore.logout();
       signOutCallback?.();
       return Promise.reject({

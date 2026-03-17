@@ -23,8 +23,10 @@ export const useGymMemberStore = create<GymMemberStore>()(
         set({ memberships });
 
         const { currentGymId } = get();
-        if (!currentGymId && memberships.length > 0) {
-          set({ currentGymId: memberships[0].gym.id });
+        const isValidCurrent = memberships.some((m) => m.gym.id === currentGymId);
+
+        if (!isValidCurrent) {
+          set({ currentGymId: memberships.length > 0 ? memberships[0].gym.id : null });
         }
       },
 

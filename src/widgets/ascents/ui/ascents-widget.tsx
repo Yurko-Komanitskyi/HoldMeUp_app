@@ -11,21 +11,13 @@ import { AscentsStats } from '@/widgets/ascents/ui/ascents-stats';
 import { AscentsList } from '@/widgets/ascents/ui/ascents-list';
 import { RoutePickerModal } from '@/features/route-picker/ui/route-picker-modal';
 import { ACCENT } from '@/shared/config/palette';
-import { useAscentsQuery } from '@/entities/ascent/model/useAscentsQuery';
-import { useRoutesQuery } from '@/entities/route/model/useRoutesQuery';
 import { useUserStore } from '@/entities/user/model/userStore';
 import { useGymMemberStore } from '@/entities/gym-member/model/gymMemberStore';
 import type { Route } from '@/entities/route/model/route';
-
-const PERIODS = [
-  { key: '7d',   days: 7        },
-  { key: '30d',  days: 30       },
-  { key: '90d',  days: 90       },
-  { key: '180d', days: 180      },
-  { key: 'all',  days: Infinity },
-] as const;
-
-type PeriodKey = (typeof PERIODS)[number]['key'];
+import { useAscentsQuery } from '@/entities/ascent/model/ascentHooks';
+import { useRoutesQuery } from '@/entities/route/model/routeHooks';
+import { PERIODS } from '@/entities/ascent/lib/constants';
+import { useAscentPeriodFilter } from '@/entities/ascent/lib/utilsAscent';
 
 export function AscentsWidget() {
   const { t } = useTranslation();
@@ -36,28 +28,22 @@ export function AscentsWidget() {
   const user = useUserStore((s) => s.currentUser);
   const currentGymId = useGymMemberStore((s) => s.currentGymId);
 
-  const { data: ascents = [], isLoading, refetch } = useAscentsQuery(!!user);
-  const { data: routes = [] } = useRoutesQuery(
-    { gymId: currentGymId ?? undefined, status: ['ACTIVE'] },
-    !!user && !!currentGymId
-  );
+  const { data: ascents = [], isLoading, refetch } = useAscentsQuery();
+  const { data: routes = [] } = useRoutesQuery({
+    gymId: currentGymId ?? undefined,
+    status: ['ACTIVE'],
+  });
 
-  const [activePeriod, setActivePeriod] = React.useState<PeriodKey>('30d');
   const [pickerVisible, setPickerVisible] = React.useState(false);
   const [refreshing, setRefreshing] = React.useState(false);
+
+  const { activePeriod, setActivePeriod, periodAscents } = useAscentPeriodFilter(ascents);
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
     await refetch();
     setRefreshing(false);
   }, [refetch]);
-
-  const periodAscents = React.useMemo(() => {
-    const period = PERIODS.find((p) => p.key === activePeriod)!;
-    if (period.days === Infinity) return ascents;
-    const cutoff = new Date(Date.now() - period.days * 24 * 60 * 60 * 1000);
-    return ascents.filter((a) => new Date(a.date) >= cutoff);
-  }, [ascents, activePeriod]);
 
   const handleRouteSelect = React.useCallback(
     (route: Route) => {
@@ -80,13 +66,26 @@ export function AscentsWidget() {
         style={{ flex: 1, backgroundColor: isDark ? '#000' : '#f2f2f7' }}
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={ACCENT} />}>
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={ACCENT} />
+        }>
         <View style={{ gap: 16, paddingTop: 20 }}>
-
           {/* Header */}
-          <View style={{ paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View
+            style={{
+              paddingHorizontal: 20,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
             <View>
-              <Text style={{ fontSize: 28, fontWeight: '800', color: isDark ? '#fff' : '#000', letterSpacing: -0.5 }}>
+              <Text
+                style={{
+                  fontSize: 28,
+                  fontWeight: '800',
+                  color: isDark ? '#fff' : '#000',
+                  letterSpacing: -0.5,
+                }}>
                 {t('ascents.title')}
               </Text>
               <Text style={{ fontSize: 14, color: 'rgba(128,128,128,0.7)', marginTop: 2 }}>
@@ -130,7 +129,6 @@ export function AscentsWidget() {
           <AscentsStats ascents={periodAscents} />
 
           <AscentsList ascents={periodAscents} isLoading={isLoading} />
-
         </View>
       </ScrollView>
     </>

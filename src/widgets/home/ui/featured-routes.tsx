@@ -9,55 +9,10 @@ import { Text } from '@/shared/ui/text';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { resolveRouteColor, ACCENT } from '@/shared/config/palette';
 import type { Route } from '@/entities/route/model/route';
-
-interface FeaturedRouteCardProps {
-  route: Route;
-  onPress: () => void;
-}
-
-function FeaturedRouteCard({ route, onPress }: FeaturedRouteCardProps) {
-  const hex = resolveRouteColor(route.color);
-  const isWhite = route.color?.toLowerCase() === 'white';
-  const textCol = isWhite ? '#374151' : '#fff';
-
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      style={{
-        width: 140,
-        height: 130,
-        borderRadius: 20,
-        backgroundColor: hex,
-        padding: 14,
-        justifyContent: 'space-between',
-        borderWidth: isWhite ? 1 : 0,
-        borderColor: '#e5e7eb',
-      }}
-      activeOpacity={0.85}>
-      <View
-        style={{
-          backgroundColor: 'rgba(0,0,0,0.2)',
-          borderRadius: 10,
-          paddingHorizontal: 10,
-          paddingVertical: 4,
-          alignSelf: 'flex-start',
-        }}>
-        <Text style={{ fontSize: 14, fontWeight: '900', color: textCol }}>{route.grade}</Text>
-      </View>
-      <View>
-        <Text style={{ fontSize: 13, fontWeight: '700', color: textCol }} numberOfLines={2}>
-          {route.name}
-        </Text>
-        <Text style={{ fontSize: 11, color: textCol, opacity: 0.7, marginTop: 2 }}>
-          {route.sector?.name ?? ''}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
-}
+import { FeaturedRouteCard } from '@/entities/route/ui/featured-route-card';
 
 interface FeaturedRoutesProps {
-  routes:    Route[];
+  routes: Route[];
   isLoading: boolean;
 }
 
@@ -79,11 +34,19 @@ export function FeaturedRoutes({ routes, isLoading }: FeaturedRoutesProps) {
           paddingHorizontal: 20,
           marginBottom: 12,
         }}>
-        <Text style={{ fontSize: 13, fontWeight: '700', letterSpacing: 0.8, color: 'rgba(128,128,128,0.6)' }}>
+        <Text
+          style={{
+            fontSize: 13,
+            fontWeight: '700',
+            letterSpacing: 0.8,
+            color: 'rgba(128,128,128,0.6)',
+          }}>
           {t('home.featuredRoutes').toUpperCase()}
         </Text>
         <Pressable onPress={() => router.push('/(tabs)/routes' as never)}>
-          <Text style={{ fontSize: 13, fontWeight: '600', color: ACCENT }}>{t('home.allRoutes')}</Text>
+          <Text style={{ fontSize: 13, fontWeight: '600', color: ACCENT }}>
+            {t('home.allRoutes')}
+          </Text>
         </Pressable>
       </View>
 

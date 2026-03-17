@@ -5,7 +5,7 @@ import { useColorScheme } from 'nativewind';
 
 import { Text } from '@/shared/ui/text';
 import { Icon } from '@/shared/ui/icon';
-import { ASCENT_TYPE_META, FEELING_ICONS } from '@/entities/ascent/lib/meta';
+import { ASCENT_TYPE_META, FEELING_ICONS } from '@/entities/ascent/lib/constants';
 import type { Ascent } from '@/entities/ascent/model/ascent';
 
 interface AscentCardProps {
