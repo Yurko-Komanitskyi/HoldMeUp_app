@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { Text } from '@/shared/ui/text';
 import { ACCENT } from '@/shared/config/palette';
-import { GRADES, ROUTE_COLORS, STYLE_LABELS } from '@/entities/route';
+import { GRADES, ROUTE_COLORS, STYLE_LABELS } from '@/entities/route/lib/constants';
 import type { RouteUiFilters } from '../model/useRouteFilters';
 
 const STYLE_OPTIONS = [

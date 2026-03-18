@@ -1,11 +1,20 @@
-export type AscentType = string;
+export enum AscentType {
+  FLASH = 'FLASH',
+  REDPOINT = 'REDPOINT',
+  TOP = 'TOP',
+  PROJECT = 'PROJECT',
+  ON_SIGHT = 'ON_SIGHT',
+}
 
 export interface Ascent {
   id: string;
   userId: string;
   routeId: string;
+  routeName?: string;
+  routeGrade?: string;
+  routeColor?: string;
   type: AscentType;
-  date: Date;
+  date: string;
   timeSeconds: number | null;
   attemptNumber: number | null;
   success: boolean;
@@ -13,6 +22,6 @@ export interface Ascent {
   feeling: number | null;
   notes: string | null;
   videoUrl: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }

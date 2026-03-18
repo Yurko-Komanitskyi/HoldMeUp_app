@@ -26,7 +26,7 @@ export function ProfileWidget() {
   const setUser = useUserStore((s) => s.setUser);
   const clearGymMembers = useGymMemberStore((s) => s.clearAll);
   const { logout } = useAuth();
-  const { data: ascents = [] } = useAscentsQuery();
+  const { data: { data: ascents = [] } = {} } = useAscentsQuery();
 
   const [showEditProfile, setShowEditProfile] = React.useState(false);
   const [showChangePassword, setShowChangePassword] = React.useState(false);

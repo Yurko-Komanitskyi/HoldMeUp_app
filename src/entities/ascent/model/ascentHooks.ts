@@ -8,11 +8,25 @@ import {
   deleteAscent,
   ascentKeys,
 } from '../api/ascentApi';
+import { AscentType } from './ascent';
+import { useInfiniteListQuery } from '@/shared/hooks/useInfiniteListQuery';
 
-export function useAscentsQuery() {
-  return useQuery({
+const ASCENTS_PAGE_SIZE = 20;
+
+export interface AscentFilters {
+  type?: AscentType;
+  routeId?: string;
+  success?: boolean;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export function useAscentsQuery(filters?: AscentFilters) {
+  return useInfiniteListQuery({
     queryKey: ascentKeys.list(),
-    queryFn: fetchAscents,
+    fetchFn: fetchAscents,
+    params: filters,
+    pageSize: ASCENTS_PAGE_SIZE,
   });
 }
 

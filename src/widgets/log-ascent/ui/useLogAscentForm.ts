@@ -32,6 +32,7 @@ interface UseLogAscentFormResult {
   };
   submit: () => Promise<void>;
   isPending: boolean;
+  reset: () => void;
 }
 
 export function useLogAscentForm(
@@ -40,7 +41,7 @@ export function useLogAscentForm(
   timeSeconds: number | null
 ): UseLogAscentFormResult {
   const queryClient = useQueryClient();
-  const [state, setState] = React.useState<LogAscentState>({
+  const initialState = React.useRef<LogAscentState>({
     ascentType: 'SEND',
     success: true,
     attemptNumber: 1,
@@ -49,7 +50,9 @@ export function useLogAscentForm(
     notes: '',
     videoUrl: '',
     serverError: null,
-  });
+  }).current;
+
+  const [state, setState] = React.useState<LogAscentState>(initialState);
 
   const setField = <K extends keyof LogAscentState>(key: K, value: LogAscentState[K]) => {
     setState((prev) => ({ ...prev, [key]: value }));
@@ -104,6 +107,7 @@ export function useLogAscentForm(
     },
     submit,
     isPending: mutation.isPending,
+    reset: () => setState(initialState),
   };
 }
 

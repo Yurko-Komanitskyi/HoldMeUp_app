@@ -30,6 +30,7 @@ function AppHeader() {
   const setCurrentGymId = useGymMemberStore((state) => state.setCurrentGymId);
   const router = useRouter();
 
+
   const { isLoading, isError, refetch } = useGymMembersQuery(currentGymId ?? '');
 
   const gyms = React.useMemo(() => memberships?.map((m) => m.gym) ?? [], [memberships]);
@@ -55,12 +56,14 @@ function AppHeader() {
 
   return (
     <SafeAreaView edges={['top']} className="z-10 bg-background">
-      <View className="border-b border-border/60 px-4 pb-3 pt-2">
+      <View
+        className="border-b border-border/60 px-4"
+        style={{ paddingTop: 14, paddingBottom: 10 }}>
         {user ? (
-          <View className="relative flex-row items-center justify-between">
+          <View className="relative flex-row items-center">
             <Pressable
               onPress={() => router.push('/(tabs)/profile')}
-              className="flex-row items-center gap-3">
+              className="flex-1 flex-row items-center gap-3">
               <Avatar alt="User Avatar" className="h-10 w-10 rounded-2xl bg-accent/15">
                 <AvatarFallback className="rounded-2xl">
                   <Text className="text-sm font-bold text-accent">{initials}</Text>
@@ -68,13 +71,13 @@ function AppHeader() {
               </Avatar>
               <View className="gap-0.5">
                 <Text className="text-xs text-muted-foreground">Привіт</Text>
-                <Text className="text-sm font-semibold text-foreground">
-                  {user.firstName ?? 'Скелеліз'}
+                <Text className="text-sm font-semibold text-foreground" numberOfLines={1}>
+                  {user.firstName ?? 'Скелелаз'}
                 </Text>
               </View>
             </Pressable>
 
-            <View className="flex-row items-center gap-2">
+            <View className="ml-4 flex-row items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Pressable
@@ -153,11 +156,11 @@ function AppHeader() {
             </View>
           </View>
         ) : (
-          <View className="flex-row items-center justify-between">
-            <View>
+          <View className="flex-row items-center">
+            <View className="flex-1">
               <Text variant="large">HoldMeUp</Text>
               <Text variant="muted" className="text-xs">
-                Логи підйомів та статистика
+                Пролази та маршрути в кишені
               </Text>
             </View>
             <View className="flex-row gap-2">

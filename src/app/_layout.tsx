@@ -13,6 +13,7 @@ import { useUserStore } from '@/entities/user/model/userStore';
 import { useAppInterceptors } from '@/app/model/useAppInterceptors';
 import { AppHeader } from '@/features/header/ui/header';
 import { AppLoadingScreen } from '@/shared/ui/app-loading-screen';
+import { AppToastOverlay } from '@/shared/ui/app-toast';
 import { queryClient } from '@/shared/lib/queryClient';
 import { NAV_THEME } from '@/shared/lib/theme';
 import i18n from '@/shared/lib/i18n';
@@ -132,6 +133,7 @@ export default function RootLayout() {
           </Drawer>
         </AppBootstrap>
         <PortalHost />
+        <AppToastOverlay />
       </ThemeProvider>
     </QueryClientProvider>
   );

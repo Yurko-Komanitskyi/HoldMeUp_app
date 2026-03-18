@@ -6,6 +6,7 @@ import {
   updateSector,
   deleteSector,
   sectorKeys,
+  fetchSectors,
 } from '../api/sectorApi';
 
 
@@ -14,6 +15,13 @@ export function useSectorDetailsQuery(id: string) {
     queryKey: sectorKeys.detail(id),
     queryFn: () => fetchSectorById(id),
     enabled: !!id,
+  });
+}
+
+export function useSectorsQuery(gymId: string) {
+  return useQuery({
+    queryKey: sectorKeys.list(gymId),
+    queryFn: () => fetchSectors(gymId),
   });
 }
 

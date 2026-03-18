@@ -15,6 +15,8 @@ interface Props {
   onChangeAttempt: (updater: (n: number) => number) => void;
 }
 
+//todo: add auto increment for attempt number
+
 export function ResultAttemptsSection({
   success,
   attemptNumber,
@@ -91,7 +93,13 @@ export function ResultAttemptsSection({
             <ChevronDown size={20} color={isDark ? '#fff' : '#000'} />
           </TouchableOpacity>
           <View style={{ flex: 1, alignItems: 'center' }}>
-            <Text style={{ fontSize: 36, fontWeight: '200', color: isDark ? '#fff' : '#000' }}>
+            <Text
+              style={{
+                fontSize: 36,
+                lineHeight: 42,
+                fontWeight: '200',
+                color: isDark ? '#fff' : '#000',
+              }}>
               {attemptNumber}
             </Text>
             <Text style={{ fontSize: 12, color: 'rgba(128,128,128,0.6)', marginTop: -4 }}>

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authApi, authKeys } from '../api/authApi';
 import { authSecureStore } from './authSecureStore';
-import { useUserStore } from '../model/userStore';
+import { useUserStore } from '@/entities/user/model/userStore';
 
 export function useMeQuery() {
   const query = useQuery({
@@ -58,6 +58,7 @@ export function useAuth() {
       const result = await authApi.login({ email, password });
       await authSecureStore.saveAccessToken(result.token);
       await authSecureStore.saveRefreshToken(result.refreshToken);
+      setUser(result.user);
       return result;
     },
     onSuccess: () => {

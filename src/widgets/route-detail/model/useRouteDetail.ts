@@ -36,9 +36,6 @@ export function useRouteDetail(id: string) {
     return route.annotationData as AnnotationData;
   }, [route?.annotationData]);
 
-  const mergedImageUrl =
-    parsedAnnotation?.mergedImageUrl ?? (route as any).annotationImageUrl ?? null;
-
   const status =
     STATUS_MAP[route?.status?.toLowerCase() as keyof typeof STATUS_MAP] ?? STATUS_MAP.active;
 
@@ -79,6 +76,5 @@ export function useRouteDetail(id: string) {
     rating,
     addedDate,
     parsedAnnotation,
-    mergedImageUrl,
   };
 }

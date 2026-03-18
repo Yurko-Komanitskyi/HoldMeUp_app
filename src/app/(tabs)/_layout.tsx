@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Tabs } from 'expo-router';
 import { BarChart2, Home, Mountain, PlusCircle, Route, User } from 'lucide-react-native';
 import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
 import { useUserStore } from '@/entities/user/model/userStore';
@@ -14,6 +15,7 @@ const INACTIVE_LIGHT = 'rgba(0,0,0,0.3)';
 
 export default function TabsLayout() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const user = useUserStore((state) => state.currentUser);
   const theme = useUserStore((state) => state.theme);
   const memberships = useGymMemberStore((state) => state.memberships);
@@ -35,6 +37,9 @@ export default function TabsLayout() {
 
   const inactiveColor = theme === 'dark' ? INACTIVE : INACTIVE_LIGHT;
 
+  const baseTabHeight = Platform.OS === 'ios' ? 60 : 60;
+  const bottomInset = insets.bottom ?? 0;
+
   return (
     <Tabs
       screenOptions={{
@@ -45,8 +50,8 @@ export default function TabsLayout() {
           backgroundColor: theme === 'dark' ? '#0a0a0f' : '#ffffff',
           borderTopColor: theme === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
           borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 84 : 64,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+          height: baseTabHeight + bottomInset,
+          paddingBottom: bottomInset > 0 ? bottomInset : 8,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
@@ -66,6 +71,7 @@ export default function TabsLayout() {
         name="ascents"
         options={{
           title: 'Пролази',
+          href: user ? '/ascents' : null,
           tabBarIcon: ({ color, size }) => <Mountain size={size} color={color} />,
         }}
       />
@@ -73,6 +79,7 @@ export default function TabsLayout() {
         name="routes"
         options={{
           title: 'Маршрути',
+          href: user ? '/routes' : null,
           tabBarIcon: ({ color, size }) => <Route size={size} color={color} />,
         }}
       />
@@ -80,7 +87,7 @@ export default function TabsLayout() {
         name="gym-stats"
         options={{
           title: 'Статистика',
-          href: isManager ? '/gym-stats' : null,
+          href: user && (isManager || isSetter) ? '/gym-stats' : null,
           tabBarIcon: ({ color, size }) => <BarChart2 size={size} color={color} />,
         }}
       />
@@ -88,7 +95,7 @@ export default function TabsLayout() {
         name="add-route"
         options={{
           title: 'Додати',
-          href: isSetter || isManager ? '/add-route' : null,
+          href: user && (isSetter || isManager) ? '/add-route' : null,
           tabBarIcon: ({ color, size }) => <PlusCircle size={size} color={color} />,
         }}
       />
@@ -96,6 +103,7 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: 'Профіль',
+          href: user ? '/profile' : null,
           tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
         }}
       />

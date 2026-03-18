@@ -7,9 +7,9 @@ import { useTranslation } from 'react-i18next';
 import { Text } from '@/shared/ui/text';
 import { Icon } from '@/shared/ui/icon';
 import { useGymMemberStore } from '@/entities/gym-member/model/gymMemberStore';
-import { useGymMembersQuery } from '@/entities/gym-member/model/useGymMembersQuery';
-import { useRoutesQuery } from '@/entities/route/model/useRoutesQuery';
-import { useSectorsQuery } from '@/entities/sector/model/useSectorsQuery';
+import { useGymMembersQuery } from '@/entities/gym-member/model/gymMemberHooks';
+import { useRoutesQuery } from '@/entities/route/model/routeHooks';
+import { useSectorsQuery } from '@/entities/sector/model/sectorHooks';
 import { GymMemberRole } from '@/entities/gym-member/model/gym-member';
 import { MemberRow } from '@/entities/gym-member/ui/member-row';
 import { MetricCard } from '@/shared/ui/metric-card';
@@ -26,15 +26,15 @@ export function GymStatsWidget() {
     data: members = [],
     isLoading: membersLoading,
     refetch: refetchMembers,
-  } = useGymMembersQuery({ gymId: currentGymId ?? '', enabled: !!currentGymId });
+  } = useGymMembersQuery(currentGymId ?? '');
 
   const {
     data: routes = [],
     isLoading: routesLoading,
     refetch: refetchRoutes,
-  } = useRoutesQuery({ gymId: currentGymId ?? undefined }, !!currentGymId);
+  } = useRoutesQuery({ gymId: currentGymId ?? '', status: ['ACTIVE'] });
 
-  const { data: sectors = [], isLoading: sectorsLoading } = useSectorsQuery(currentGymId);
+  const { data: sectors = [], isLoading: sectorsLoading } = useSectorsQuery(currentGymId ?? '');
 
   const [refreshing, setRefreshing] = React.useState(false);
 

@@ -5,6 +5,7 @@ import { useGymMemberStore } from '@/entities/gym-member/model/gymMemberStore';
 import { useRoutesQuery } from '@/entities/route/model/routeHooks';
 import { useAscentsQuery } from '@/entities/ascent/model/ascentHooks';
 import { useWeekStats } from '@/entities/ascent/model/useWeekStats';
+import { useHomeRefresh } from './useHomeRefresh';
 
 export function useHomeDashboard() {
   const user = useUserStore((s) => s.currentUser);
@@ -13,27 +14,14 @@ export function useHomeDashboard() {
 
   const hasGym = memberships.length > 0 || !!currentGymId;
 
-  const [refreshing, setRefreshing] = React.useState(false);
+  const { data: { data: ascents = [] } = {}, isLoading: ascentsLoading } = useAscentsQuery();
 
-  const {
-    data: ascents = [],
-    isLoading: ascentsLoading,
-    refetch,
-  } = useAscentsQuery();
+  const { data: routes = [], isLoading: routesLoading } = useRoutesQuery({
+    gymId: currentGymId ?? undefined,
+    status: ['ACTIVE'],
+  });
 
-  const {
-    data: routes = [],
-    isLoading: routesLoading,
-  } = useRoutesQuery({ gymId: currentGymId ?? undefined, status: ['ACTIVE'] });
-
-  const onRefresh = React.useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await refetch();
-    } finally {
-      setRefreshing(false);
-    }
-  }, [refetch]);
+  const { refreshing, onRefresh } = useHomeRefresh();
 
   const weekStats = useWeekStats(ascents);
 
@@ -48,4 +36,3 @@ export function useHomeDashboard() {
     onRefresh,
   };
 }
-

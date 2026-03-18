@@ -14,11 +14,14 @@ import { Button } from '@/shared/ui/button';
 import { ACCENT } from '@/shared/config/palette';
 import { useHomeDashboard } from '@/features/home-dashboard/model/useHomeDashboard';
 import type { Route } from '@/entities/route/model/route';
+import { useUserStore } from '@/entities/user/model/userStore';
+import { HomeUnlogin } from './home-unlogin';
 
 export function HomeWidget() {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const user = useUserStore((s) => s.currentUser);
 
   const [pickerVisible, setPickerVisible] = React.useState(false);
   const {
@@ -39,6 +42,10 @@ export function HomeWidget() {
     },
     [router]
   );
+
+  if (!user) {
+    return <HomeUnlogin />;
+  }
 
   return (
     <>

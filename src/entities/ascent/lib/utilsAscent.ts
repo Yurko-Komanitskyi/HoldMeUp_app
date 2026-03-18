@@ -13,8 +13,9 @@ export function getMaxGradeLabel(ascents: Array<{ route?: { grade?: string } }>)
 
 export function useAscentPeriodFilter(ascents: Ascent[]) {
   const [activePeriod, setActivePeriod] = useState<string>('week');
-  const periodAscents = useMemo(() => {
-    return ascents.filter((a) => a.date.toISOString().slice(0, 7) === activePeriod);
-  }, [ascents, activePeriod]);
+  // const periodAscents = useMemo(() => {
+  //   return ascents.filter((a) => a.date.toISOString().slice(0, 7) === activePeriod);
+  // }, [ascents, activePeriod]);
+  const periodAscents = ascents;
   return { activePeriod, setActivePeriod, periodAscents };
 }

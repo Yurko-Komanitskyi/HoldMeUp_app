@@ -29,6 +29,13 @@ export function AscentsStats({ ascents }: AscentsStatsProps) {
 
   const stats = React.useMemo(() => computeAscentsStats(ascents), [ascents]);
 
+  const getAscentDateISO = React.useCallback((dateLike: unknown): string | null => {
+    if (!dateLike) return null;
+    const date = dateLike instanceof Date ? dateLike : new Date(dateLike as any);
+    if (Number.isNaN(date.getTime())) return null;
+    return date.toISOString();
+  }, []);
+
   const typeCounts = React.useMemo(
     () =>
       (['FLASH', 'ONSIGHT', 'REDPOINT', 'REPEAT'] as const).map((type) => ({
@@ -49,7 +56,10 @@ export function AscentsStats({ ascents }: AscentsStatsProps) {
       };
     });
     return days.map((day) => {
-      const count = ascents.filter((a) => a.date.toISOString().split('T')[0] === day.dateStr).length;
+      const count = ascents.filter((a) => {
+        const iso = getAscentDateISO(a.date);
+        return iso ? iso.split('T')[0] === day.dateStr : false;
+      }).length;
       return {
         value: count,
         label: day.label,
@@ -69,7 +79,10 @@ export function AscentsStats({ ascents }: AscentsStatsProps) {
       };
     });
     const data = months.map((m) => {
-      const monthAscents = ascents.filter((a) => a.date.toISOString().slice(0, 7) === m.monthStr && a.success);
+      const monthAscents = ascents.filter((a) => {
+        const iso = getAscentDateISO(a.date);
+        return iso ? iso.slice(0, 7) === m.monthStr && a.success : false;
+      });
       const maxVal = monthAscents.reduce((max, a) => {
         const val = GRADE_MAP[(a as any).route?.grade ?? ''] ?? 0;
         return val > max ? val : max;
@@ -94,7 +107,7 @@ export function AscentsStats({ ascents }: AscentsStatsProps) {
   return (
     <>
       {/* Stats grid */}
-      <View style={{ paddingHorizontal: 16, flexDirection: 'row', gap: 10 }}>
+      <View style={{ flexDirection: 'row', gap: 10 }}>
         {STAT_CARDS.map((s) => (
           <View
             key={s.label}
@@ -122,7 +135,6 @@ export function AscentsStats({ ascents }: AscentsStatsProps) {
       {/* Weekly activity chart */}
       <View
         style={{
-          marginHorizontal: 16,
           backgroundColor: cardBg,
           borderRadius: 20,
           padding: 16,
@@ -161,8 +173,8 @@ export function AscentsStats({ ascents }: AscentsStatsProps) {
         />
       </View>
 
-      {/* Grade progression chart */}
-      <View
+      {/* Grade progression chart (temporarily disabled) */}
+      {/* <View
         style={{
           marginHorizontal: 16,
           backgroundColor: cardBg,
@@ -218,12 +230,11 @@ export function AscentsStats({ ascents }: AscentsStatsProps) {
             isAnimated
           />
         </View>
-      </View>
+      </View> */}
 
       {/* Type breakdown */}
       <View
         style={{
-          marginHorizontal: 16,
           backgroundColor: cardBg,
           borderRadius: 20,
           padding: 16,

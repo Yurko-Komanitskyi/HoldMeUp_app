@@ -10,10 +10,11 @@ export interface StopwatchActions {
   start:  () => void;
   pause:  () => void;
   reset:  () => void;
+  setSeconds: (value: number) => void;
 }
 
 export function useStopwatch(): StopwatchState & StopwatchActions {
-  const [seconds, setSeconds]   = React.useState(0);
+  const [seconds, setSecondsState]   = React.useState(0);
   const [running, setRunning]   = React.useState(false);
   const [saved,   setSaved]     = React.useState(false);
   const intervalRef             = React.useRef<ReturnType<typeof setInterval> | null>(null);
@@ -28,13 +29,13 @@ export function useStopwatch(): StopwatchState & StopwatchActions {
     if (running) return;
     setRunning(true);
     setSaved(false);
-    intervalRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
+    intervalRef.current = setInterval(() => setSecondsState((s) => s + 1), 1000);
   }, [running]);
 
   const pause = React.useCallback(() => {
     setRunning(false);
     if (intervalRef.current) clearInterval(intervalRef.current);
-    setSeconds((s) => {
+    setSecondsState((s) => {
       if (s > 0) setSaved(true);
       return s;
     });
@@ -44,10 +45,15 @@ export function useStopwatch(): StopwatchState & StopwatchActions {
     setRunning(false);
     setSaved(false);
     if (intervalRef.current) clearInterval(intervalRef.current);
-    setSeconds(0);
+    setSecondsState(0);
   }, []);
 
-  return { seconds, running, saved, start, pause, reset };
+  const setSeconds = React.useCallback((value: number) => {
+    setSecondsState(Math.max(0, Math.floor(value)));
+    setSaved(value > 0);
+  }, []);
+
+  return { seconds, running, saved, start, pause, reset, setSeconds };
 }
 
 export function formatStopwatch(seconds: number): string {

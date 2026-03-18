@@ -45,9 +45,7 @@ export function RecentAscents({ ascents, isLoading, onAddPress }: RecentAscentsP
           {t('home.recentAscents').toUpperCase()}
         </Text>
         <Pressable onPress={() => router.push('/(tabs)/ascents' as never)}>
-          <Text style={{ fontSize: 13, fontWeight: '600', color: ACCENT }}>
-            {t('home.allRoutes')}
-          </Text>
+          <Text style={{ fontSize: 13, fontWeight: '600', color: ACCENT }}>Усі пролази</Text>
         </Pressable>
       </View>
 

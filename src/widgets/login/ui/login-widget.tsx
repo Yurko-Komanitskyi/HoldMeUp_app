@@ -16,6 +16,7 @@ import { ACCENT } from '@/shared/config/palette';
 import { parseApiError } from '@/shared/lib/api-error';
 import { useAuth } from '@/entities/auth/model/authHooks';
 import { ForgotPasswordModal } from '@/features/auth/forgot-password/ui/forgot-password-modal';
+import { useMyGymMembershipsQuery } from '@/entities/gym-member/model/gymMemberHooks';
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Обовʼязкове поле').email('Введіть коректний email'),
@@ -26,6 +27,7 @@ type LoginValues = z.infer<typeof loginSchema>;
 export function LoginWidget() {
   const router = useRouter();
   const { login } = useAuth();
+  const myMembershipsQuery = useMyGymMembershipsQuery();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const iconColor = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)';
@@ -47,6 +49,7 @@ export function LoginWidget() {
     setServerError(null);
     try {
       await login.mutateAsync({ email: values.email, password: values.password });
+      await myMembershipsQuery.refetch();
       router.replace('/(tabs)');
     } catch (e: unknown) {
       const { message, fieldErrors } = parseApiError(e);

@@ -2,6 +2,7 @@ import { apiClient } from '@/shared/api/axios';
 
 import type { Ascent } from '../model/ascent';
 import type { CreateAscentInput, UpdateAscentInput } from './types';
+import { PaginatedListResponse } from '@/shared/types/pagination';
 
 export const ascentKeys = {
   all: ['ascents'] as const,
@@ -13,9 +14,18 @@ export const ascentKeys = {
 
 const ASCENTS_BASE = '/api/v1/ascents';
 
-export async function fetchAscents(): Promise<Ascent[]> {
-  const { data } = await apiClient.get<Ascent[]>(ASCENTS_BASE);
-  return Array.isArray(data) ? data : [];
+export type AscentListParams = {
+  page?: number;
+  limit?: number;
+};
+
+export async function fetchAscents(
+  params?: AscentListParams
+): Promise<PaginatedListResponse<Ascent>> {
+  const { data } = await apiClient.get<PaginatedListResponse<Ascent>>(ASCENTS_BASE, {
+    params,
+  });
+  return data;
 }
 
 export async function fetchAscentById(id: string): Promise<Ascent> {
@@ -37,4 +47,3 @@ export async function updateAscent(input: UpdateAscentInput): Promise<Ascent> {
 export async function deleteAscent(id: string): Promise<void> {
   await apiClient.delete(`${ASCENTS_BASE}/${id}`);
 }
-

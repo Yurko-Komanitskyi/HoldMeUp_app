@@ -1,4 +1,4 @@
-import { GRADE_MAP } from '@/entities/ascent/lib/meta';
+import { GRADE_MAP } from '@/entities/ascent/lib/constants';
 import type { Ascent } from '@/entities/ascent/model/ascent';
 
 export function computeAscentsStats(ascents: Ascent[]) {

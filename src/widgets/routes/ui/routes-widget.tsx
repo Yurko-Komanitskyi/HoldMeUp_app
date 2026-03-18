@@ -1,30 +1,24 @@
 import * as React from 'react';
-import {
-  View,
-  ScrollView,
-  RefreshControl,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native';
-import { Mountain, ChevronDown } from 'lucide-react-native';
+import { View, ScrollView, RefreshControl, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { ChevronDown } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
-import { useRouter } from 'expo-router';
 
 import { Text } from '@/shared/ui/text';
-import { Skeleton } from '@/shared/ui/skeleton';
 import { RouteCard } from '@/entities/route/ui/route-card';
 import { RouteSkeletonCard } from '@/entities/route/ui/route-skeleton-card';
 import { RouteFilterBar } from '@/widgets/routes/ui/route-filter-bar';
 import { useRouteFilters } from '@/widgets/routes/model/useRouteFilters';
-import { useRoutesInfiniteQuery } from '@/entities/route/model/useRoutesInfiniteQuery';
 import { useGymMemberStore } from '@/entities/gym-member/model/gymMemberStore';
 import { useUserStore } from '@/entities/user/model/userStore';
 import { ACCENT } from '@/shared/config/palette';
+import type { Route } from '@/entities/route/model/route';
+import { RoutesNoGymState } from './routes-no-gym-state';
+import { RoutesEmptyState } from './routes-empty-state';
+import { useRoutesQuery } from '@/entities/route/model/routeHooks';
 
 export function RoutesWidget() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const router = useRouter();
 
   const user = useUserStore((s) => s.currentUser);
   const currentGymId = useGymMemberStore((s) => s.currentGymId);
@@ -50,10 +44,10 @@ export function RoutesWidget() {
     [currentGymId, apiFilters]
   );
 
-  const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage, refetch } =
-    useRoutesInfiniteQuery(queryFilters, !!user && hasGym);
+  const { data, isLoading, refetch } =
+    useRoutesQuery({ gymId: currentGymId ?? '', ...apiFilters });
 
-  const displayed = React.useMemo(() => data?.pages.flatMap((p) => p.routes) ?? [], [data]);
+  const displayed: Route[] = React.useMemo(() => data ?? [], [data]);
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
@@ -62,42 +56,7 @@ export function RoutesWidget() {
   }, [refetch]);
 
   if (!hasGym) {
-    return (
-      <View
-        style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 16 }}
-        className="bg-background">
-        <View
-          style={{
-            width: 72,
-            height: 72,
-            borderRadius: 22,
-            backgroundColor: ACCENT + '18',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-          <Mountain size={34} color={ACCENT} />
-        </View>
-        <Text
-          style={{
-            fontSize: 18,
-            fontWeight: '700',
-            textAlign: 'center',
-            color: isDark ? '#fff' : '#000',
-          }}>
-          Спочатку оберіть зал
-        </Text>
-        <TouchableOpacity
-          onPress={() => router.push('/gym/join' as never)}
-          style={{
-            paddingHorizontal: 24,
-            paddingVertical: 12,
-            borderRadius: 14,
-            backgroundColor: ACCENT,
-          }}>
-          <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Знайти зал</Text>
-        </TouchableOpacity>
-      </View>
-    );
+    return <RoutesNoGymState isDark={isDark} />;
   }
 
   const totalShown = displayed.length;
@@ -123,7 +82,6 @@ export function RoutesWidget() {
           {!isLoading && (
             <Text className="text-sm text-muted-foreground">
               {totalShown}
-              {hasNextPage ? '+' : ''}
             </Text>
           )}
         </View>
@@ -145,64 +103,19 @@ export function RoutesWidget() {
           {isLoading ? (
             Array.from({ length: 6 }).map((_, i) => <RouteSkeletonCard key={i} />)
           ) : displayed.length === 0 ? (
-            <View
-              style={{
-                alignItems: 'center',
-                borderRadius: 20,
-                borderWidth: 1,
-                borderStyle: 'dashed',
-                paddingVertical: 56,
-                paddingHorizontal: 24,
-              }}
-              className="border-border">
-              <Mountain size={44} color={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'} />
-              <Text
-                style={{
-                  marginTop: 16,
-                  fontSize: 16,
-                  fontWeight: '600',
-                  color: isDark ? '#fff' : '#000',
-                }}>
-                {hasActiveFilters ? 'Нічого не знайдено' : 'Маршрутів поки немає'}
-              </Text>
-              <Text
-                style={{
-                  marginTop: 6,
-                  textAlign: 'center',
-                  fontSize: 13,
-                  color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)',
-                  lineHeight: 18,
-                }}>
-                {hasActiveFilters
-                  ? 'Спробуйте змінити або скинути фільтри'
-                  : 'Маршрути ще не додані до вашого залу'}
-              </Text>
-              {hasActiveFilters && (
-                <TouchableOpacity
-                  onPress={clearFilters}
-                  style={{
-                    marginTop: 16,
-                    paddingHorizontal: 20,
-                    paddingVertical: 10,
-                    borderRadius: 12,
-                    backgroundColor: ACCENT,
-                  }}>
-                  <Text style={{ fontSize: 13, fontWeight: '700', color: '#fff' }}>
-                    Скинути фільтри
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
+            <RoutesEmptyState
+              isDark={isDark}
+              hasActiveFilters={hasActiveFilters}
+              onClearFilters={clearFilters}
+            />
           ) : (
-            displayed.map((route) => <RouteCard key={route.id} route={route} />)
+            displayed.map((route: Route) => <RouteCard key={route.id} route={route} />)
           )}
         </View>
 
         {/* Load More */}
-        {!isLoading && hasNextPage && (
+        {!isLoading && displayed.length > 0 && (
           <TouchableOpacity
-            onPress={() => fetchNextPage()}
-            disabled={isFetchingNextPage}
             style={{
               marginHorizontal: 16,
               height: 44,
@@ -214,11 +127,7 @@ export function RoutesWidget() {
               gap: 6,
               borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)',
               backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-              opacity: isFetchingNextPage ? 0.6 : 1,
             }}>
-            {isFetchingNextPage ? (
-              <ActivityIndicator size="small" color={ACCENT} />
-            ) : (
               <>
                 <ChevronDown
                   size={16}
@@ -233,7 +142,6 @@ export function RoutesWidget() {
                   Завантажити більше
                 </Text>
               </>
-            )}
           </TouchableOpacity>
         )}
       </View>

@@ -27,6 +27,7 @@ export function AscentCard({ ascent }: AscentCardProps) {
   return (
     <View
       style={{
+        marginBottom: 16,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
@@ -57,7 +58,7 @@ export function AscentCard({ ascent }: AscentCardProps) {
         <Text
           style={{ fontSize: 14, fontWeight: '600', color: isDark ? '#fff' : '#000' }}
           numberOfLines={1}>
-          #{ascent.routeId.slice(-6)}
+          {ascent.routeName}
         </Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <View

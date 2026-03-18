@@ -1,6 +1,14 @@
 import * as React from 'react';
-import { View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import {
+  View,
+  ScrollView,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from 'nativewind';
 import { ArrowLeft, CheckCircle2, XCircle } from 'lucide-react-native';
@@ -19,6 +27,8 @@ import { GradePerceptionSection } from '@/widgets/log-ascent/ui/sections/GradePe
 import { NotesSection } from '@/widgets/log-ascent/ui/sections/NotesSection';
 import { VideoSection } from '@/widgets/log-ascent/ui/sections/VideoSection';
 import { useStopwatch } from '@/features/stopwatch/model/useStopwatch';
+import { useToastStore } from '@/shared/ui/app-toast';
+import { useEffect } from 'react';
 
 export function LogAscentWidget() {
   const { routeId } = useLocalSearchParams<{ routeId: string }>();
@@ -29,13 +39,36 @@ export function LogAscentWidget() {
   const { data: route } = useRouteDetailsQuery(routeId ?? '');
 
   const stopwatch = useStopwatch();
+  const { reset: resetStopwatch } = stopwatch;
+  const toast = useToastStore();
 
-  const timeSeconds = stopwatch.saved && stopwatch.seconds > 0 ? stopwatch.seconds : null;
-  const { state, actions, submit, isPending } = useLogAscentForm(user?.id, routeId, timeSeconds);
-  const { ascentType, success, attemptNumber, feeling, gradePerception, notes, videoUrl, serverError } =
-    state;
-  const { setAscentType, setSuccess, setAttemptNumber, setFeeling, setGradePerception, setNotes, setVideoUrl } =
-    actions;
+  const scrollRef = React.useRef<ScrollView | null>(null);
+
+  const timeSeconds = stopwatch.seconds > 0 ? stopwatch.seconds : null;
+  const { state, actions, submit, isPending, reset } = useLogAscentForm(
+    user?.id,
+    routeId,
+    timeSeconds
+  );
+  const {
+    ascentType,
+    success,
+    attemptNumber,
+    feeling,
+    gradePerception,
+    notes,
+    videoUrl,
+    serverError,
+  } = state;
+  const {
+    setAscentType,
+    setSuccess,
+    setAttemptNumber,
+    setFeeling,
+    setGradePerception,
+    setNotes,
+    setVideoUrl,
+  } = actions;
 
   const cardBg = isDark ? '#1c1c1e' : '#fff';
   const borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
@@ -43,10 +76,25 @@ export function LogAscentWidget() {
   const inputColor = isDark ? '#fff' : '#000';
   const placeholderColor = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)';
 
+  useFocusEffect(
+    React.useCallback(() => {
+      requestAnimationFrame(() => {
+        scrollRef.current?.scrollTo({ y: 0, animated: false });
+      });
+    }, [])
+  );
+
   async function handleSubmit() {
     try {
       await submit();
-      router.back();
+      toast.show('success', 'Пролаз успішно записано');
+      setTimeout(() => {
+        reset();
+        resetStopwatch();
+        setTimeout(() => {
+          router.back();
+        }, 10);
+      }, 700);
     } catch {
       // помилка вже показана через serverError
     }
@@ -88,6 +136,7 @@ export function LogAscentWidget() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView
+          ref={scrollRef}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingBottom: 120, gap: 12, paddingHorizontal: 16 }}>

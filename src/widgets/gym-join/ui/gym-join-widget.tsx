@@ -11,7 +11,7 @@ import { parseApiError } from '@/shared/lib/api-error';
 import { ACCENT } from '@/shared/config/palette';
 import { useAutoJoinGymsQuery, useGymMutations } from '@/entities/gym/model/gymHooks';
 import { useGymMemberStore } from '@/entities/gym-member/model/gymMemberStore';
-import { GymCard } from '../../../../gym-card';
+import { GymCard } from '../../../entities/gym/ui/gym-card';
 
 export function GymJoinWidget() {
   const router = useRouter();
