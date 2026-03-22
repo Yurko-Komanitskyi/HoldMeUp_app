@@ -20,25 +20,13 @@ import { Button } from '@/shared/ui/button';
 import { PasswordInput } from '@/shared/ui/password-input';
 import { ServerErrorBanner } from '@/shared/ui/server-error-banner';
 import { ACCENT } from '@/shared/config/palette';
+import { THEME } from '@/shared/config/tokens';
 import { parseApiError } from '@/shared/lib/api-error';
 import { useAuth } from '@/entities/auth/model/authHooks';
-
-const schema = z
-  .object({
-    firstName: z.string().min(2, 'Мінімум 2 символи'),
-    lastName: z.string().min(2, 'Мінімум 2 символи'),
-    email: z.string().min(1, 'Обовʼязкове поле').email('Введіть коректний email'),
-    password: z.string().min(6, 'Мінімум 6 символів'),
-    confirmPassword: z.string().min(1, 'Підтвердіть пароль'),
-  })
-  .refine((d) => d.password === d.confirmPassword, {
-    message: 'Паролі не збігаються',
-    path: ['confirmPassword'],
-  });
-
-type FormValues = z.infer<typeof schema>;
+import { useTranslation } from 'react-i18next';
 
 function SuccessScreen({ email, onLogin }: { email: string; onLogin: () => void }) {
+  const { t } = useTranslation();
   return (
     <View
       style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }}
@@ -55,48 +43,70 @@ function SuccessScreen({ email, onLogin }: { email: string; onLogin: () => void 
         }}>
         <MailCheck size={40} color={ACCENT} />
       </View>
-      <Text className="mb-3 text-center text-2xl font-bold text-foreground">Перевір пошту</Text>
+      <Text className="mb-3 text-center text-2xl font-bold text-foreground">{t('auth.checkEmail')}</Text>
       <Text className="mb-1 text-center text-base text-muted-foreground">
-        Ми надіслали лист підтвердження на
+        {t('auth.checkEmailIntro')}
       </Text>
       <Text className="mb-8 text-center text-base font-semibold" style={{ color: ACCENT }}>
         {email}
       </Text>
       <Text className="mb-10 text-center text-sm text-muted-foreground">
-        Перейди за посиланням у листі, а потім увійди у застосунок.
+        {t('auth.checkEmailOutro')}
       </Text>
       <Button onPress={onLogin} className="h-12 w-full">
-        <Text className="font-semibold">Перейти до входу</Text>
+        <Text className="font-semibold">{t('auth.goToLogin')}</Text>
       </Button>
     </View>
   );
 }
 
-const TEXT_FIELDS = [
-  {
-    name: 'firstName' as const,
-    label: 'Імʼя',
-    icon: User,
-    placeholder: 'Юрко',
-    autoCapitalize: 'words' as const,
-  },
-  {
-    name: 'lastName' as const,
-    label: 'Прізвище',
-    icon: User,
-    placeholder: 'Іванченко',
-    autoCapitalize: 'words' as const,
-  },
-  {
-    name: 'email' as const,
-    label: 'Email',
-    icon: Mail,
-    placeholder: 'you@example.com',
-    autoCapitalize: 'none' as const,
-  },
-];
-
 export function RegisterWidget() {
+  const { t } = useTranslation();
+  const schema = React.useMemo(
+    () =>
+      z
+        .object({
+          firstName: z.string().min(2, t('validation.min2')),
+          lastName: z.string().min(2, t('validation.min2')),
+          email: z.string().min(1, t('validation.required')).email(t('validation.emailInvalid')),
+          password: z.string().min(6, t('validation.min6')),
+          confirmPassword: z.string().min(1, t('validation.confirmPassword')),
+        })
+        .refine((d) => d.password === d.confirmPassword, {
+          message: t('validation.passwordMismatch'),
+          path: ['confirmPassword'],
+        }),
+    [t]
+  );
+  type FormValues = z.infer<typeof schema>;
+
+  const TEXT_FIELDS = React.useMemo(
+    () => [
+      {
+        name: 'firstName' as const,
+        label: t('auth.firstName'),
+        icon: User,
+        placeholder: t('auth.placeholderFirstName'),
+        autoCapitalize: 'words' as const,
+      },
+      {
+        name: 'lastName' as const,
+        label: t('auth.lastName'),
+        icon: User,
+        placeholder: t('auth.placeholderLastName'),
+        autoCapitalize: 'words' as const,
+      },
+      {
+        name: 'email' as const,
+        label: t('auth.email'),
+        icon: Mail,
+        placeholder: t('auth.placeholderEmail'),
+        autoCapitalize: 'none' as const,
+      },
+    ],
+    [t]
+  );
+
   const router = useRouter();
   const { register } = useAuth();
   const { colorScheme } = useColorScheme();
@@ -174,10 +184,8 @@ export function RegisterWidget() {
             paddingTop: 80,
           }}>
           <View style={{ marginBottom: 40 }}>
-            <Text className="mb-2 text-4xl font-bold tracking-tight">Реєстрація</Text>
-            <Text className="text-base text-muted-foreground">
-              Створи акаунт HoldMeUp, щоб відстежувати свої підйоми
-            </Text>
+            <Text className="mb-2 text-4xl font-bold tracking-tight">{t('auth.registerTitle')}</Text>
+            <Text className="text-base text-muted-foreground">{t('auth.registerSubtitle')}</Text>
           </View>
 
           <View style={{ gap: 20 }}>
@@ -224,7 +232,7 @@ export function RegisterWidget() {
             ))}
 
             <View style={{ gap: 8 }}>
-              <Text className="text-sm font-medium text-foreground">Пароль</Text>
+              <Text className="text-sm font-medium text-foreground">{t('auth.password')}</Text>
               <Controller
                 control={control}
                 name="password"
@@ -233,7 +241,7 @@ export function RegisterWidget() {
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
-                    placeholder="••••••••"
+                    placeholder={t('auth.placeholderPassword')}
                     autoComplete="new-password"
                   />
                 )}
@@ -244,7 +252,7 @@ export function RegisterWidget() {
             </View>
 
             <View style={{ gap: 8 }}>
-              <Text className="text-sm font-medium text-foreground">Підтвердіть пароль</Text>
+              <Text className="text-sm font-medium text-foreground">{t('auth.confirmPasswordLabel')}</Text>
               <Controller
                 control={control}
                 name="confirmPassword"
@@ -253,7 +261,7 @@ export function RegisterWidget() {
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
-                    placeholder="••••••••"
+                    placeholder={t('auth.placeholderPassword')}
                   />
                 )}
               />
@@ -266,9 +274,11 @@ export function RegisterWidget() {
 
             <Button onPress={handleSubmit(onSubmit)} disabled={isSubmitting} className="mt-1 h-12">
               {isSubmitting ? (
-                <ActivityIndicator color={isDark ? '#0a0a0f' : '#fff'} />
+                <ActivityIndicator
+                  color={isDark ? THEME.dark.background : THEME.light.destructiveForeground}
+                />
               ) : (
-                <Text className="font-semibold">Створити акаунт</Text>
+                <Text className="font-semibold">{t('auth.createAccount')}</Text>
               )}
             </Button>
           </View>
@@ -281,10 +291,10 @@ export function RegisterWidget() {
               justifyContent: 'center',
               gap: 4,
             }}>
-            <Text className="text-sm text-muted-foreground">Вже маєш акаунт?</Text>
+            <Text className="text-sm text-muted-foreground">{t('auth.haveAccount')}</Text>
             <TouchableOpacity onPress={() => router.back()}>
               <Text className="text-sm font-semibold" style={{ color: ACCENT }}>
-                Увійти
+                {t('auth.signInLink')}
               </Text>
             </TouchableOpacity>
           </View>

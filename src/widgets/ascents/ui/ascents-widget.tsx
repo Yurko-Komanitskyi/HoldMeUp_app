@@ -1,24 +1,55 @@
 import * as React from 'react';
-import { View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
-import { useColorScheme } from 'nativewind';
 import { useTranslation } from 'react-i18next';
 import { InfiniteList } from '@/shared/ui/Infinite-list';
+import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
 import { AscentHeader } from './acsent-header';
 import { AscentCard } from '@/entities/ascent/ui/ascent-card';
 import { AscentFilters, useAscentsQuery } from '@/entities/ascent/model/ascentHooks';
+import { ascentFiltersToMyStatsParams } from '@/entities/stats/lib/ascent-filters-to-stats';
+import { useMyStatsQuery } from '@/entities/stats/model/statsHooks';
 import { Mountain } from 'lucide-react-native';
 import { Text } from '@/shared/ui/text';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
 
 export function AscentsWidget() {
   const { t } = useTranslation();
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const colors = useThemeColor();
   const [filters, setFilters] = React.useState<AscentFilters>({});
 
-  const { items, isLoading, isFetchingNextPage, hasNextPage, loadMore } = useAscentsQuery(filters);
+  const {
+    items,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    loadMore,
+    isError,
+    error,
+    refetch,
+  } = useAscentsQuery(filters);
 
-  const ascentHeader = React.useMemo(() => <AscentHeader setFilters={setFilters} />, []);
+  const statsParams = React.useMemo(() => ascentFiltersToMyStatsParams(filters), [filters]);
+  const {
+    data: myStats,
+    isLoading: statsLoading,
+    isError: statsIsError,
+    error: statsError,
+    refetch: refetchStats,
+  } = useMyStatsQuery(statsParams);
+
+  const ascentHeader = React.useMemo(
+    () => (
+      <AscentHeader
+        setFilters={setFilters}
+        statsResponse={myStats}
+        statsLoading={statsLoading}
+        statsQueryError={statsIsError ? statsError : undefined}
+        onRetryStats={() => void refetchStats()}
+      />
+    ),
+    [myStats, statsLoading, statsIsError, statsError, refetchStats]
+  );
 
   return (
     <View style={{ flex: 1, paddingHorizontal: 16 }}>
@@ -33,38 +64,48 @@ export function AscentsWidget() {
         onLoadMore={loadMore}
         estimatedItemSize={100}
         ListEmptyComponent={
-          <View style={{ flex: 1, paddingHorizontal: 16, justifyContent: 'center' }}>
-            <View
-              style={{
-                alignItems: 'center',
-                borderRadius: 20,
-                borderWidth: 1,
-                borderStyle: 'dashed',
-                borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)',
-                paddingVertical: 48,
-              }}>
-              <Mountain size={40} color="rgba(128,128,128,0.3)" />
-              <Text
-                style={{
-                  marginTop: 14,
-                  fontSize: 15,
-                  fontWeight: '600',
-                  color: 'rgba(128,128,128,0.6)',
-                }}>
-                {t('ascents.noAscents')}
-              </Text>
-              <Text
-                style={{
-                  marginTop: 4,
-                  fontSize: 13,
-                  color: 'rgba(128,128,128,0.45)',
-                  textAlign: 'center',
-                  paddingHorizontal: 32,
-                }}>
-                {t('ascents.logFirst')}
-              </Text>
+          isLoading && items.length === 0 ? (
+            <View style={{ paddingVertical: 48, alignItems: 'center' }}>
+              <ActivityIndicator size="large" color={colors.primary} />
             </View>
-          </View>
+          ) : isError && items.length === 0 ? (
+            <View style={{ paddingHorizontal: 8, paddingVertical: 24, minHeight: 260 }}>
+              <QueryErrorPanel error={error ?? new Error('')} onRetry={() => void refetch()} />
+            </View>
+          ) : (
+            <View style={{ flex: 1, paddingHorizontal: 16, justifyContent: 'center' }}>
+              <View
+                style={{
+                  alignItems: 'center',
+                  borderRadius: 20,
+                  borderWidth: 1,
+                  borderStyle: 'dashed',
+                  borderColor: colors.border,
+                  paddingVertical: 48,
+                }}>
+                <Mountain size={40} color={colors.mutedForeground} />
+                <Text
+                  style={{
+                    marginTop: 14,
+                    fontSize: 15,
+                    fontWeight: '600',
+                    color: colors.mutedForeground,
+                  }}>
+                  {t('ascents.noAscents')}
+                </Text>
+                <Text
+                  style={{
+                    marginTop: 4,
+                    fontSize: 13,
+                    color: colors.mutedForeground,
+                    textAlign: 'center',
+                    paddingHorizontal: 32,
+                  }}>
+                  {t('ascents.logFirst')}
+                </Text>
+              </View>
+            </View>
+          )
         }
       />
     </View>

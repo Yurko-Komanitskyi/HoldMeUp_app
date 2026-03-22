@@ -4,6 +4,7 @@ import { Dumbbell, MapPin, Plus, CheckCircle } from 'lucide-react-native';
 
 import { Text } from '@/shared/ui/text';
 import { ACCENT } from '@/shared/config/palette';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   gymId: string;
@@ -28,6 +29,7 @@ export function JoinableGymCard({
   error,
   onJoin,
 }: Props) {
+  const { t } = useTranslation();
   return (
     <View
       style={{
@@ -103,12 +105,12 @@ export function JoinableGymCard({
         ) : joined ? (
           <>
             <CheckCircle size={14} color={ACCENT} />
-            <Text style={{ fontSize: 13, fontWeight: '700', color: ACCENT }}>Приєднались!</Text>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: ACCENT }}>{t('gym.joinedCta')}</Text>
           </>
         ) : (
           <>
             <Plus size={14} color="#fff" />
-            <Text style={{ fontSize: 13, fontWeight: '700', color: '#fff' }}>Приєднатись</Text>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: '#fff' }}>{t('gym.joinCta')}</Text>
           </>
         )}
       </TouchableOpacity>

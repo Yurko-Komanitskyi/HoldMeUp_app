@@ -4,11 +4,12 @@ import { CheckCircle2, XCircle, ChevronUp, ChevronDown } from 'lucide-react-nati
 
 import { Text } from '@/shared/ui/text';
 import { SectionLabel } from '@/shared/ui/section-label';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   success: boolean;
   attemptNumber: number;
-  isDark: boolean;
   cardBg: string;
   borderColor: string;
   onChangeSuccess: (value: boolean) => void;
@@ -20,12 +21,13 @@ interface Props {
 export function ResultAttemptsSection({
   success,
   attemptNumber,
-  isDark,
   cardBg,
   borderColor,
   onChangeSuccess,
   onChangeAttempt,
 }: Props) {
+  const { t } = useTranslation();
+  const colors = useThemeColor();
   return (
     <View
       style={{
@@ -37,12 +39,13 @@ export function ResultAttemptsSection({
         gap: 20,
       }}>
       <View>
-        <SectionLabel>Результат</SectionLabel>
+        <SectionLabel>{t('logAscent.result')}</SectionLabel>
         <View style={{ flexDirection: 'row', gap: 10 }}>
           {[
-            { val: true, label: 'Пролаз', icon: CheckCircle2, color: '#22c55e' },
-            { val: false, label: 'Впав', icon: XCircle, color: '#ef4444' },
-          ].map(({ val, label, icon: BtnIcon, color }) => {
+            { val: true, label: t('logAscent.send'), icon: CheckCircle2, colorKey: 'chart2' as const },
+            { val: false, label: t('logAscent.fall'), icon: XCircle, colorKey: 'destructive' as const },
+          ].map(({ val, label, icon: BtnIcon, colorKey }) => {
+            const color = colors[colorKey];
             const active = success === val;
             return (
               <TouchableOpacity
@@ -60,12 +63,12 @@ export function ResultAttemptsSection({
                   borderColor: active ? color : borderColor,
                   backgroundColor: active ? color + '1a' : 'transparent',
                 }}>
-                <BtnIcon size={20} color={active ? color : 'rgba(128,128,128,0.4)'} />
+                <BtnIcon size={20} color={active ? color : colors.mutedForeground} />
                 <Text
                   style={{
                     fontWeight: '700',
                     fontSize: 15,
-                    color: active ? color : 'rgba(128,128,128,0.6)',
+                    color: active ? color : colors.mutedForeground,
                   }}>
                   {label}
                 </Text>
@@ -76,7 +79,7 @@ export function ResultAttemptsSection({
       </View>
 
       <View>
-        <SectionLabel>Номер спроби</SectionLabel>
+        <SectionLabel>{t('logAscent.attemptNumber')}</SectionLabel>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
           <TouchableOpacity
             onPress={() => onChangeAttempt((n) => Math.max(1, n - 1))}
@@ -88,9 +91,9 @@ export function ResultAttemptsSection({
               borderColor,
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+              backgroundColor: colors.muted,
             }}>
-            <ChevronDown size={20} color={isDark ? '#fff' : '#000'} />
+            <ChevronDown size={20} color={colors.foreground} />
           </TouchableOpacity>
           <View style={{ flex: 1, alignItems: 'center' }}>
             <Text
@@ -98,12 +101,12 @@ export function ResultAttemptsSection({
                 fontSize: 36,
                 lineHeight: 42,
                 fontWeight: '200',
-                color: isDark ? '#fff' : '#000',
+                color: colors.foreground,
               }}>
               {attemptNumber}
             </Text>
-            <Text style={{ fontSize: 12, color: 'rgba(128,128,128,0.6)', marginTop: -4 }}>
-              {attemptNumber === 1 ? 'перша спроба' : 'спроба'}
+            <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: -4 }}>
+              {attemptNumber === 1 ? t('logAscent.firstAttempt') : t('logAscent.attempt')}
             </Text>
           </View>
           <TouchableOpacity
@@ -116,9 +119,9 @@ export function ResultAttemptsSection({
               borderColor,
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+              backgroundColor: colors.muted,
             }}>
-            <ChevronUp size={20} color={isDark ? '#fff' : '#000'} />
+            <ChevronUp size={20} color={colors.foreground} />
           </TouchableOpacity>
         </View>
       </View>

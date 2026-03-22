@@ -11,6 +11,7 @@ import { useColorScheme } from 'nativewind';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X } from 'lucide-react-native';
 import { Text } from '@/shared/ui/text';
+import { useTranslation } from 'react-i18next';
 
 export interface BottomSheetProps {
   visible: boolean;
@@ -20,6 +21,7 @@ export interface BottomSheetProps {
 }
 
 export function BottomSheet({ visible, onClose, title, children }: BottomSheetProps) {
+  const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const insets = useSafeAreaInsets();
@@ -53,7 +55,11 @@ export function BottomSheet({ visible, onClose, title, children }: BottomSheetPr
                 justifyContent: 'space-between',
               }}>
               <Text className="text-lg font-bold text-foreground">{title}</Text>
-              <TouchableOpacity onPress={onClose} hitSlop={8}>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t('common.close')}
+                onPress={onClose}
+                hitSlop={8}>
                 <X size={20} color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)'} />
               </TouchableOpacity>
             </View>

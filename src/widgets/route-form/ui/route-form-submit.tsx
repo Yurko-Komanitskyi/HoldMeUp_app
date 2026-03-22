@@ -2,11 +2,11 @@ import * as React from 'react';
 import { View, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 
 import { Text } from '@/shared/ui/text';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
 
 type Props = {
   bgColor: string;
   borderTopColor: string;
-  isDark: boolean;
   isSubmitting: boolean;
   uploading: boolean;
   submitLabel: string;
@@ -16,12 +16,15 @@ type Props = {
 export function RouteFormSubmitBar({
   bgColor,
   borderTopColor,
-  isDark,
   isSubmitting,
   uploading,
   submitLabel,
   onSubmit,
 }: Props) {
+  const colors = useThemeColor();
+  const btnBg = colors.foreground;
+  const btnFg = colors.background;
+
   return (
     <View
       style={{
@@ -45,17 +48,17 @@ export function RouteFormSubmitBar({
           justifyContent: 'center',
           borderRadius: 16,
           paddingVertical: 15,
-          backgroundColor: isDark ? '#ffffff' : '#000000',
+          backgroundColor: btnBg,
           opacity: isSubmitting || uploading ? 0.55 : 1,
         }}>
         {isSubmitting ? (
-          <ActivityIndicator color={isDark ? '#000' : '#fff'} />
+          <ActivityIndicator color={btnFg} />
         ) : (
           <Text
             style={{
               fontSize: 15,
               fontWeight: '800',
-              color: isDark ? '#000000' : '#ffffff',
+              color: btnFg,
               letterSpacing: -0.3,
             }}>
             {submitLabel}
@@ -65,4 +68,3 @@ export function RouteFormSubmitBar({
     </View>
   );
 }
-

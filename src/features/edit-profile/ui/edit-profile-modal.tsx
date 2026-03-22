@@ -11,18 +11,25 @@ import { Input } from '@/shared/ui/input';
 import { Button } from '@/shared/ui/button';
 import { ServerErrorBanner } from '@/shared/ui/server-error-banner';
 import { BottomSheet } from '@/shared/ui/bottom-sheet';
+import { THEME } from '@/shared/config/tokens';
 import { parseApiError } from '@/shared/lib/api-error';
 import { useUserStore } from '@/entities/user/model/userStore';
 import { useMeMutation } from '@/entities/auth/model/authHooks';
-
-const editProfileSchema = z.object({
-  firstName: z.string().min(2, 'Мінімум 2 символи'),
-  lastName: z.string().min(2, 'Мінімум 2 символи'),
-  email: z.string().min(1, 'Обовʼязкове поле').email('Введіть коректний email'),
-});
-type EditProfileValues = z.infer<typeof editProfileSchema>;
+import { useTranslation } from 'react-i18next';
 
 export function EditProfileModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
+  const editProfileSchema = React.useMemo(
+    () =>
+      z.object({
+        firstName: z.string().min(2, t('validation.min2')),
+        lastName: z.string().min(2, t('validation.min2')),
+        email: z.string().min(1, t('validation.required')).email(t('validation.emailInvalid')),
+      }),
+    [t]
+  );
+  type EditProfileValues = z.infer<typeof editProfileSchema>;
+
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const iconColor = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)';
@@ -84,21 +91,29 @@ export function EditProfileModal({ visible, onClose }: { visible: boolean; onClo
     }
   }
 
-  const fields = [
-    { name: 'firstName' as const, label: 'Імʼя', placeholder: 'Юрко', Icon: User },
-    { name: 'lastName' as const, label: 'Прізвище', placeholder: 'Іванченко', Icon: User },
-    { name: 'email' as const, label: 'Email', placeholder: 'you@example.com', Icon: Mail },
-  ];
+  const fields = React.useMemo(
+    () => [
+      { name: 'firstName' as const, label: t('auth.firstName'), placeholder: t('auth.placeholderFirstName'), Icon: User },
+      { name: 'lastName' as const, label: t('auth.lastName'), placeholder: t('auth.placeholderLastName'), Icon: User },
+      {
+        name: 'email' as const,
+        label: t('auth.email'),
+        placeholder: t('auth.placeholderEmail'),
+        Icon: Mail,
+      },
+    ],
+    [t]
+  );
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} title="Редагувати профіль">
+    <BottomSheet visible={visible} onClose={onClose} title={t('editProfile.title')}>
       {emailHint ? (
         <View style={{ gap: 12, paddingVertical: 8 }}>
           <Text className="text-center text-sm text-muted-foreground">
-            На нову адресу надіслано лист підтвердження. Перейди за посиланням.
+            {t('editProfile.emailSentHint')}
           </Text>
           <Button onPress={onClose} className="h-11">
-            <Text className="font-semibold">Зрозуміло</Text>
+            <Text className="font-semibold">{t('common.understood')}</Text>
           </Button>
         </View>
       ) : (
@@ -139,7 +154,7 @@ export function EditProfileModal({ visible, onClose }: { visible: boolean; onClo
               )}
               {name === 'email' && (
                 <Text className="text-xs text-muted-foreground">
-                  Зміна email потребує підтвердження поштою
+                  {t('editProfile.emailChangeHint')}
                 </Text>
               )}
             </View>
@@ -147,9 +162,11 @@ export function EditProfileModal({ visible, onClose }: { visible: boolean; onClo
           <ServerErrorBanner message={serverError} />
           <Button onPress={handleSubmit(onSubmit)} disabled={isSubmitting} className="h-11">
             {isSubmitting ? (
-              <ActivityIndicator color={isDark ? '#0a0a0f' : '#fff'} />
+              <ActivityIndicator
+                color={isDark ? THEME.dark.background : THEME.light.destructiveForeground}
+              />
             ) : (
-              <Text className="font-semibold">Зберегти</Text>
+              <Text className="font-semibold">{t('common.save')}</Text>
             )}
           </Button>
         </>

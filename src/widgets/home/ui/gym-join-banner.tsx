@@ -7,8 +7,11 @@ import { ACCENT } from '@/shared/config/palette';
 import { useGymMemberStore } from '@/entities/gym-member/model/gymMemberStore';
 import { useAutoJoinGymsQuery, useGymMutations } from '@/entities/gym/model/gymHooks';
 import { GymCompactCard } from '@/widgets/routes/ui/gym-compact-card';
+import { useTranslation } from 'react-i18next';
+import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
 
 export function GymJoinBanner() {
+  const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const setCurrentGymId = useGymMemberStore((s) => s.setCurrentGymId);
@@ -16,7 +19,7 @@ export function GymJoinBanner() {
   const [joiningId, setJoiningId] = React.useState<string | null>(null);
   const [joinedIds, setJoinedIds] = React.useState<Set<string>>(new Set());
 
-  const { data: gyms = [], isLoading, isError } = useAutoJoinGymsQuery();
+  const { data: gyms = [], isLoading, isError, error: gymsQueryError, refetch } = useAutoJoinGymsQuery();
   const { joinGymMutation } = useGymMutations();
 
   async function handleJoin(gymId: string) {
@@ -49,16 +52,28 @@ export function GymJoinBanner() {
     );
   }
 
-  if (isError || gyms.length === 0) return null;
+  if (isError) {
+    return (
+      <View style={{ marginHorizontal: 16 }}>
+        <QueryErrorPanel
+          variant="compact"
+          error={gymsQueryError ?? new Error('')}
+          onRetry={() => void refetch()}
+        />
+      </View>
+    );
+  }
+
+  if (gyms.length === 0) return null;
 
   return (
     <View style={{ gap: 12 }}>
       <View style={{ paddingHorizontal: 16, gap: 4 }}>
         <Text style={{ fontSize: 20, fontWeight: '800', color: isDark ? '#fff' : '#000' }}>
-          Обери свій зал
+          {t('home.gymBannerTitle')}
         </Text>
         <Text style={{ fontSize: 13, color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}>
-          Приєднайся до залу, щоб бачити маршрути та відстежувати підйоми
+          {t('home.gymBannerSubtitle')}
         </Text>
       </View>
 

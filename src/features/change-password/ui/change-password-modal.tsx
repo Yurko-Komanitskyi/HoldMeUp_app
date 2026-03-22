@@ -6,9 +6,11 @@ import { Button } from '@/shared/ui/button';
 import { ServerErrorBanner } from '@/shared/ui/server-error-banner';
 import { BottomSheet } from '@/shared/ui/bottom-sheet';
 import { ACCENT } from '@/shared/config/palette';
+import { THEME } from '@/shared/config/tokens';
 import { parseApiError } from '@/shared/lib/api-error';
 import { useUserStore } from '@/entities/user/model/userStore';
 import { authApi } from '@/entities/auth/api/authApi';
+import { useTranslation } from 'react-i18next';
 
 export function ChangePasswordModal({
   visible,
@@ -17,6 +19,7 @@ export function ChangePasswordModal({
   visible: boolean;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const user = useUserStore((s) => s.currentUser);
   const [loading, setLoading] = React.useState(false);
   const [sent, setSent] = React.useState(false);
@@ -44,7 +47,7 @@ export function ChangePasswordModal({
   }
 
   return (
-    <BottomSheet visible={visible} onClose={handleClose} title="Змінити пароль">
+    <BottomSheet visible={visible} onClose={handleClose} title={t('changePassword.title')}>
       {sent ? (
         <View style={{ alignItems: 'center', gap: 12, paddingVertical: 12 }}>
           <View
@@ -59,11 +62,11 @@ export function ChangePasswordModal({
             <MailCheck size={28} color={ACCENT} />
           </View>
           <Text className="text-center text-sm text-muted-foreground">
-            Лист зі скиданням пароля надіслано на{' '}
+            {t('changePassword.resetSentPrefix')}{' '}
             <Text style={{ color: ACCENT, fontWeight: '600' }}>{user?.email}</Text>
           </Text>
           <Button onPress={handleClose} className="mt-2 h-11 w-full">
-            <Text className="font-semibold">Зрозуміло</Text>
+            <Text className="font-semibold">{t('changePassword.understood')}</Text>
           </Button>
         </View>
       ) : (
@@ -79,16 +82,17 @@ export function ChangePasswordModal({
             }}>
             <Lock size={16} color={ACCENT} />
             <Text className="flex-1 text-sm text-muted-foreground">
-              На адресу <Text style={{ color: ACCENT, fontWeight: '600' }}>{user?.email}</Text> буде
-              надіслано лист зі скиданням пароля.
+              {t('changePassword.description')}{' '}
+              <Text style={{ color: ACCENT, fontWeight: '600' }}>{user?.email}</Text>{' '}
+              {t('changePassword.descriptionSuffix')}
             </Text>
           </View>
           <ServerErrorBanner message={error} />
           <Button onPress={handleSend} disabled={loading} className="h-11">
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={THEME.light.destructiveForeground} />
             ) : (
-              <Text className="font-semibold">Надіслати лист</Text>
+              <Text className="font-semibold">{t('changePassword.sendLetter')}</Text>
             )}
           </Button>
         </View>

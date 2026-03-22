@@ -5,13 +5,8 @@ import { Dumbbell, MapPin, LogOut, ShieldCheck, Wrench, Crown, User } from 'luci
 import { Text } from '@/shared/ui/text';
 import { ACCENT } from '@/shared/config/palette';
 import { GymMemberRole, type GymMember } from '@/entities/gym-member/model/gym-member';
-
-const ROLE_LABEL: Record<string, string> = {
-  [GymMemberRole.OWNER]: 'Власник',
-  [GymMemberRole.MANAGER]: 'Менеджер',
-  [GymMemberRole.SETTER]: 'Постановник',
-  [GymMemberRole.CUSTOMER]: 'Учасник',
-};
+import { formatGymMemberRoleLabel } from '@/entities/gym-member/lib/gym-role-i18n';
+import { useTranslation } from 'react-i18next';
 
 const ROLE_ICON: Record<string, React.ElementType> = {
   [GymMemberRole.OWNER]: Crown,
@@ -28,6 +23,7 @@ interface Props {
 }
 
 export function MembershipCard({ membership, isDark, leaving, onLeavePress }: Props) {
+  const { t } = useTranslation();
   const RoleIcon = ROLE_ICON[membership.role] ?? User;
   const isOwner = membership.role === GymMemberRole.OWNER;
 
@@ -74,7 +70,7 @@ export function MembershipCard({ membership, isDark, leaving, onLeavePress }: Pr
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }}>
             <RoleIcon size={12} color={ACCENT} />
             <Text style={{ fontSize: 12, fontWeight: '600', color: ACCENT }}>
-              {ROLE_LABEL[membership.role] ?? membership.role}
+              {formatGymMemberRoleLabel(membership.role, t)}
             </Text>
           </View>
         </View>

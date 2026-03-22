@@ -2,23 +2,26 @@ import * as React from 'react';
 import { View, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { Dumbbell, ChevronLeft, Users, RefreshCw } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
+import { Dumbbell, ChevronLeft, Users } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from '@/shared/ui/text';
 import { parseApiError } from '@/shared/lib/api-error';
 import { ACCENT } from '@/shared/config/palette';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import { useAutoJoinGymsQuery, useGymMutations } from '@/entities/gym/model/gymHooks';
 import { useGymMemberStore } from '@/entities/gym-member/model/gymMemberStore';
 import { GymCard } from '../../../entities/gym/ui/gym-card';
+import { useTranslation } from 'react-i18next';
+import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
 
 export function GymJoinWidget() {
+  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const colors = useThemeColor();
+  const isDark = colors.isDark;
 
   const setCurrentGymId = useGymMemberStore((s) => s.setCurrentGymId);
 
@@ -27,7 +30,7 @@ export function GymJoinWidget() {
   const [joinErrors, setJoinErrors] = React.useState<Record<string, string>>({});
   const [refreshing, setRefreshing] = React.useState(false);
 
-  const { data: gyms = [], isLoading, isError, refetch } = useAutoJoinGymsQuery();
+  const { data: gyms = [], isLoading, isError, error: gymsQueryError, refetch } = useAutoJoinGymsQuery();
   const { joinGymMutation } = useGymMutations();
   async function handleJoin(gymId: string) {
     setJoiningId(gymId);
@@ -55,8 +58,8 @@ export function GymJoinWidget() {
     setRefreshing(false);
   }
 
-  const bgColor = isDark ? '#000' : '#f2f2f7';
-  const textColor = isDark ? '#fff' : '#000';
+  const bgColor = colors.background;
+  const textColor = colors.foreground;
   const canGoBack = router.canGoBack?.() ?? false;
 
   return (
@@ -71,7 +74,7 @@ export function GymJoinWidget() {
             alignItems: 'center',
             gap: 10,
             borderBottomWidth: 1,
-            borderBottomColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)',
+            borderBottomColor: colors.border,
           }}>
           <TouchableOpacity
             onPress={() => router.back()}
@@ -80,13 +83,13 @@ export function GymJoinWidget() {
               width: 34,
               height: 34,
               borderRadius: 10,
-              backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+              backgroundColor: colors.secondary,
               alignItems: 'center',
               justifyContent: 'center',
             }}>
             <ChevronLeft size={20} color={textColor} />
           </TouchableOpacity>
-          <Text style={{ fontSize: 18, fontWeight: '700', color: textColor }}>Знайти зал</Text>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: textColor }}>{t('gym.findGym')}</Text>
         </View>
       )}
       <ScrollView
@@ -97,16 +100,16 @@ export function GymJoinWidget() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={ACCENT} />
         }>
         <View style={{ gap: 6, marginBottom: 8 }}>
-          <Text style={{ fontSize: 24, fontWeight: '800', color: isDark ? '#fff' : '#000' }}>
-            Обери свій зал
+          <Text style={{ fontSize: 24, fontWeight: '800', color: colors.foreground }}>
+            {t('gym.pickYourGym')}
           </Text>
           <Text
             style={{
               fontSize: 14,
-              color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
+              color: colors.mutedForeground,
               lineHeight: 20,
             }}>
-            Приєднайся до залу, щоб бачити маршрути та відстежувати свої підйоми
+            {t('gym.joinSubtitle')}
           </Text>
         </View>
 
@@ -115,28 +118,7 @@ export function GymJoinWidget() {
             <ActivityIndicator size="large" color={ACCENT} />
           </View>
         ) : isError ? (
-          <View style={{ alignItems: 'center', gap: 16, paddingVertical: 48 }}>
-            <Text
-              style={{
-                color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
-                textAlign: 'center',
-              }}>
-              Не вдалося завантажити список залів
-            </Text>
-            <TouchableOpacity
-              onPress={() => refetch()}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 6,
-                padding: 12,
-                borderRadius: 12,
-                backgroundColor: ACCENT + '15',
-              }}>
-              <RefreshCw size={16} color={ACCENT} />
-              <Text style={{ color: ACCENT, fontWeight: '600' }}>Спробувати знову</Text>
-            </TouchableOpacity>
-          </View>
+          <QueryErrorPanel error={gymsQueryError ?? new Error('')} onRetry={() => void refetch()} />
         ) : gyms.length === 0 ? (
           <View style={{ alignItems: 'center', gap: 12, paddingVertical: 48 }}>
             <View
@@ -150,8 +132,8 @@ export function GymJoinWidget() {
               }}>
               <Dumbbell size={32} color={ACCENT} />
             </View>
-            <Text style={{ fontSize: 16, fontWeight: '600', color: isDark ? '#fff' : '#000' }}>
-              Залів не знайдено
+            <Text style={{ fontSize: 16, fontWeight: '600', color: colors.foreground }}>
+              {t('gym.noGyms')}
             </Text>
           </View>
         ) : (
@@ -172,16 +154,16 @@ export function GymJoinWidget() {
             marginTop: 8,
             padding: 16,
             borderRadius: 16,
-            backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+            backgroundColor: colors.muted,
             borderWidth: 1,
-            borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+            borderColor: colors.border,
             flexDirection: 'row',
             alignItems: 'flex-start',
             gap: 12,
           }}>
           <Users
             size={18}
-            color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'}
+            color={colors.mutedForeground}
             style={{ marginTop: 1 }}
           />
           <Text
@@ -189,9 +171,9 @@ export function GymJoinWidget() {
               flex: 1,
               fontSize: 13,
               lineHeight: 20,
-              color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
+              color: colors.mutedForeground,
             }}>
-            Якщо вашого залу немає у списку — попросіть адміна залу вас додати вручну
+            {t('gym.footerHint')}
           </Text>
         </View>
       </ScrollView>

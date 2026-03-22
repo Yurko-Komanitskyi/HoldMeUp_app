@@ -10,7 +10,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useColorScheme } from 'nativewind';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import { ArrowLeft, CheckCircle2, XCircle } from 'lucide-react-native';
 
 import { Text } from '@/shared/ui/text';
@@ -28,15 +28,22 @@ import { NotesSection } from '@/widgets/log-ascent/ui/sections/NotesSection';
 import { VideoSection } from '@/widgets/log-ascent/ui/sections/VideoSection';
 import { useStopwatch } from '@/features/stopwatch/model/useStopwatch';
 import { useToastStore } from '@/shared/ui/app-toast';
-import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
 
 export function LogAscentWidget() {
+  const { t } = useTranslation();
   const { routeId } = useLocalSearchParams<{ routeId: string }>();
   const router = useRouter();
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const colors = useThemeColor();
   const user = useUserStore((s) => s.currentUser);
-  const { data: route } = useRouteDetailsQuery(routeId ?? '');
+  const {
+    data: route,
+    isLoading: routeLoading,
+    isError: routeError,
+    error: routeQueryError,
+    refetch: refetchRoute,
+  } = useRouteDetailsQuery(routeId ?? '');
 
   const stopwatch = useStopwatch();
   const { reset: resetStopwatch } = stopwatch;
@@ -70,11 +77,11 @@ export function LogAscentWidget() {
     setVideoUrl,
   } = actions;
 
-  const cardBg = isDark ? '#1c1c1e' : '#fff';
-  const borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
-  const inputBg = isDark ? '#1c1c1e' : '#f2f2f7';
-  const inputColor = isDark ? '#fff' : '#000';
-  const placeholderColor = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)';
+  const cardBg = colors.card;
+  const borderColor = colors.border;
+  const inputBg = colors.input;
+  const inputColor = colors.foreground;
+  const placeholderColor = colors.mutedForeground;
 
   useFocusEffect(
     React.useCallback(() => {
@@ -84,10 +91,87 @@ export function LogAscentWidget() {
     }, [])
   );
 
+  if (!routeId) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', padding: 24 }}>
+        <Text style={{ textAlign: 'center', color: colors.mutedForeground }}>{t('logAscent.missingRoute')}</Text>
+      </View>
+    );
+  }
+
+  if (routeLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center' }}>
+        <SafeAreaView edges={['top']}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+            }}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              hitSlop={12}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: colors.secondary,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              <ArrowLeft size={18} color={colors.foreground} />
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 24 }} />
+      </View>
+    );
+  }
+
+  if (routeError || !route) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <SafeAreaView edges={['top']}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              gap: 12,
+            }}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              hitSlop={12}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: colors.secondary,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              <ArrowLeft size={18} color={colors.foreground} />
+            </TouchableOpacity>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: colors.foreground }}>
+              {t('logAscent.title')}
+            </Text>
+          </View>
+        </SafeAreaView>
+        <QueryErrorPanel
+          error={routeQueryError ?? new Error('')}
+          onRetry={() => void refetchRoute()}
+        />
+      </View>
+    );
+  }
+
   async function handleSubmit() {
     try {
       await submit();
-      toast.show('success', 'Пролаз успішно записано');
+      toast.show('success', t('logAscent.toastSuccess'));
       setTimeout(() => {
         reset();
         resetStopwatch();
@@ -101,7 +185,7 @@ export function LogAscentWidget() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDark ? '#000' : '#f2f2f7' }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <SafeAreaView edges={['top']}>
         <View
           style={{
@@ -118,15 +202,15 @@ export function LogAscentWidget() {
               width: 36,
               height: 36,
               borderRadius: 18,
-              backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.07)',
+              backgroundColor: colors.secondary,
               alignItems: 'center',
               justifyContent: 'center',
             }}>
-            <ArrowLeft size={18} color={isDark ? '#fff' : '#000'} />
+            <ArrowLeft size={18} color={colors.foreground} />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 18, fontWeight: '800', color: isDark ? '#fff' : '#000' }}>
-              Записати пролаз
+            <Text style={{ fontSize: 18, fontWeight: '800', color: colors.foreground }}>
+              {t('logAscent.title')}
             </Text>
           </View>
         </View>
@@ -149,7 +233,6 @@ export function LogAscentWidget() {
 
           <AscentTypeSection
             ascentType={ascentType}
-            isDark={isDark}
             cardBg={cardBg}
             borderColor={borderColor}
             onChange={setAscentType}
@@ -158,7 +241,6 @@ export function LogAscentWidget() {
           <ResultAttemptsSection
             success={success}
             attemptNumber={attemptNumber}
-            isDark={isDark}
             cardBg={cardBg}
             borderColor={borderColor}
             onChangeSuccess={setSuccess}
@@ -167,7 +249,6 @@ export function LogAscentWidget() {
 
           <FeelingSection
             feeling={feeling}
-            isDark={isDark}
             cardBg={cardBg}
             borderColor={borderColor}
             onChange={setFeeling}
@@ -209,7 +290,7 @@ export function LogAscentWidget() {
           bottom: 0,
           left: 0,
           right: 0,
-          backgroundColor: isDark ? '#000' : '#f2f2f7',
+          backgroundColor: colors.background,
           paddingHorizontal: 16,
           paddingTop: 12,
           paddingBottom: Platform.OS === 'ios' ? 36 : 20,
@@ -220,7 +301,7 @@ export function LogAscentWidget() {
           onPress={handleSubmit}
           disabled={isPending}
           style={{
-            backgroundColor: success ? '#22c55e' : '#ef4444',
+            backgroundColor: success ? colors.chart2 : colors.destructive,
             borderRadius: 18,
             paddingVertical: 16,
             alignItems: 'center',
@@ -229,16 +310,16 @@ export function LogAscentWidget() {
           }}
           activeOpacity={0.85}>
           {isPending ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={colors.destructiveForeground} />
           ) : (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               {success ? (
-                <CheckCircle2 size={20} color="#fff" />
+                <CheckCircle2 size={20} color={colors.destructiveForeground} />
               ) : (
-                <XCircle size={20} color="#fff" />
+                <XCircle size={20} color={colors.destructiveForeground} />
               )}
-              <Text style={{ color: '#fff', fontSize: 16, fontWeight: '800' }}>
-                {success ? 'Записати пролаз' : 'Записати спробу'}
+              <Text style={{ color: colors.destructiveForeground, fontSize: 16, fontWeight: '800' }}>
+                {success ? t('logAscent.saveAscent') : t('logAscent.saveAttempt')}
               </Text>
             </View>
           )}

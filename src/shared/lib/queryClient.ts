@@ -4,7 +4,7 @@ import type { ApiError } from '@/shared/api/axios';
 function shouldRetry(failureCount: number, error: unknown): boolean {
   const err = error as ApiError | undefined;
   if (err?.status === 401 || err?.status === 403) return false;
-  return failureCount < 2;
+  return failureCount < 1;
 }
 
 export const queryClient = new QueryClient({

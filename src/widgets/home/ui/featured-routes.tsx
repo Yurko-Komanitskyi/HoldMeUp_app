@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { View, ScrollView, TouchableOpacity, Pressable } from 'react-native';
 import { Plus } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 
 import { Text } from '@/shared/ui/text';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { resolveRouteColor, ACCENT } from '@/shared/config/palette';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import type { Route } from '@/entities/route/model/route';
 import { FeaturedRouteCard } from '@/entities/route/ui/featured-route-card';
 
@@ -19,8 +19,7 @@ interface FeaturedRoutesProps {
 export function FeaturedRoutes({ routes, isLoading }: FeaturedRoutesProps) {
   const { t } = useTranslation();
   const router = useRouter();
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const colors = useThemeColor();
 
   if (!isLoading && routes.length === 0) return null;
 
@@ -39,7 +38,7 @@ export function FeaturedRoutes({ routes, isLoading }: FeaturedRoutesProps) {
             fontSize: 13,
             fontWeight: '700',
             letterSpacing: 0.8,
-            color: 'rgba(128,128,128,0.6)',
+            color: colors.mutedForeground,
           }}>
           {t('home.featuredRoutes').toUpperCase()}
         </Text>
@@ -72,14 +71,14 @@ export function FeaturedRoutes({ routes, isLoading }: FeaturedRoutesProps) {
               borderRadius: 20,
               borderWidth: 1.5,
               borderStyle: 'dashed',
-              borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)',
+              borderColor: colors.border,
               alignItems: 'center',
               justifyContent: 'center',
               gap: 6,
             }}
             activeOpacity={0.7}>
-            <Plus size={22} color="rgba(128,128,128,0.5)" />
-            <Text style={{ fontSize: 12, color: 'rgba(128,128,128,0.5)', fontWeight: '600' }}>
+            <Plus size={22} color={colors.mutedForeground} />
+            <Text style={{ fontSize: 12, color: colors.mutedForeground, fontWeight: '600' }}>
               {t('home.allRoutes')}
             </Text>
           </TouchableOpacity>

@@ -4,8 +4,10 @@ import { Zap } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 
 import { Text } from '@/shared/ui/text';
+import { useTranslation } from 'react-i18next';
 
 export function RouteDetailTip() {
+  const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -26,7 +28,7 @@ export function RouteDetailTip() {
       <View style={{ flex: 1 }}>
         <Text
           style={{ fontSize: 13, fontWeight: '700', color: isDark ? '#c8ddf0' : '#2a5f80' }}>
-          Порада
+          {t('routeDetail.tipTitle')}
         </Text>
         <Text
           style={{
@@ -35,7 +37,7 @@ export function RouteDetailTip() {
             lineHeight: 20,
             color: isDark ? 'rgba(200,221,240,0.7)' : 'rgba(42,95,128,0.75)',
           }}>
-          Зафіксуй свій пролаз одразу після спроби — так точніше відображається прогрес.
+          {t('routeDetail.tipBody')}
         </Text>
       </View>
     </View>

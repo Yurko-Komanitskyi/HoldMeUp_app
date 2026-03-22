@@ -8,6 +8,7 @@ import {
   deleteAscent,
   ascentKeys,
 } from '../api/ascentApi';
+import { statsKeys } from '@/entities/stats/api/statsApi';
 import { AscentType } from './ascent';
 import { useInfiniteListQuery } from '@/shared/hooks/useInfiniteListQuery';
 
@@ -43,7 +44,10 @@ export function useAscentMutations() {
 
   const createAscentMutation = useMutation({
     mutationFn: createAscent,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ascentKeys.lists() }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ascentKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: statsKeys.all });
+    },
   });
 
   const updateAscentMutation = useMutation({
@@ -51,12 +55,17 @@ export function useAscentMutations() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ascentKeys.detail(data.id) });
       queryClient.invalidateQueries({ queryKey: ascentKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: statsKeys.all });
     },
   });
 
   const deleteAscentMutation = useMutation({
     mutationFn: deleteAscent,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ascentKeys.lists() }),
+    onSuccess: (_, id) => {
+      queryClient.removeQueries({ queryKey: ascentKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: ascentKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: statsKeys.all });
+    },
   });
 
   return { createAscentMutation, updateAscentMutation, deleteAscentMutation };

@@ -17,14 +17,10 @@ import { Input } from '@/shared/ui/input';
 import { Button } from '@/shared/ui/button';
 import { ServerErrorBanner } from '@/shared/ui/server-error-banner';
 import { ACCENT } from '@/shared/config/palette';
+import { THEME } from '@/shared/config/tokens';
 import { parseApiError } from '@/shared/lib/api-error';
 import { useAuth } from '@/entities/auth/model/authHooks';
-
-const forgotSchema = z.object({
-  email: z.string().min(1, 'Обовʼязкове поле').email('Введіть коректний email'),
-});
-
-type ForgotValues = z.infer<typeof forgotSchema>;
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   visible: boolean;
@@ -32,6 +28,16 @@ interface Props {
 }
 
 export function ForgotPasswordModal({ visible, onClose }: Props) {
+  const { t } = useTranslation();
+  const forgotSchema = React.useMemo(
+    () =>
+      z.object({
+        email: z.string().min(1, t('validation.required')).email(t('validation.emailInvalid')),
+      }),
+    [t]
+  );
+  type ForgotValues = z.infer<typeof forgotSchema>;
+
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const iconColor = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)';
@@ -100,8 +106,12 @@ export function ForgotPasswordModal({ visible, onClose }: Props) {
               justifyContent: 'space-between',
               marginBottom: 20,
             }}>
-            <Text className="text-lg font-bold text-foreground">Відновити пароль</Text>
-            <TouchableOpacity onPress={handleClose} hitSlop={8}>
+            <Text className="text-lg font-bold text-foreground">{t('forgotPassword.title')}</Text>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t('common.close')}
+              onPress={handleClose}
+              hitSlop={8}>
               <X size={20} color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)'} />
             </TouchableOpacity>
           </View>
@@ -120,17 +130,15 @@ export function ForgotPasswordModal({ visible, onClose }: Props) {
                 <MailCheck size={28} color={ACCENT} />
               </View>
               <Text className="text-center text-sm text-muted-foreground">
-                Лист з інструкціями надіслано. Перевір пошту.
+                {t('forgotPassword.sent')}
               </Text>
               <Button onPress={handleClose} className="mt-2 h-11 w-full">
-                <Text className="font-semibold">Зрозуміло</Text>
+                <Text className="font-semibold">{t('common.understood')}</Text>
               </Button>
             </View>
           ) : (
             <View style={{ gap: 16 }}>
-              <Text className="text-sm text-muted-foreground">
-                Введи email від свого акаунту — ми надішлемо посилання для відновлення пароля.
-              </Text>
+              <Text className="text-sm text-muted-foreground">{t('forgotPassword.hint')}</Text>
               <View style={{ gap: 8 }}>
                 <Controller
                   control={control}
@@ -154,7 +162,7 @@ export function ForgotPasswordModal({ visible, onClose }: Props) {
                         onBlur={onBlur}
                         autoCapitalize="none"
                         keyboardType="email-address"
-                        placeholder="you@example.com"
+                        placeholder={t('auth.placeholderEmail')}
                         style={{ paddingLeft: 40 }}
                       />
                     </View>
@@ -167,9 +175,11 @@ export function ForgotPasswordModal({ visible, onClose }: Props) {
               <ServerErrorBanner message={error} />
               <Button onPress={handleSubmit(onSubmit)} disabled={isSubmitting} className="h-11">
                 {isSubmitting ? (
-                  <ActivityIndicator color={isDark ? '#0a0a0f' : '#fff'} />
+                  <ActivityIndicator
+                    color={isDark ? THEME.dark.background : THEME.light.destructiveForeground}
+                  />
                 ) : (
-                  <Text className="font-semibold">Надіслати лист</Text>
+                  <Text className="font-semibold">{t('forgotPassword.sendLetter')}</Text>
                 )}
               </Button>
             </View>

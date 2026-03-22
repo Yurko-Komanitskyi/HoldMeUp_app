@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { View, TouchableOpacity, Modal } from 'react-native';
 import { Timer, Play, Pause, RotateCcw, Pencil, ChevronUp, ChevronDown } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
-
 import { Text } from '@/shared/ui/text';
 import { type StopwatchState, type StopwatchActions, formatStopwatch } from '@/features/stopwatch/model/useStopwatch';
 import { ACCENT } from '@/shared/config/palette';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
+import { useTranslation } from 'react-i18next';
 
 type StopwatchCardProps = StopwatchState & StopwatchActions;
 
@@ -18,12 +18,13 @@ export function StopwatchCard({
   reset,
   setSeconds,
 }: StopwatchCardProps) {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const cardBg     = isDark ? '#1c1c1e' : '#fff';
-  const borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+  const { t } = useTranslation();
+  const colors = useThemeColor();
+  const cardBg = colors.card;
+  const borderColor = colors.border;
 
-  const timeColor = running ? '#22c55e' : saved ? ACCENT : (isDark ? '#fff' : '#000');
+  const timeColor = running ? colors.chart2 : saved ? ACCENT : colors.foreground;
+  const onAccentIcon = colors.destructiveForeground;
 
   const [manualOpen, setManualOpen] = React.useState(false);
   const [manualMinutes, setManualMinutes] = React.useState(0);
@@ -58,9 +59,15 @@ export function StopwatchCard({
       }}>
       <View style={{ flex: 1 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 2 }}>
-          <Timer size={11} color="rgba(128,128,128,0.55)" />
-          <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 1.1, color: 'rgba(128,128,128,0.55)' }}>
-            СЕКУНДОМІР
+          <Timer size={11} color={colors.mutedForeground} />
+          <Text
+            style={{
+              fontSize: 10,
+              fontWeight: '700',
+              letterSpacing: 1.1,
+              color: colors.mutedForeground,
+            }}>
+            {t('stopwatch.label')}
           </Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
@@ -77,8 +84,8 @@ export function StopwatchCard({
           </Text>
         </View>
         {saved && seconds > 0 && (
-          <Text style={{ fontSize: 11, color: '#22c55e', fontWeight: '600', marginTop: 2 }}>
-            ✓ Зафіксовано
+          <Text style={{ fontSize: 11, color: colors.chart2, fontWeight: '600', marginTop: 2 }}>
+            {t('stopwatch.saved')}
           </Text>
         )}
       </View>
@@ -92,11 +99,11 @@ export function StopwatchCard({
                 width: 52,
                 height: 52,
                 borderRadius: 26,
-                backgroundColor: '#22c55e',
+                backgroundColor: colors.chart2,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}>
-              <Play size={22} color="#fff" />
+              <Play size={22} color={onAccentIcon} />
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
@@ -105,11 +112,11 @@ export function StopwatchCard({
                 width: 52,
                 height: 52,
                 borderRadius: 26,
-                backgroundColor: '#f97316',
+                backgroundColor: colors.chart5,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}>
-              <Pause size={22} color="#fff" />
+              <Pause size={22} color={onAccentIcon} />
             </TouchableOpacity>
           )}
           <TouchableOpacity
@@ -120,11 +127,11 @@ export function StopwatchCard({
               borderRadius: 26,
               borderWidth: 1,
               borderColor,
-              backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
+              backgroundColor: colors.muted,
               alignItems: 'center',
               justifyContent: 'center',
             }}>
-            <RotateCcw size={18} color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)'} />
+            <RotateCcw size={18} color={colors.mutedForeground} />
           </TouchableOpacity>
         </View>
 
@@ -135,19 +142,19 @@ export function StopwatchCard({
             paddingHorizontal: 10,
             paddingVertical: 6,
             borderRadius: 999,
-            backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+            backgroundColor: colors.muted,
             flexDirection: 'row',
             alignItems: 'center',
             gap: 4,
           }}>
-          <Pencil size={12} color={isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.55)'} />
+          <Pencil size={12} color={colors.mutedForeground} />
           <Text
             style={{
               fontSize: 11,
-              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.55)',
+              color: colors.mutedForeground,
               fontWeight: '600',
             }}>
-            Вказати час
+            {t('stopwatch.setTime')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -165,14 +172,14 @@ export function StopwatchCard({
               width: '80%',
               borderRadius: 18,
               padding: 18,
-              backgroundColor: isDark ? '#18181b' : '#f9fafb',
+              backgroundColor: colors.card,
               gap: 14,
             }}>
-            <Text style={{ fontSize: 14, fontWeight: '600', marginBottom: 4, color: isDark ? '#fff' : '#000' }}>
-              Вкажи час спроби
+            <Text style={{ fontSize: 14, fontWeight: '600', marginBottom: 4, color: colors.foreground }}>
+              {t('stopwatch.modalTitle')}
             </Text>
-            <Text style={{ fontSize: 12, color: 'rgba(148,163,184,1)' }}>
-              Обери хвилини та секунди, як у годиннику.
+            <Text style={{ fontSize: 12, color: colors.mutedForeground }}>
+              {t('stopwatch.modalHint')}
             </Text>
 
             <View
@@ -192,15 +199,15 @@ export function StopwatchCard({
                     borderRadius: 18,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.04)',
+                    backgroundColor: colors.muted,
                   }}>
-                  <ChevronUp size={18} color={isDark ? '#fff' : '#000'} />
+                  <ChevronUp size={18} color={colors.foreground} />
                 </TouchableOpacity>
                 <Text
                   style={{
                     fontSize: 28,
                     fontVariant: ['tabular-nums'],
-                    color: isDark ? '#fff' : '#000',
+                    color: colors.foreground,
                   }}>
                   {String(manualMinutes).padStart(2, '0')}
                 </Text>
@@ -212,12 +219,12 @@ export function StopwatchCard({
                     borderRadius: 18,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.04)',
+                    backgroundColor: colors.muted,
                   }}>
-                  <ChevronDown size={18} color={isDark ? '#fff' : '#000'} />
+                  <ChevronDown size={18} color={colors.foreground} />
                 </TouchableOpacity>
-                <Text style={{ fontSize: 11, color: 'rgba(148,163,184,1)', marginTop: 2 }}>
-                  хв
+                <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 2 }}>
+                  {t('common.minuteAbbr')}
                 </Text>
               </View>
 
@@ -231,15 +238,15 @@ export function StopwatchCard({
                     borderRadius: 18,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.04)',
+                    backgroundColor: colors.muted,
                   }}>
-                  <ChevronUp size={18} color={isDark ? '#fff' : '#000'} />
+                  <ChevronUp size={18} color={colors.foreground} />
                 </TouchableOpacity>
                 <Text
                   style={{
                     fontSize: 28,
                     fontVariant: ['tabular-nums'],
-                    color: isDark ? '#fff' : '#000',
+                    color: colors.foreground,
                   }}>
                   {String(manualSeconds).padStart(2, '0')}
                 </Text>
@@ -251,12 +258,12 @@ export function StopwatchCard({
                     borderRadius: 18,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.04)',
+                    backgroundColor: colors.muted,
                   }}>
-                  <ChevronDown size={18} color={isDark ? '#fff' : '#000'} />
+                  <ChevronDown size={18} color={colors.foreground} />
                 </TouchableOpacity>
-                <Text style={{ fontSize: 11, color: 'rgba(148,163,184,1)', marginTop: 2 }}>
-                  с
+                <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 2 }}>
+                  {t('common.secondAbbr')}
                 </Text>
               </View>
             </View>
@@ -275,8 +282,8 @@ export function StopwatchCard({
                   paddingVertical: 8,
                   borderRadius: 999,
                 }}>
-                <Text style={{ fontSize: 13, color: 'rgba(148,163,184,1)', fontWeight: '500' }}>
-                  Скасувати
+                <Text style={{ fontSize: 13, color: colors.mutedForeground, fontWeight: '500' }}>
+                  {t('common.cancel')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -287,7 +294,9 @@ export function StopwatchCard({
                   borderRadius: 999,
                   backgroundColor: ACCENT,
                 }}>
-                <Text style={{ fontSize: 13, color: '#fff', fontWeight: '600' }}>Зберегти</Text>
+                <Text style={{ fontSize: 13, color: colors.destructiveForeground, fontWeight: '600' }}>
+                  {t('common.save')}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

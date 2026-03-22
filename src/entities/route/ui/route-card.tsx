@@ -1,135 +1,174 @@
 import * as React from 'react';
-import { View, Pressable } from 'react-native';
-import { ChevronRight } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
-import { useColorScheme } from 'nativewind';
+import { View, Text, Pressable, type ColorValue } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MapPin, Mountain, TrendingUp, Zap } from 'lucide-react-native';
 
-import { Text } from '@/shared/ui/text';
-import { resolveRouteColor } from '@/shared/config/palette';
-import { STYLE_LABELS } from '@/entities/route/lib/constants';
+import { cn } from '@/shared/lib/utils';
 import type { Route } from '@/entities/route/model/route';
+import { useRouter } from 'expo-router';
+import { Icon } from '@/shared/ui/icon';
 
-const STATUS_CONFIG = {
-  archived: { label: 'Архів',    color: '#9ca3af', bg: 'rgba(107,114,128,0.14)' },
-  draft:    { label: 'Чернетка', color: '#f59e0b', bg: 'rgba(245,158,11,0.14)'  },
-} as const;
+import { formatRouteSetterName } from '@/entities/route/lib/format-route-setter';
+import { gradeColorForRouteGrade } from '@/entities/route/lib/route-grade';
+import {
+  routeAccentGradientStops,
+  routeCardGlyphColor,
+} from '@/entities/route/lib/route-accent-visual';
+import {
+  getRouteStyleIcon,
+  getRouteStyleLabel,
+  normalizeRouteStyleKey,
+} from '@/entities/route/lib/route-style';
+import { RouteCardRatingStars } from '@/entities/route/ui/route-card-rating-stars';
+import { useTranslation } from 'react-i18next';
+
+function MetaSeparator() {
+  return <View className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground/35" />;
+}
 
 interface RouteCardProps {
   route: Route;
+  className?: string;
 }
 
-export function RouteCard({ route }: RouteCardProps) {
+export function RouteCard({ route, className }: RouteCardProps) {
+  const { t } = useTranslation();
+  const styleLabel = getRouteStyleLabel(route.style);
+  const styleKey = route.style?.trim() ? normalizeRouteStyleKey(route.style) : null;
+  const StyleGlyph = styleKey ? getRouteStyleIcon(styleKey) : Mountain;
+
+  const holdsToShow = route.holdTypes?.slice(0, 3) ?? [];
+  const hasMoreHolds = (route.holdTypes?.length ?? 0) > 3;
   const router = useRouter();
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
 
-  const hex       = resolveRouteColor(route.color);
-  const isWhite   = route.color?.toLowerCase() === 'white';
-  const gradeText = isWhite ? '#374151' : '#ffffff';
+  const accentStops = routeAccentGradientStops(route.color) as readonly [
+    ColorValue,
+    ColorValue,
+    ...ColorValue[],
+  ];
+  const glyphColor = routeCardGlyphColor(route.color);
+  const gradeTint = gradeColorForRouteGrade(route.grade);
 
-  const styleLabel = route.style
-    ? (STYLE_LABELS[route.style.toLowerCase()] ?? route.style)
-    : null;
-
-  const setterName =
-    route.setter?.firstName || route.setter?.lastName
-      ? `${route.setter.firstName ?? ''} ${route.setter.lastName ?? ''}`.trim()
-      : null;
-
-  const statusKey = route.status?.toLowerCase() as keyof typeof STATUS_CONFIG;
-  const nonActiveStatus = STATUS_CONFIG[statusKey];
-
-  const meta = [route.sector?.name, styleLabel].filter(Boolean).join(' · ');
-
-  const cardBg    = isDark ? '#0f0f14' : '#ffffff';
-  const borderCol = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
-  const nameCol   = isDark ? '#ffffff' : '#0a0a0a';
-  const metaCol   = isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.5)';
-  const subtleCol = isDark ? 'rgba(255,255,255,0.32)' : 'rgba(0,0,0,0.32)';
+  const handlePress = React.useCallback(() => {
+    router.push(`/route/${route.id}`);
+  }, [router, route.id]);
 
   return (
     <Pressable
-      onPress={() => router.push(`/route/${route.id}` as never)}
-      android_ripple={{ color: 'rgba(0,0,0,0.05)' }}
-      style={({ pressed }) => ({
-        flexDirection: 'row',
-        borderRadius: 18,
-        overflow: 'hidden',
-        borderWidth: 1,
-        borderColor: borderCol,
-        backgroundColor: cardBg,
-        opacity: pressed ? 0.85 : 1,
-      })}>
+      onPress={handlePress}
+      className={cn(
+        'overflow-hidden rounded-2xl border border-border bg-card active:scale-[0.98]',
+        className
+      )}
+      style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}>
+      <LinearGradient
+        colors={accentStops}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={{ height: 6, width: '100%' }}
+      />
 
-      {/* Color stripe */}
-      <View style={{ width: 4, backgroundColor: hex, opacity: isWhite ? 0.5 : 1 }} />
-
-      {/* Grade badge */}
-      <View style={{ paddingLeft: 14, paddingVertical: 14, justifyContent: 'center' }}>
-        <View style={{
-          width: 46, height: 46, borderRadius: 23,
-          backgroundColor: hex,
-          alignItems: 'center', justifyContent: 'center',
-          borderWidth: isWhite ? 1.5 : 0,
-          borderColor: '#d1d5db',
-        }}>
-          <Text style={{
-            fontSize: 11,
-            fontWeight: '900',
-            color: gradeText,
-            letterSpacing: -0.3,
-            textShadowColor: 'rgba(0,0,0,0.25)',
-            textShadowOffset: { width: 0, height: 1 },
-            textShadowRadius: 2,
+      <View className="flex-row gap-3 p-4">
+        <LinearGradient
+          colors={accentStops}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: 16,
+            alignItems: 'center',
+            justifyContent: 'center',
           }}>
-            {route.grade}
-          </Text>
+          <Icon as={StyleGlyph} size={28} color={glyphColor} />
+        </LinearGradient>
+
+        <View className="min-w-0 flex-1">
+          <View className="flex-row items-start gap-2">
+            <View className="min-w-0 flex-1 gap-1">
+              <Text className="text-base font-semibold text-foreground" numberOfLines={2}>
+                {route.name}
+              </Text>
+
+              <View className="flex-row flex-wrap items-center gap-x-2 gap-y-1">
+                {route.sector && (
+                  <View className="max-w-[100%] flex-row items-center gap-1">
+                    <Icon as={MapPin} size={12} className="shrink-0 text-muted-foreground" />
+                    <Text className="text-xs text-muted-foreground" numberOfLines={1}>
+                      {route.sector.name}
+                    </Text>
+                  </View>
+                )}
+                {styleLabel && (
+                  <>
+                    {route.sector ? <MetaSeparator /> : null}
+                    <Text className="text-xs text-muted-foreground">{styleLabel}</Text>
+                  </>
+                )}
+                {route.height != null && (
+                  <>
+                    {(route.sector || styleLabel) && <MetaSeparator />}
+                    <Text className="text-xs text-muted-foreground">{route.height}m</Text>
+                  </>
+                )}
+              </View>
+
+              {route.setter && (
+                <Text className="text-xs text-muted-foreground">
+                  {t('routeCard.setBy', { name: formatRouteSetterName(route.setter) })}
+                </Text>
+              )}
+
+              {route.communityRating != null && (
+                <View className="pt-0.5">
+                  <RouteCardRatingStars rating={route.communityRating} />
+                </View>
+              )}
+            </View>
+
+            <View className="shrink-0 items-end gap-1.5">
+              <View
+                className="rounded-full px-3 py-1"
+                style={{ backgroundColor: `${gradeTint}26` }}>
+                <Text className="text-sm font-bold" style={{ color: gradeTint }}>
+                  {route.grade}
+                </Text>
+              </View>
+              {route.ascentCount != null && (
+                <View className="flex-row items-center gap-1">
+                  <Icon as={TrendingUp} size={13} className="shrink-0 text-muted-foreground" />
+                  <Text className="text-xs font-medium text-muted-foreground">{route.ascentCount}</Text>
+                </View>
+              )}
+              {route.flashCount != null && (
+                <View className="flex-row items-center gap-1">
+                  <Icon as={Zap} size={13} className="shrink-0 text-muted-foreground" />
+                  <Text className="text-xs font-medium text-muted-foreground">{route.flashCount}</Text>
+                </View>
+              )}
+            </View>
+          </View>
         </View>
       </View>
 
-      {/* Main content */}
-      <View style={{ flex: 1, paddingHorizontal: 12, paddingVertical: 13, justifyContent: 'center', gap: 4 }}>
-
-        {/* Name */}
-        <Text style={{ fontSize: 15, fontWeight: '700', color: nameCol, letterSpacing: -0.2 }} numberOfLines={1}>
-          {route.name}
-        </Text>
-
-        {/* Meta: sector · style */}
-        {meta ? (
-          <Text style={{ fontSize: 12, color: metaCol }} numberOfLines={1}>
-            {meta}
-          </Text>
-        ) : null}
-
-        {/* Bottom row: setter, status badge, ascent count */}
-        {(setterName || nonActiveStatus || (route.ascentCount != null && route.ascentCount > 0)) ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 1 }}>
-            {setterName && (
-              <Text style={{ fontSize: 11, color: subtleCol, flexShrink: 1 }} numberOfLines={1}>
-                {setterName}
+      {holdsToShow.length > 0 && (
+        <View
+          className="flex-row flex-wrap gap-1.5 px-4 pt-0.5"
+          style={{ paddingBottom: 10 }}>
+          {holdsToShow.map((hold) => (
+            <View key={hold} className="rounded-md bg-muted px-2 py-0.5">
+              <Text className="text-xs capitalize text-muted-foreground">{hold}</Text>
+            </View>
+          ))}
+          {hasMoreHolds && (
+            <View className="rounded-md bg-muted px-2 py-0.5">
+              <Text className="text-xs text-muted-foreground">
+                +{(route.holdTypes?.length ?? 0) - 3}
               </Text>
-            )}
-            {nonActiveStatus && (
-              <View style={{ paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, backgroundColor: nonActiveStatus.bg }}>
-                <Text style={{ fontSize: 10, fontWeight: '700', color: nonActiveStatus.color }}>
-                  {nonActiveStatus.label}
-                </Text>
-              </View>
-            )}
-            {route.ascentCount != null && route.ascentCount > 0 && (
-              <Text style={{ fontSize: 11, color: subtleCol }}>
-                ↑ {route.ascentCount}
-              </Text>
-            )}
-          </View>
-        ) : null}
-      </View>
-
-      {/* Chevron */}
-      <View style={{ paddingRight: 14, justifyContent: 'center' }}>
-        <ChevronRight size={15} color={subtleCol} />
-      </View>
+            </View>
+          )}
+        </View>
+      )}
     </Pressable>
   );
 }

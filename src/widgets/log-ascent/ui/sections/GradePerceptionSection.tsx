@@ -4,7 +4,9 @@ import { View, ScrollView, TouchableOpacity } from 'react-native';
 import { Text } from '@/shared/ui/text';
 import { SectionLabel } from '@/shared/ui/section-label';
 import { ACCENT } from '@/shared/config/palette';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import { GRADES } from '@/entities/route/lib/constants';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   gradePerception: string | null;
@@ -19,6 +21,9 @@ export function GradePerceptionSection({
   borderColor,
   onChange,
 }: Props) {
+  const { t } = useTranslation();
+  const colors = useThemeColor();
+
   return (
     <View
       style={{
@@ -30,11 +35,11 @@ export function GradePerceptionSection({
       }}>
       <SectionLabel>
         {gradePerception
-          ? `Складність по відчуттю — ${gradePerception}`
-          : 'Складність по відчуттю'}
+          ? t('logAscent.gradeFeelWith', { grade: gradePerception })
+          : t('logAscent.gradeFeel')}
       </SectionLabel>
-      <Text style={{ fontSize: 12, color: 'rgba(128,128,128,0.6)', marginBottom: 10 }}>
-        Який грейд цей маршрут заслуговує на твою думку?
+      <Text style={{ fontSize: 12, color: colors.mutedForeground, marginBottom: 10 }}>
+        {t('logAscent.gradeFeelHint')}
       </Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -59,7 +64,7 @@ export function GradePerceptionSection({
                   style={{
                     fontSize: 13,
                     fontWeight: '700',
-                    color: isActive ? ACCENT : 'rgba(128,128,128,0.7)',
+                    color: isActive ? ACCENT : colors.mutedForeground,
                   }}>
                   {g}
                 </Text>

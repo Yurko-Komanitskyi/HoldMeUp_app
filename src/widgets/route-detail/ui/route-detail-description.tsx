@@ -4,12 +4,14 @@ import { Info } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 
 import { Text } from '@/shared/ui/text';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   description: string;
 };
 
 export function RouteDetailDescription({ description }: Props) {
+  const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const sectionTitleColor = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.45)';
@@ -31,7 +33,7 @@ export function RouteDetailDescription({ description }: Props) {
         <Info size={14} color={sectionTitleColor} />
         <Text
           style={{ fontSize: 13, fontWeight: '700', color: isDark ? '#e0e0e8' : '#1a1a2a' }}>
-          Опис
+          {t('routeDetail.descriptionTitle')}
         </Text>
       </View>
       <Text

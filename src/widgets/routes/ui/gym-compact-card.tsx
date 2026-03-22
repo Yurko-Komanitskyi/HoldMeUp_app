@@ -6,6 +6,7 @@ import { useColorScheme } from 'nativewind';
 import { Text } from '@/shared/ui/text';
 import { ACCENT } from '@/shared/config/palette';
 import type { Gym } from '@/entities/gym/model/gym';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   gym: Gym;
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function GymCompactCard({ gym, onJoin, joining, joined }: Props) {
+  const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -80,11 +82,11 @@ export function GymCompactCard({ gym, onJoin, joining, joined }: Props) {
         ) : joined ? (
           <>
             <CheckCircle size={14} color={ACCENT} />
-            <Text style={{ fontSize: 13, fontWeight: '700', color: ACCENT }}>Приєднались!</Text>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: ACCENT }}>{t('gym.joinedCta')}</Text>
           </>
         ) : (
           <>
-            <Text style={{ fontSize: 13, fontWeight: '700', color: '#fff' }}>Приєднатись</Text>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: '#fff' }}>{t('gym.joinCta')}</Text>
             <ChevronRight size={14} color="rgba(255,255,255,0.9)" />
           </>
         )}

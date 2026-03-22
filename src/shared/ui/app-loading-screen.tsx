@@ -13,6 +13,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Path, Circle, G } from 'react-native-svg';
 
+import { THEME } from '@/shared/config/tokens';
+import { useTranslation } from 'react-i18next';
+
 const { width } = Dimensions.get('window');
 
 function MountainIcon() {
@@ -133,9 +136,10 @@ function IconWrapper() {
 }
 
 export function AppLoadingScreen() {
+  const { t } = useTranslation();
   return (
     <LinearGradient
-      colors={['#0a0a0f', '#0f0f1a', '#0a0a0f']}
+      colors={[THEME.dark.background, THEME.dark.secondary, THEME.dark.background]}
       locations={[0, 0.5, 1]}
       style={styles.container}>
       <Animated.View entering={FadeIn.duration(600)} style={styles.content}>
@@ -146,10 +150,8 @@ export function AppLoadingScreen() {
         </View>
 
         <View style={styles.textContainer}>
-          <Animated.Text style={styles.title}>HoldMeUp</Animated.Text>
-          <Animated.Text style={styles.subtitle}>
-            Логи підйомів, батли та статистика
-          </Animated.Text>
+          <Animated.Text style={styles.title}>{t('common.brandName')}</Animated.Text>
+          <Animated.Text style={styles.subtitle}>{t('appLoading.tagline')}</Animated.Text>
         </View>
 
         <LoadingDots />

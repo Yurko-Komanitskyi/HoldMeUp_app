@@ -13,18 +13,25 @@ import { Button } from '@/shared/ui/button';
 import { PasswordInput } from '@/shared/ui/password-input';
 import { ServerErrorBanner } from '@/shared/ui/server-error-banner';
 import { ACCENT } from '@/shared/config/palette';
+import { THEME } from '@/shared/config/tokens';
 import { parseApiError } from '@/shared/lib/api-error';
 import { useAuth } from '@/entities/auth/model/authHooks';
 import { ForgotPasswordModal } from '@/features/auth/forgot-password/ui/forgot-password-modal';
 import { useMyGymMembershipsQuery } from '@/entities/gym-member/model/gymMemberHooks';
-
-const loginSchema = z.object({
-  email: z.string().min(1, 'Обовʼязкове поле').email('Введіть коректний email'),
-  password: z.string().min(1, 'Обовʼязкове поле').min(6, 'Мінімум 6 символів'),
-});
-type LoginValues = z.infer<typeof loginSchema>;
+import { useTranslation } from 'react-i18next';
 
 export function LoginWidget() {
+  const { t } = useTranslation();
+  const loginSchema = React.useMemo(
+    () =>
+      z.object({
+        email: z.string().min(1, t('validation.required')).email(t('validation.emailInvalid')),
+        password: z.string().min(1, t('validation.required')).min(6, t('validation.min6')),
+      }),
+    [t]
+  );
+  type LoginValues = z.infer<typeof loginSchema>;
+
   const router = useRouter();
   const { login } = useAuth();
   const myMembershipsQuery = useMyGymMembershipsQuery();
@@ -85,15 +92,13 @@ export function LoginWidget() {
             paddingTop: 80,
           }}>
           <View style={{ marginBottom: 40 }}>
-            <Text className="mb-2 text-4xl font-bold tracking-tight">Привіт знову</Text>
-            <Text className="text-base text-muted-foreground">
-              Введи email та пароль, щоб продовжити
-            </Text>
+            <Text className="mb-2 text-4xl font-bold tracking-tight">{t('auth.loginTitle')}</Text>
+            <Text className="text-base text-muted-foreground">{t('auth.loginSubtitle')}</Text>
           </View>
 
           <View style={{ gap: 20 }}>
             <View style={{ gap: 8 }}>
-              <Text className="text-sm font-medium text-foreground">Email</Text>
+              <Text className="text-sm font-medium text-foreground">{t('auth.email')}</Text>
               <Controller
                 control={control}
                 name="email"
@@ -117,7 +122,7 @@ export function LoginWidget() {
                       autoCapitalize="none"
                       autoComplete="email"
                       keyboardType="email-address"
-                      placeholder="you@example.com"
+                      placeholder={t('auth.placeholderEmail')}
                       style={{ paddingLeft: 40 }}
                     />
                   </View>
@@ -135,10 +140,10 @@ export function LoginWidget() {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                 }}>
-                <Text className="text-sm font-medium text-foreground">Пароль</Text>
+                <Text className="text-sm font-medium text-foreground">{t('auth.password')}</Text>
                 <TouchableOpacity onPress={() => setShowForgot(true)} hitSlop={8}>
                   <Text className="text-sm" style={{ color: ACCENT }}>
-                    Забули пароль?
+                    {t('auth.forgotPassword')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -151,7 +156,7 @@ export function LoginWidget() {
                     onChangeText={onChange}
                     onBlur={onBlur}
                     autoComplete="password"
-                    placeholder="••••••••"
+                    placeholder={t('auth.placeholderPassword')}
                   />
                 )}
               />
@@ -164,9 +169,11 @@ export function LoginWidget() {
 
             <Button onPress={handleSubmit(onSubmit)} disabled={isSubmitting} className="mt-1 h-12">
               {isSubmitting ? (
-                <ActivityIndicator color={isDark ? '#0a0a0f' : '#fff'} />
+                <ActivityIndicator
+                  color={isDark ? THEME.dark.background : THEME.light.destructiveForeground}
+                />
               ) : (
-                <Text className="font-semibold">Увійти</Text>
+                <Text className="font-semibold">{t('auth.signIn')}</Text>
               )}
             </Button>
           </View>
@@ -179,10 +186,10 @@ export function LoginWidget() {
               justifyContent: 'center',
               gap: 4,
             }}>
-            <Text className="text-sm text-muted-foreground">Ще немає акаунту?</Text>
+            <Text className="text-sm text-muted-foreground">{t('auth.noAccount')}</Text>
             <TouchableOpacity onPress={() => router.push('/auth/register')}>
               <Text className="text-sm font-semibold" style={{ color: ACCENT }}>
-                Зареєструватись
+                {t('auth.signUpLink')}
               </Text>
             </TouchableOpacity>
           </View>

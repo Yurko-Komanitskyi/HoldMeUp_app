@@ -12,13 +12,25 @@ import { Route } from '@/entities/route/model/route';
 import { ACCENT } from '@/shared/config/palette';
 import { Plus } from 'lucide-react-native';
 import { AscentFilters } from '@/entities/ascent/model/ascentHooks';
+import type { AscentStatsResponse } from '@/entities/stats/api/types';
 import { AscentFilter } from './ascent-filter';
+import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
 
 interface AscentHeaderProps {
   setFilters: (filters: AscentFilters) => void;
+  statsResponse: AscentStatsResponse | undefined;
+  statsLoading?: boolean;
+  statsQueryError?: unknown;
+  onRetryStats?: () => void;
 }
 
-export function AscentHeader({ setFilters }: AscentHeaderProps) {
+export function AscentHeader({
+  setFilters,
+  statsResponse,
+  statsLoading,
+  statsQueryError,
+  onRetryStats,
+}: AscentHeaderProps) {
   const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -28,7 +40,12 @@ export function AscentHeader({ setFilters }: AscentHeaderProps) {
 
   const currentGymId = useGymMemberStore((s) => s.currentGymId);
 
-  const { data: routes = [] } = useRoutesQuery({
+  const {
+    items: routes = [],
+    isError: routesPickerError,
+    error: routesPickerQueryError,
+    refetch: refetchRoutesForPicker,
+  } = useRoutesQuery({
     gymId: currentGymId ?? undefined,
     status: ['ACTIVE'],
   });
@@ -85,7 +102,20 @@ export function AscentHeader({ setFilters }: AscentHeaderProps) {
           </TouchableOpacity>
         </View>
 
-        <AscentsStats ascents={[]} />
+        {routesPickerError ? (
+          <QueryErrorPanel
+            variant="compact"
+            error={routesPickerQueryError ?? new Error('')}
+            onRetry={() => void refetchRoutesForPicker()}
+          />
+        ) : null}
+
+        <AscentsStats
+          statsResponse={statsResponse}
+          isLoading={statsLoading}
+          statsQueryError={statsQueryError}
+          onRetryStats={onRetryStats}
+        />
         {/* Period filter */}
         <AscentFilter setFilters={setFilters} />
       </View>

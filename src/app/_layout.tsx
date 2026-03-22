@@ -17,6 +17,7 @@ import { AppToastOverlay } from '@/shared/ui/app-toast';
 import { queryClient } from '@/shared/lib/queryClient';
 import { NAV_THEME } from '@/shared/lib/theme';
 import i18n from '@/shared/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import { useMyGymMembershipsQuery } from '@/entities/gym-member/model/gymMemberHooks';
 
 export { ErrorBoundary } from 'expo-router';
@@ -64,6 +65,7 @@ function AppBootstrap({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
+  const { t } = useTranslation();
   const theme = useUserStore((state) => state.theme);
   const language = useUserStore((state) => state.language);
   const { setColorScheme } = useColorScheme();
@@ -81,11 +83,11 @@ export default function RootLayout() {
         <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
         <AppBootstrap>
           <Drawer screenOptions={{ header: () => <AppHeader /> }}>
-            <Drawer.Screen name="(tabs)" options={{ title: 'Головна' }} />
+            <Drawer.Screen name="(tabs)" options={{ title: t('tabs.home') }} />
             <Drawer.Screen
               name="auth/login"
               options={{
-                title: 'Увійти',
+                title: t('common.login'),
                 drawerItemStyle: { display: 'none' },
                 headerShown: false,
               }}
@@ -93,7 +95,7 @@ export default function RootLayout() {
             <Drawer.Screen
               name="auth/register"
               options={{
-                title: 'Реєстрація',
+                title: t('common.register'),
                 drawerItemStyle: { display: 'none' },
                 headerShown: false,
               }}
@@ -101,7 +103,7 @@ export default function RootLayout() {
             <Drawer.Screen
               name="route/[id]"
               options={{
-                title: 'Маршрут',
+                title: t('drawer.route'),
                 drawerItemStyle: { display: 'none' },
                 headerShown: false,
               }}
@@ -109,7 +111,7 @@ export default function RootLayout() {
             <Drawer.Screen
               name="route/edit/[id]"
               options={{
-                title: 'Редагувати маршрут',
+                title: t('drawer.routeEdit'),
                 drawerItemStyle: { display: 'none' },
                 header: () => null,
               }}
@@ -117,18 +119,34 @@ export default function RootLayout() {
             <Drawer.Screen
               name="ascent/[routeId]"
               options={{
-                title: 'Пролаз',
+                title: t('drawer.ascent'),
+                drawerItemStyle: { display: 'none' },
+                headerShown: false,
+              }}
+            />
+            <Drawer.Screen
+              name="ascent-detail/[id]"
+              options={{
+                title: t('ascentDetail.title'),
                 drawerItemStyle: { display: 'none' },
                 headerShown: false,
               }}
             />
             <Drawer.Screen
               name="gym/join"
-              options={{ drawerItemStyle: { display: 'none' }, header: () => null }}
+              options={{
+                title: t('gym.findGym'),
+                drawerItemStyle: { display: 'none' },
+                header: () => null,
+              }}
             />
             <Drawer.Screen
               name="gym/manage"
-              options={{ drawerItemStyle: { display: 'none' }, header: () => null }}
+              options={{
+                title: t('gym.manageTitle'),
+                drawerItemStyle: { display: 'none' },
+                header: () => null,
+              }}
             />
           </Drawer>
         </AppBootstrap>

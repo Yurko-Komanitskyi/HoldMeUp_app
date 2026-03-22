@@ -3,33 +3,49 @@ import { View, ActivityIndicator, Pressable, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
-import { useColorScheme } from 'nativewind';
-import { AlertCircle, ChevronLeft } from 'lucide-react-native';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
+import { ChevronLeft } from 'lucide-react-native';
 
 import { Text } from '@/shared/ui/text';
 import { useRouteDetailsQuery, useRouteMutations } from '@/entities/route/model/routeHooks';
-import {
-  RouteFormWidget,
-  type RouteFormSubmitData,
-} from '@/widgets/route-form/ui/route-form-widget';
+import { RouteFormWidget } from '@/widgets/route-form/ui/route-form-widget';
+import type { RouteFormSubmitData } from '@/widgets/edit-route/ui/useRouteForm';
 import { parseApiError } from '@/shared/lib/api-error';
 import type { AnnotationData } from '@/features/route-annotation';
+import { useTranslation } from 'react-i18next';
+import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
 
 export function EditRouteWidget() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const colors = useThemeColor();
 
-  const bgColor = isDark ? '#000000' : '#ffffff';
-  const textColor = isDark ? '#ffffff' : '#000000';
-  const mutedColor = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)';
+  const bgColor = colors.background;
+  const textColor = colors.foreground;
+  const mutedColor = colors.mutedForeground;
 
-  const { data: route, isLoading, isError } = useRouteDetailsQuery(id ?? '');
+  const { data: route, isLoading, isError, error: routeQueryError, refetch: refetchRoute } =
+    useRouteDetailsQuery(id ?? '');
   const { updateRouteMutation } = useRouteMutations();
   const { mutateAsync, isPending } = updateRouteMutation;
+
+  if (!id) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: bgColor,
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingHorizontal: 24,
+        }}>
+        <Text className="text-center text-muted-foreground">{t('routeForm.loadError')}</Text>
+      </View>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -47,29 +63,48 @@ export function EditRouteWidget() {
 
   if (isError || !route) {
     return (
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: bgColor,
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 12,
-          paddingHorizontal: 32,
-        }}>
-        <AlertCircle size={44} color="#ef4444" />
-        <Text className="text-center text-base font-semibold text-foreground">
-          Не вдалося завантажити маршрут
-        </Text>
+      <View style={{ flex: 1, backgroundColor: bgColor }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingTop: insets.top + 8,
+            paddingBottom: 12,
+            paddingHorizontal: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+            gap: 12,
+          }}>
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={8}
+            style={{
+              padding: 6,
+              borderRadius: 12,
+              backgroundColor: colors.secondary,
+            }}>
+            <ChevronLeft size={20} color={textColor} />
+          </Pressable>
+          <Text style={{ fontSize: 17, fontWeight: '700', color: textColor }}>
+            {t('routeForm.editTitle')}
+          </Text>
+        </View>
+        <QueryErrorPanel
+          error={routeQueryError ?? new Error('')}
+          onRetry={() => void refetchRoute()}
+        />
         <Pressable
           onPress={() => router.back()}
           style={{
+            alignSelf: 'center',
+            marginTop: 8,
             borderRadius: 14,
             borderWidth: 1,
             paddingHorizontal: 20,
             paddingVertical: 10,
             borderColor: mutedColor,
           }}>
-          <Text style={{ color: textColor, fontSize: 14 }}>Назад</Text>
+          <Text style={{ color: textColor, fontSize: 14 }}>{t('common.back')}</Text>
         </Pressable>
       </View>
     );
@@ -92,7 +127,9 @@ export function EditRouteWidget() {
     name: route.name,
     grade: route.grade,
     color: route.color,
-    sectorId: route.sectorId,
+    style:
+      (route.style?.toLowerCase() as 'boulder' | 'lead' | 'top_rope' | 'speed' | undefined) ??
+      undefined,
     description: route.description ?? '',
     height: route.height?.toString() ?? '',
     holdTypes: (route.holdTypes as string[]) ?? [],
@@ -118,6 +155,7 @@ export function EditRouteWidget() {
         grade: data.grade,
         color: data.color,
         sectorId: data.sectorId,
+        style: data.style ?? null,
         description: data.description?.trim() || null,
         height: Number.isNaN(height as number) ? null : height,
         status: data.status,
@@ -129,7 +167,7 @@ export function EditRouteWidget() {
       router.back();
     } catch (error) {
       const { message } = parseApiError(error);
-      Alert.alert('Помилка', message);
+      Alert.alert(t('common.errorTitle'), message);
     }
   }
 
@@ -143,7 +181,7 @@ export function EditRouteWidget() {
           paddingBottom: 12,
           paddingHorizontal: 16,
           borderBottomWidth: 1,
-          borderBottomColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+          borderBottomColor: colors.border,
           backgroundColor: bgColor,
           gap: 12,
         }}>
@@ -153,13 +191,13 @@ export function EditRouteWidget() {
           style={{
             padding: 6,
             borderRadius: 12,
-            backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+            backgroundColor: colors.secondary,
           }}>
           <ChevronLeft size={20} color={textColor} />
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 17, fontWeight: '700', color: textColor }}>
-            {isPending ? 'Збереження…' : 'Редагування маршруту'}
+            {isPending ? t('routeForm.saving') : t('routeForm.editTitle')}
           </Text>
           {route.sector?.name && (
             <Text style={{ fontSize: 13, color: mutedColor, marginTop: 1 }}>
@@ -169,11 +207,13 @@ export function EditRouteWidget() {
         </View>
       </View>
 
-      <RouteFormWidget
-        initialValues={initialValues}
-        submitLabel="Зберегти зміни"
-        onSubmitForm={handleSubmit}
-      />
+      <View style={{ flex: 1, paddingTop: 8 }}>
+        <RouteFormWidget
+          initialValues={initialValues}
+          submitLabel={t('routeForm.saveChanges')}
+          onSubmitForm={handleSubmit}
+        />
+      </View>
     </View>
   );
 }

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Modal, Image, TouchableOpacity, StatusBar, Platform } from 'react-native';
 import Svg, { Circle as SvgCircle, Path as SvgPath } from 'react-native-svg';
 import { Text } from '@/shared/ui/text';
+import { useTranslation } from 'react-i18next';
 import { X, Circle, Pencil, Undo2, Trash2, CheckCheck, Eraser } from 'lucide-react-native';
 import { ANNOTATION_COLORS, CIRCLE_SIZES, PATH_STROKE_WIDTH } from '../lib/constants';
 import type { AnnotationData } from '../model/types';
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function RouteAnnotator({ visible, photoUri, initial, onSave, onClose }: Props) {
+  const { t } = useTranslation();
   const {
     tool,
     setTool,
@@ -51,11 +53,17 @@ export function RouteAnnotator({ visible, photoUri, initial, onSave, onClose }: 
             paddingTop: Platform.OS === 'ios' ? 60 : 20,
             paddingBottom: 14,
           }}>
-          <TouchableOpacity onPress={onClose} hitSlop={12}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={t('common.close')}
+            onPress={onClose}
+            hitSlop={12}>
             <X size={24} color="#fff" />
           </TouchableOpacity>
-          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>Розмітка маршруту</Text>
+          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>{t('routeAnnotator.title')}</Text>
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={t('common.save')}
             onPress={handleSave}
             hitSlop={12}
             style={{
@@ -68,7 +76,7 @@ export function RouteAnnotator({ visible, photoUri, initial, onSave, onClose }: 
               borderRadius: 20,
             }}>
             <CheckCheck size={16} color="#fff" />
-            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Зберегти</Text>
+            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>{t('common.save')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -139,9 +147,7 @@ export function RouteAnnotator({ visible, photoUri, initial, onSave, onClose }: 
                   borderRadius: 20,
                 }}>
                 <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13 }}>
-                  {tool === 'circle'
-                    ? 'Натисни на зачіпку щоб позначити'
-                    : 'Проведи пальцем по шляху маршруту'}
+                  {tool === 'circle' ? t('routeAnnotator.hintCircle') : t('routeAnnotator.hintPath')}
                 </Text>
               </View>
             </View>
@@ -159,38 +165,38 @@ export function RouteAnnotator({ visible, photoUri, initial, onSave, onClose }: 
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <ToolButton
               icon={<Circle size={20} color={tool === 'circle' ? '#000' : '#fff'} />}
-              label="Коло"
+              label={t('routeAnnotator.toolCircle')}
               active={tool === 'circle'}
               onPress={() => setTool('circle')}
             />
             <ToolButton
               icon={<Pencil size={20} color={tool === 'path' ? '#000' : '#fff'} />}
-              label="Лінія"
+              label={t('routeAnnotator.toolLine')}
               active={tool === 'path'}
               onPress={() => setTool('path')}
             />
             <ToolButton
               icon={<Eraser size={20} color={tool === 'erase' ? '#000' : '#fff'} />}
-              label="Стирач"
+              label={t('routeAnnotator.toolEraser')}
               active={tool === 'erase'}
               onPress={() => setTool('erase')}
             />
             <View style={{ flex: 1 }} />
             <ActionButton
               icon={<Undo2 size={20} color="#aaa" />}
-              label="Скасувати"
+              label={t('routeAnnotator.undo')}
               onPress={undo}
             />
             <ActionButton
               icon={<Trash2 size={20} color="#aaa" />}
-              label="Очистити"
+              label={t('routeAnnotator.clearAll')}
               onPress={clearAll}
             />
           </View>
 
           {tool === 'circle' && (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={{ color: '#666', fontSize: 11, marginRight: 4 }}>Розмір:</Text>
+              <Text style={{ color: '#666', fontSize: 11, marginRight: 4 }}>{t('routeAnnotator.strokeSize')}</Text>
               {CIRCLE_SIZES.map((size) => {
                 const isActive = circleSize === size.label;
                 const displaySize = size.radius;

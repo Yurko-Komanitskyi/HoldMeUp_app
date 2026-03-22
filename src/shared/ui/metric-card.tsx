@@ -18,7 +18,7 @@ export function MetricCard({ icon, value, label, sub, accent }: MetricCardProps)
     <View
       className={`flex-1 rounded-2xl border p-4 ${accent ? 'bg-accent/8 border-accent/30' : 'border-border bg-card'}`}>
       <Icon as={icon as LucideIcon} size={18} color={iconColor} />
-      <Text className={`mt-3 text-2xl font-bold ${accent ? 'text-accent' : 'text-foreground'}`}>
+      <Text className={`mt-3 text-2xl font-bold ${accent ? 'text-accent-foreground' : 'text-foreground'}`}>
         {value}
       </Text>
       <Text className="text-xs font-medium text-foreground">{label}</Text>

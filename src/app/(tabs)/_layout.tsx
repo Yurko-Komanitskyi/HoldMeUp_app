@@ -8,12 +8,12 @@ import { useNavigation } from '@react-navigation/native';
 import { useUserStore } from '@/entities/user/model/userStore';
 import { useGymMemberStore } from '@/entities/gym-member/model/gymMemberStore';
 import { GymMemberRole } from '@/entities/gym-member/model/gym-member';
-
-const ACCENT = 'rgb(139, 153, 200)';
-const INACTIVE = 'rgba(255,255,255,0.3)';
-const INACTIVE_LIGHT = 'rgba(0,0,0,0.3)';
+import { ACCENT } from '@/shared/config/palette';
+import { THEME } from '@/shared/config/tokens';
+import { useTranslation } from 'react-i18next';
 
 export default function TabsLayout() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const user = useUserStore((state) => state.currentUser);
@@ -35,7 +35,7 @@ export default function TabsLayout() {
     (myMembership.role === GymMemberRole.MANAGER || myMembership.role === GymMemberRole.OWNER);
   const isSetter = myMembership?.role === GymMemberRole.SETTER;
 
-  const inactiveColor = theme === 'dark' ? INACTIVE : INACTIVE_LIGHT;
+  const inactiveColor = theme === 'dark' ? THEME.dark.mutedForeground : THEME.light.mutedForeground;
 
   const baseTabHeight = Platform.OS === 'ios' ? 60 : 60;
   const bottomInset = insets.bottom ?? 0;
@@ -47,8 +47,8 @@ export default function TabsLayout() {
         tabBarActiveTintColor: ACCENT,
         tabBarInactiveTintColor: inactiveColor,
         tabBarStyle: {
-          backgroundColor: theme === 'dark' ? '#0a0a0f' : '#ffffff',
-          borderTopColor: theme === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+          backgroundColor: theme === 'dark' ? THEME.dark.card : THEME.light.card,
+          borderTopColor: theme === 'dark' ? THEME.dark.border : THEME.light.border,
           borderTopWidth: 1,
           height: baseTabHeight + bottomInset,
           paddingBottom: bottomInset > 0 ? bottomInset : 8,
@@ -63,14 +63,14 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Головна',
+          title: t('tabs.home'),
           tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="ascents"
         options={{
-          title: 'Пролази',
+          title: t('tabs.ascents'),
           href: user ? '/ascents' : null,
           tabBarIcon: ({ color, size }) => <Mountain size={size} color={color} />,
         }}
@@ -78,7 +78,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="routes"
         options={{
-          title: 'Маршрути',
+          title: t('tabs.routes'),
           href: user ? '/routes' : null,
           tabBarIcon: ({ color, size }) => <Route size={size} color={color} />,
         }}
@@ -86,7 +86,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="gym-stats"
         options={{
-          title: 'Статистика',
+          title: t('tabs.gymStats'),
           href: user && (isManager || isSetter) ? '/gym-stats' : null,
           tabBarIcon: ({ color, size }) => <BarChart2 size={size} color={color} />,
         }}
@@ -94,7 +94,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="add-route"
         options={{
-          title: 'Додати',
+          title: t('tabs.addRoute'),
           href: user && (isSetter || isManager) ? '/add-route' : null,
           tabBarIcon: ({ color, size }) => <PlusCircle size={size} color={color} />,
         }}
@@ -102,7 +102,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Профіль',
+          title: t('tabs.profile'),
           href: user ? '/profile' : null,
           tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
         }}

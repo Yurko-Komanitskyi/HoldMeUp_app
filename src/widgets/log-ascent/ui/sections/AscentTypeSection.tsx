@@ -5,16 +5,19 @@ import { CheckCircle2 } from 'lucide-react-native';
 import { Text } from '@/shared/ui/text';
 import { SectionLabel } from '@/shared/ui/section-label';
 import { ASCENT_TYPES } from '@/entities/ascent/lib/constants';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   ascentType: string;
-  isDark: boolean;
   cardBg: string;
   borderColor: string;
   onChange: (value: string) => void;
 }
 
-export function AscentTypeSection({ ascentType, isDark, cardBg, borderColor, onChange }: Props) {
+export function AscentTypeSection({ ascentType, cardBg, borderColor, onChange }: Props) {
+  const { t } = useTranslation();
+  const colors = useThemeColor();
   return (
     <View
       style={{
@@ -24,7 +27,7 @@ export function AscentTypeSection({ ascentType, isDark, cardBg, borderColor, onC
         borderWidth: 1,
         borderColor,
       }}>
-      <SectionLabel>Тип пролазу</SectionLabel>
+      <SectionLabel>{t('logAscent.ascentType')}</SectionLabel>
       <View style={{ gap: 8 }}>
         {ASCENT_TYPES.map((type) => {
           const isActive = ascentType === type.value;
@@ -50,25 +53,23 @@ export function AscentTypeSection({ ascentType, isDark, cardBg, borderColor, onC
                   borderRadius: 12,
                   backgroundColor: isActive
                     ? type.color + '22'
-                    : isDark
-                      ? 'rgba(255,255,255,0.06)'
-                      : 'rgba(0,0,0,0.05)',
+                    : colors.muted,
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}>
-                <IconComp size={20} color={isActive ? type.color : 'rgba(128,128,128,0.6)'} />
+                <IconComp size={20} color={isActive ? type.color : colors.mutedForeground} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text
                   style={{
                     fontSize: 15,
                     fontWeight: '700',
-                    color: isActive ? type.color : isDark ? '#fff' : '#000',
+                    color: isActive ? type.color : colors.foreground,
                   }}>
-                  {type.label}
+                  {t(`logAscent.ascentTypeLabel.${type.value}`)}
                 </Text>
-                <Text style={{ fontSize: 12, color: 'rgba(128,128,128,0.7)', marginTop: 2 }}>
-                  {type.sublabel}
+                <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
+                  {t(`logAscent.ascentTypeSublabel.${type.value}`)}
                 </Text>
               </View>
               {isActive && (
@@ -81,7 +82,7 @@ export function AscentTypeSection({ ascentType, isDark, cardBg, borderColor, onC
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}>
-                  <CheckCircle2 size={14} color="#fff" />
+                  <CheckCircle2 size={14} color={colors.destructiveForeground} />
                 </View>
               )}
             </TouchableOpacity>

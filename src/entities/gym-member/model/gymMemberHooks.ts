@@ -12,6 +12,7 @@ import {
   gymMemberKeys,
   type FetchGymMembersOptions,
 } from '../api/gymMemberApi';
+import { useUserStore } from '@/entities/user/model/userStore';
 import { useGymMemberStore } from './gymMemberStore';
 import type { CreateGymMemberInput, UpdateGymMemberInput } from '../api/types';
 
@@ -24,9 +25,11 @@ export function useGymMembersQuery(gymId: string, options?: FetchGymMembersOptio
 }
 
 export function useMyGymMembershipsQuery() {
+  const userId = useUserStore((s) => s.currentUser?.id);
   const query = useQuery({
     queryKey: [...gymMemberKeys.all, 'me'],
     queryFn: fetchMyGymMemberships,
+    enabled: !!userId,
   });
 
   const setMemberships = useGymMemberStore((s) => s.setMemberships);

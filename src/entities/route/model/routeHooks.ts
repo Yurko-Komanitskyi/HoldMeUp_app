@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import {
-  fetchRoutes,
   fetchRouteById,
   fetchRoutesWithMeta,
   createRoute,
@@ -10,11 +9,31 @@ import {
   routeKeys,
 } from '../api/routeApi';
 import type { RouteListFilters } from '../api/types';
+import { RouteGrade, RouteStatus, RouteStyle, type Route } from './route';
+import { useInfiniteListQuery } from '@/shared/hooks/useInfiniteListQuery';
+
+const ROUTES_PAGE_SIZE = 20;
+
+export interface RouteFilters {
+  gymId?: string;
+  sectorId?: string;
+  grade?: RouteGrade[];
+  status?: RouteStatus;
+  style?: RouteStyle;
+  setterId?: string;
+  color?: string;
+  search?: string;
+}
 
 export function useRoutesQuery(filters?: RouteListFilters) {
-  return useQuery({
+  return useInfiniteListQuery<Route, RouteListFilters>({
     queryKey: routeKeys.list(filters),
-    queryFn: () => fetchRoutes(filters),
+    fetchFn: async (params) => {
+      const result = await fetchRoutesWithMeta(params);
+      return { data: result.routes, hasNextPage: result.hasNextPage };
+    },
+    params: filters,
+    pageSize: ROUTES_PAGE_SIZE,
   });
 }
 
@@ -51,7 +70,10 @@ export function useRouteMutations() {
 
   const deleteRouteMutation = useMutation({
     mutationFn: deleteRoute,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: routeKeys.lists() }),
+    onSuccess: (_void, id) => {
+      queryClient.removeQueries({ queryKey: routeKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: routeKeys.lists() });
+    },
   });
 
   return { createRouteMutation, updateRouteMutation, deleteRouteMutation };

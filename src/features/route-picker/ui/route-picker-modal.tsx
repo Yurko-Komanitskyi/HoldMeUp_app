@@ -8,10 +8,10 @@ import {
 } from 'react-native';
 import { Search, X, Mountain } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useColorScheme } from 'nativewind';
 import { useTranslation } from 'react-i18next';
 
 import { Text } from '@/shared/ui/text';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import type { Route } from '@/entities/route/model/route';
 import { RoutePickerItem } from './route-picker-item';
 
@@ -25,8 +25,7 @@ export interface RoutePickerModalProps {
 
 export function RoutePickerModal({ visible, routes, onClose, onSelect }: RoutePickerModalProps) {
   const { t } = useTranslation();
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const colors = useThemeColor();
   const [search, setSearch] = React.useState('');
 
   const filtered = React.useMemo(() => {
@@ -51,8 +50,8 @@ export function RoutePickerModal({ visible, routes, onClose, onSelect }: RoutePi
       animationType="slide"
       presentationStyle="pageSheet"
       onRequestClose={handleClose}>
-      <View style={{ flex: 1, backgroundColor: isDark ? '#000' : '#f2f2f7' }}>
-        <SafeAreaView edges={['top']} style={{ backgroundColor: isDark ? '#000' : '#f2f2f7' }}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <SafeAreaView edges={['top']} style={{ backgroundColor: colors.background }}>
           <View
             style={{
               flexDirection: 'row',
@@ -62,25 +61,32 @@ export function RoutePickerModal({ visible, routes, onClose, onSelect }: RoutePi
               gap: 12,
             }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 18, fontWeight: '800', color: isDark ? '#fff' : '#000' }}>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: '800',
+                  color: colors.foreground,
+                }}>
                 {t('home.pickRoute')}
               </Text>
-              <Text style={{ fontSize: 13, color: 'rgba(128,128,128,0.65)', marginTop: 2 }}>
+              <Text style={{ fontSize: 13, color: colors.mutedForeground, marginTop: 2 }}>
                 {t('home.routesInGym', { count: routes.length })}
               </Text>
             </View>
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t('common.close')}
               onPress={handleClose}
               hitSlop={12}
               style={{
                 width: 34,
                 height: 34,
                 borderRadius: 17,
-                backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.07)',
+                backgroundColor: colors.secondary,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}>
-              <X size={18} color={isDark ? '#fff' : '#000'} />
+              <X size={18} color={colors.foreground} />
             </TouchableOpacity>
           </View>
 
@@ -91,23 +97,27 @@ export function RoutePickerModal({ visible, routes, onClose, onSelect }: RoutePi
               gap: 10,
               marginHorizontal: 16,
               marginBottom: 12,
-              backgroundColor: isDark ? '#1c1c1e' : '#fff',
+              backgroundColor: colors.card,
               borderRadius: 14,
               paddingHorizontal: 12,
               paddingVertical: 10,
             }}>
-            <Search size={16} color="rgba(128,128,128,0.6)" />
+            <Search size={16} color={colors.mutedForeground} />
             <TextInput
               value={search}
               onChangeText={setSearch}
               placeholder={t('home.searchRoute')}
-              placeholderTextColor="rgba(128,128,128,0.4)"
-              style={{ flex: 1, fontSize: 15, color: isDark ? '#fff' : '#000' }}
+              placeholderTextColor={colors.mutedForeground}
+              style={{ flex: 1, fontSize: 15, color: colors.foreground }}
               autoFocus
             />
             {search.length > 0 && (
-              <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}>
-                <X size={14} color="rgba(128,128,128,0.5)" />
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t('common.clear')}
+                onPress={() => setSearch('')}
+                hitSlop={8}>
+                <X size={14} color={colors.mutedForeground} />
               </TouchableOpacity>
             )}
           </View>
@@ -119,7 +129,6 @@ export function RoutePickerModal({ visible, routes, onClose, onSelect }: RoutePi
           renderItem={({ item }) => (
             <RoutePickerItem
               route={item}
-              isDark={isDark}
               onPress={() => {
                 setSearch('');
                 onSelect(item);
@@ -129,15 +138,15 @@ export function RoutePickerModal({ visible, routes, onClose, onSelect }: RoutePi
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={{ alignItems: 'center', paddingTop: 60, gap: 8 }}>
-              <Mountain size={40} color="rgba(128,128,128,0.25)" />
-              <Text style={{ fontSize: 15, color: 'rgba(128,128,128,0.5)', fontWeight: '600' }}>
+              <Mountain size={40} color={colors.mutedForeground} />
+              <Text style={{ fontSize: 15, color: colors.mutedForeground, fontWeight: '600' }}>
                 {t('home.noRoutesFound')}
               </Text>
             </View>
           }
           contentContainerStyle={{ paddingBottom: 60 }}
           style={{
-            backgroundColor: isDark ? '#1c1c1e' : '#fff',
+            backgroundColor: colors.card,
             marginHorizontal: 16,
             borderRadius: 16,
           }}

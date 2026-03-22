@@ -1,115 +1,167 @@
 import * as React from 'react';
-import { View, TextInput, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import {
+  View,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  Platform,
+  LayoutAnimation,
+  UIManager,
+} from 'react-native';
 import { Search, X, SlidersHorizontal } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 
 import { Text } from '@/shared/ui/text';
 import { ACCENT } from '@/shared/config/palette';
-import { GRADES, ROUTE_COLORS, STYLE_LABELS } from '@/entities/route/lib/constants';
-import type { RouteUiFilters } from '../model/useRouteFilters';
+import { GRADES, ROUTE_COLORS } from '@/entities/route/lib/constants';
+import type { RouteFilters } from '@/entities/route/model/routeHooks';
+import { RouteGrade, RouteStyle, RouteStatus } from '@/entities/route/model/route';
 
-const STYLE_OPTIONS = [
-  { value: 'BOULDER', label: STYLE_LABELS.boulder },
-  { value: 'LEAD', label: STYLE_LABELS.lead },
-  { value: 'TOP_ROPE', label: STYLE_LABELS.top_rope },
-  { value: 'SPEED', label: STYLE_LABELS.speed },
-];
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
-const STATUS_OPTIONS = [
-  { value: null, label: 'Всі' },
-  { value: 'ACTIVE', label: 'Активні' },
-  { value: 'ARCHIVED', label: 'Архівовані' },
-  { value: 'DRAFT', label: 'Чернетки' },
-];
+// const STATUS_OPTIONS: { value: RouteStatus; label: string; color: string }[] = [
+//   { value: 'active', label: 'Активні', color: '#22c55e' },
+//   { value: 'draft', label: 'Чернетки', color: '#f59e0b' },
+//   { value: 'archived', label: 'Архів', color: '#9ca3af' },
+// ];
 
 interface Props {
-  filters: RouteUiFilters;
+  filters: RouteFilters;
   hasActiveFilters: boolean;
   onSearchChange: (v: string) => void;
-  onGradeChange: (v: string | null) => void;
-  onStyleChange: (v: string | null) => void;
-  onStatusChange: (v: string | null) => void;
-  onColorChange: (v: string | null) => void;
+  onGradeChange: (v: RouteGrade[] | undefined) => void;
+  onStyleChange: (v: RouteStyle | undefined) => void;
+  onStatusChange: (v: RouteStatus | undefined) => void;
+  onColorChange: (v: string | undefined) => void;
   onClearFilters: () => void;
 }
 
-function FilterLabel({ children }: { children: string }) {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
+function ActiveTag({
+  label,
+  isDark,
+  onRemove,
+  dotColor,
+}: {
+  label: string;
+  isDark: boolean;
+  onRemove: () => void;
+  dotColor?: string;
+}) {
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+        paddingLeft: dotColor ? 8 : 10,
+        paddingRight: 7,
+        paddingVertical: 6,
+        borderRadius: 20,
+        backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+        borderWidth: 1,
+        borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+      }}>
+      {dotColor && (
+        <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: dotColor }} />
+      )}
+      <Text style={{ fontSize: 12, fontWeight: '500', color: isDark ? '#e5e7eb' : '#374151' }}>
+        {label}
+      </Text>
+      <TouchableOpacity onPress={onRemove} hitSlop={8}>
+        <X size={11} color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)'} />
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function ActiveColorTag({
+  colorValue,
+  isDark,
+  onRemove,
+}: {
+  colorValue: string;
+  isDark: boolean;
+  onRemove: () => void;
+}) {
+  const { t } = useTranslation();
+  const colorEntry = ROUTE_COLORS.find((c) => c.value === colorValue);
+  const label = colorEntry
+    ? t(`routeColors.${colorEntry.value}`, { defaultValue: colorValue })
+    : colorValue;
+  const hex = colorEntry?.hex;
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+        paddingLeft: 8,
+        paddingRight: 7,
+        paddingVertical: 6,
+        borderRadius: 20,
+        backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+        borderWidth: 1,
+        borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+      }}>
+      <View
+        style={{
+          width: 10,
+          height: 10,
+          borderRadius: 5,
+          overflow: 'hidden',
+          borderWidth: 0.5,
+          borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)',
+        }}>
+        {hex === null ? (
+          <LinearGradient
+            colors={['#ef4444', '#eab308', '#22c55e', '#3b82f6', '#a855f7']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{ flex: 1 }}
+          />
+        ) : (
+          <View style={{ flex: 1, backgroundColor: hex }} />
+        )}
+      </View>
+      <Text style={{ fontSize: 12, fontWeight: '500', color: isDark ? '#e5e7eb' : '#374151' }}>
+        {label}
+      </Text>
+      <TouchableOpacity onPress={onRemove} hitSlop={8}>
+        <X size={11} color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)'} />
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function FilterSectionLabel({ children, isDark }: { children: string; isDark: boolean }) {
   return (
     <Text
       style={{
-        fontSize: 10,
-        fontWeight: '700',
-        letterSpacing: 0.8,
-        color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)',
+        fontSize: 11,
+        fontWeight: '600',
+        letterSpacing: 0.4,
         textTransform: 'uppercase',
-        marginBottom: 8,
+        color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)',
         paddingHorizontal: 16,
+        marginBottom: 8,
       }}>
       {children}
     </Text>
   );
 }
 
-interface ChipProps {
-  value: string;
-  label: string;
-  active: boolean;
-  isDark: boolean;
-  chipBorder: string;
-  chipBg: string;
-  onPress: () => void;
-}
-
-function StatusChip({
-  label,
-  active,
-  isDark,
-  chipBorder,
-  chipBg,
-  onPress,
-}: Omit<ChipProps, 'value'>) {
+function FilterDivider({ isDark }: { isDark: boolean }) {
   return (
-    <TouchableOpacity
-      onPress={onPress}
+    <View
       style={{
-        paddingHorizontal: 14,
-        paddingVertical: 7,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: active ? ACCENT : chipBorder,
-        backgroundColor: active ? ACCENT + '1e' : chipBg,
-      }}>
-      <Text
-        style={{
-          fontSize: 13,
-          fontWeight: active ? '700' : '500',
-          color: active ? ACCENT : isDark ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.6)',
-        }}>
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
-}
-
-function FilterChip({
-  label,
-  active,
-  isDark,
-  chipBorder,
-  chipBg,
-  onPress,
-}: Omit<ChipProps, 'value'>) {
-  return (
-    <StatusChip
-      label={label}
-      active={active}
-      isDark={isDark}
-      chipBorder={chipBorder}
-      chipBg={chipBg}
-      onPress={onPress}
+        height: 1,
+        backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+        marginHorizontal: 16,
+      }}
     />
   );
 }
@@ -124,185 +176,359 @@ export function RouteFilterBar({
   onColorChange,
   onClearFilters,
 }: Props) {
+  const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const [expanded, setExpanded] = React.useState(false);
 
-  const detailCount = [filters.grade, filters.style, filters.color].filter(Boolean).length;
+  const STYLE_OPTIONS = React.useMemo(
+    (): { value: RouteStyle; label: string }[] => [
+      { value: 'boulder', label: t('routes.styleKeys.boulder') },
+      { value: 'lead', label: t('routes.styleKeys.lead') },
+      { value: 'top_rope', label: t('routes.styleKeys.top_rope') },
+      { value: 'speed', label: t('routes.styleKeys.speed') },
+    ],
+    [t]
+  );
 
-  const inputBg = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
-  const placeholderCol = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)';
-  const iconColor = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
-  const chipBorder = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)';
-  const chipBg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)';
+  const detailCount = [filters.grade, filters.style, filters.color, filters.status].filter(
+    Boolean
+  ).length;
+
+  const toggle = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpanded((v) => !v);
+  };
+
+  const inputBg = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.055)';
+  const placeholder = isDark ? 'rgba(255,255,255,0.28)' : 'rgba(0,0,0,0.28)';
+  const iconCol = isDark ? 'rgba(255,255,255,0.32)' : 'rgba(0,0,0,0.32)';
+
+  const filterActive = expanded || detailCount > 0;
 
   return (
-    <View style={{ gap: 10 }}>
-      {/* Search bar */}
-      <View
-        style={{
-          marginHorizontal: 16,
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 10,
-          borderRadius: 16,
-          paddingHorizontal: 14,
-          paddingVertical: Platform.OS === 'ios' ? 12 : 10,
-          backgroundColor: inputBg,
-        }}>
-        <Search size={15} color={placeholderCol} />
-        <TextInput
-          value={filters.searchRaw}
-          onChangeText={onSearchChange}
-          placeholder="Пошук за назвою, описом..."
-          placeholderTextColor={placeholderCol}
-          style={{ flex: 1, color: isDark ? '#fff' : '#000', fontSize: 14, paddingVertical: 0 }}
-          returnKeyType="search"
-          autoCorrect={false}
-        />
-        {filters.searchRaw.length > 0 && (
-          <TouchableOpacity onPress={() => onSearchChange('')} hitSlop={8}>
-            <X size={15} color={placeholderCol} />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Status row + filter button */}
+    <View style={{ gap: 9 }}>
+      {/* Search + filter toggle row */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16 }}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={{ flex: 1 }}
-          contentContainerStyle={{ gap: 7 }}>
-          {STATUS_OPTIONS.map((opt) => (
-            <StatusChip
-              key={String(opt.value)}
-              label={opt.label}
-              active={filters.status === opt.value}
-              isDark={isDark}
-              chipBorder={chipBorder}
-              chipBg={chipBg}
-              onPress={() => onStatusChange(filters.status === opt.value ? null : opt.value)}
-            />
-          ))}
-        </ScrollView>
-
-        {/* Expand button */}
-        <TouchableOpacity
-          onPress={() => setExpanded((e) => !e)}
+        <View
           style={{
+            flex: 1,
             flexDirection: 'row',
             alignItems: 'center',
-            gap: 5,
+            gap: 9,
+            height: 42,
+            borderRadius: 13,
             paddingHorizontal: 12,
-            paddingVertical: 8,
-            borderRadius: 20,
-            borderWidth: 1,
-            borderColor: expanded || detailCount > 0 ? ACCENT : chipBorder,
-            backgroundColor: expanded || detailCount > 0 ? ACCENT + '1e' : chipBg,
+            backgroundColor: inputBg,
           }}>
-          <SlidersHorizontal size={14} color={expanded || detailCount > 0 ? ACCENT : iconColor} />
-          {detailCount > 0 && (
+          <Search size={14} color={placeholder} />
+          <TextInput
+            value={filters.search ?? ''}
+            onChangeText={onSearchChange}
+            placeholder={t('routes.searchRouteShort')}
+            placeholderTextColor={placeholder}
+            style={{
+              flex: 1,
+              color: isDark ? '#fff' : '#000',
+              fontSize: 14,
+              paddingVertical: 0,
+            }}
+            returnKeyType="search"
+            autoCorrect={false}
+          />
+          {(filters.search?.length ?? 0) > 0 && (
+            <TouchableOpacity onPress={() => onSearchChange('')} hitSlop={10}>
+              <X size={13} color={placeholder} />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <TouchableOpacity
+          onPress={toggle}
+          activeOpacity={0.75}
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: 13,
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderWidth: filterActive ? 1.5 : 1,
+            borderColor: filterActive
+              ? ACCENT
+              : isDark
+                ? 'rgba(255,255,255,0.1)'
+                : 'rgba(0,0,0,0.08)',
+            backgroundColor: filterActive
+              ? ACCENT + '14'
+              : isDark
+                ? 'rgba(255,255,255,0.04)'
+                : 'rgba(0,0,0,0.02)',
+          }}>
+          <SlidersHorizontal size={15} color={filterActive ? ACCENT : iconCol} />
+          {detailCount > 0 && !expanded && (
             <View
               style={{
-                width: 16,
-                height: 16,
-                borderRadius: 8,
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                width: 6,
+                height: 6,
+                borderRadius: 3,
                 backgroundColor: ACCENT,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-              <Text style={{ fontSize: 9, fontWeight: '800', color: '#fff' }}>{detailCount}</Text>
-            </View>
+                borderWidth: 1.5,
+                borderColor: isDark ? '#0a0a0a' : '#fff',
+              }}
+            />
           )}
         </TouchableOpacity>
       </View>
+
+      {/* Active filter chips (collapsed) */}
+      {!expanded && detailCount > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16, gap: 6 }}>
+          {filters.grade && (
+            <ActiveTag
+              label={filters.grade.join(', ')}
+              isDark={isDark}
+              onRemove={() => onGradeChange(undefined)}
+            />
+          )}
+          {filters.style && (
+            <ActiveTag
+              label={t(`routes.styleKeys.${filters.style}`)}
+              isDark={isDark}
+              onRemove={() => onStyleChange(undefined)}
+            />
+          )}
+          {/* {filters.status && (
+            <ActiveTag
+              label={STATUS_OPTIONS.find((s) => s.value === filters.status)?.label ?? filters.status}
+              dotColor={STATUS_OPTIONS.find((s) => s.value === filters.status)?.color}
+              isDark={isDark}
+              onRemove={() => onStatusChange(undefined)}
+            />
+          )} */}
+          {filters.color && (
+            <ActiveColorTag
+              colorValue={filters.color}
+              isDark={isDark}
+              onRemove={() => onColorChange(undefined)}
+            />
+          )}
+        </ScrollView>
+      )}
 
       {/* Expanded filter panel */}
       {expanded && (
         <View
           style={{
             marginHorizontal: 16,
-            borderRadius: 18,
+            borderRadius: 16,
             borderWidth: 1,
             borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)',
-            backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-            paddingVertical: 16,
-            gap: 16,
+            backgroundColor: isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.015)',
+            paddingVertical: 14,
+            gap: 12,
             overflow: 'hidden',
           }}>
-          {/* Style */}
-          <View>
-            <FilterLabel>Стиль</FilterLabel>
+
+          {/* Status */}
+          {/* <View>
+            <FilterSectionLabel isDark={isDark}>{t('routeForm.status')}</FilterSectionLabel>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingHorizontal: 16, gap: 7 }}>
-              {STYLE_OPTIONS.map((opt) => (
-                <FilterChip
-                  key={opt.value}
-                  label={opt.label}
-                  active={filters.style === opt.value}
-                  isDark={isDark}
-                  chipBorder={chipBorder}
-                  chipBg={chipBg}
-                  onPress={() => onStyleChange(filters.style === opt.value ? null : opt.value)}
-                />
-              ))}
+              {STATUS_OPTIONS.map((opt) => {
+                const isActive = filters.status === opt.value;
+                return (
+                  <TouchableOpacity
+                    key={opt.value}
+                    onPress={() => onStatusChange(isActive ? undefined : opt.value)}
+                    activeOpacity={0.75}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 6,
+                      paddingHorizontal: 12,
+                      paddingVertical: 7,
+                      borderRadius: 20,
+                      borderWidth: 1,
+                      borderColor: isActive
+                        ? opt.color
+                        : isDark
+                          ? 'rgba(255,255,255,0.12)'
+                          : 'rgba(0,0,0,0.1)',
+                      backgroundColor: isActive ? opt.color + '1a' : 'transparent',
+                    }}>
+                    <View
+                      style={{
+                        width: 7,
+                        height: 7,
+                        borderRadius: 4,
+                        backgroundColor: isActive
+                          ? opt.color
+                          : isDark
+                            ? 'rgba(255,255,255,0.2)'
+                            : 'rgba(0,0,0,0.2)',
+                      }}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: isActive ? '600' : '400',
+                        color: isActive
+                          ? opt.color
+                          : isDark
+                            ? 'rgba(255,255,255,0.55)'
+                            : 'rgba(0,0,0,0.55)',
+                      }}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View> */}
+
+          <FilterDivider isDark={isDark} />
+
+          {/* Style */}
+          <View>
+            <FilterSectionLabel isDark={isDark}>{t('routes.filterStyle')}</FilterSectionLabel>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16, gap: 7 }}>
+              {STYLE_OPTIONS.map((opt) => {
+                const isActive = filters.style === opt.value;
+                return (
+                  <TouchableOpacity
+                    key={opt.value}
+                    onPress={() => onStyleChange(isActive ? undefined : opt.value)}
+                    activeOpacity={0.75}
+                    style={{
+                      paddingHorizontal: 14,
+                      paddingVertical: 7,
+                      borderRadius: 20,
+                      borderWidth: 1,
+                      borderColor: isActive
+                        ? ACCENT
+                        : isDark
+                          ? 'rgba(255,255,255,0.12)'
+                          : 'rgba(0,0,0,0.1)',
+                      backgroundColor: isActive ? ACCENT + '1a' : 'transparent',
+                    }}>
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: isActive ? '600' : '400',
+                        color: isActive
+                          ? ACCENT
+                          : isDark
+                            ? 'rgba(255,255,255,0.55)'
+                            : 'rgba(0,0,0,0.55)',
+                      }}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
           </View>
+
+          <FilterDivider isDark={isDark} />
 
           {/* Grade */}
           <View>
-            <FilterLabel>Категорія</FilterLabel>
+            <FilterSectionLabel isDark={isDark}>{t('routes.filterGrade')}</FilterSectionLabel>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 16, gap: 7 }}>
-              {GRADES.map((g) => (
-                <FilterChip
-                  key={g}
-                  label={g}
-                  active={filters.grade === g}
-                  isDark={isDark}
-                  chipBorder={chipBorder}
-                  chipBg={chipBg}
-                  onPress={() => onGradeChange(filters.grade === g ? null : g)}
-                />
-              ))}
+              contentContainerStyle={{ paddingHorizontal: 16, gap: 6 }}>
+              {GRADES.map((g) => {
+                const isActive = filters.grade?.includes(g as RouteGrade);
+                return (
+                  <TouchableOpacity
+                    key={g}
+                    onPress={() =>
+                      onGradeChange(
+                        isActive
+                          ? filters.grade!.length > 1
+                            ? filters.grade!.filter((gr) => gr !== g)
+                            : undefined
+                          : [...(filters.grade ?? []), g as RouteGrade]
+                      )
+                    }
+                    activeOpacity={0.75}
+                    style={{
+                      height: 34,
+                      minWidth: 42,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      paddingHorizontal: 10,
+                      borderRadius: 10,
+                      borderWidth: 1,
+                      borderColor: isActive
+                        ? ACCENT
+                        : isDark
+                          ? 'rgba(255,255,255,0.12)'
+                          : 'rgba(0,0,0,0.1)',
+                      backgroundColor: isActive ? ACCENT + '1a' : 'transparent',
+                    }}>
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: isActive ? '700' : '400',
+                        color: isActive
+                          ? ACCENT
+                          : isDark
+                            ? 'rgba(255,255,255,0.55)'
+                            : 'rgba(0,0,0,0.55)',
+                      }}>
+                      {g}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
           </View>
 
+          <FilterDivider isDark={isDark} />
+
           {/* Color */}
           <View>
-            <FilterLabel>Колір</FilterLabel>
+            <FilterSectionLabel isDark={isDark}>{t('routes.filterColor')}</FilterSectionLabel>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingHorizontal: 16, gap: 12, paddingBottom: 2 }}>
               {ROUTE_COLORS.map((c) => {
-                const active = filters.color === c.value;
-                const swatch = c.hex;
+                const isActive = filters.color === c.value;
                 return (
                   <TouchableOpacity
                     key={c.value}
-                    onPress={() => onColorChange(active ? null : c.value)}
+                    onPress={() => onColorChange(isActive ? undefined : c.value)}
+                    activeOpacity={0.75}
                     style={{ alignItems: 'center', gap: 5 }}>
                     <View
                       style={{
-                        width: 30,
-                        height: 30,
-                        borderRadius: 15,
-                        borderWidth: active ? 2.5 : 1.5,
-                        borderColor: active
+                        width: 32,
+                        height: 32,
+                        borderRadius: 16,
+                        padding: 2,
+                        borderWidth: isActive ? 2.5 : 1,
+                        borderColor: isActive
                           ? ACCENT
                           : isDark
-                            ? 'rgba(255,255,255,0.2)'
-                            : 'rgba(0,0,0,0.15)',
+                            ? 'rgba(255,255,255,0.16)'
+                            : 'rgba(0,0,0,0.12)',
                         overflow: 'hidden',
-                        transform: [{ scale: active ? 1.15 : 1 }],
                       }}>
-                      {swatch === null ? (
+                      {c.hex === null ? (
                         <LinearGradient
                           colors={[
                             '#ef4444',
@@ -314,23 +540,23 @@ export function RouteFilterBar({
                           ]}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 1 }}
-                          style={{ flex: 1 }}
+                          style={{ flex: 1, borderRadius: 12 }}
                         />
                       ) : (
-                        <View style={{ flex: 1, backgroundColor: swatch }} />
+                        <View style={{ flex: 1, borderRadius: 11, backgroundColor: c.hex }} />
                       )}
                     </View>
                     <Text
                       style={{
                         fontSize: 9,
-                        color: active
+                        color: isActive
                           ? ACCENT
                           : isDark
-                            ? 'rgba(255,255,255,0.45)'
-                            : 'rgba(0,0,0,0.45)',
-                        fontWeight: active ? '700' : '400',
+                            ? 'rgba(255,255,255,0.38)'
+                            : 'rgba(0,0,0,0.38)',
+                        fontWeight: isActive ? '700' : '400',
                       }}>
-                      {c.label}
+                      {t(`routeColors.${c.value}`)}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -338,120 +564,39 @@ export function RouteFilterBar({
             </ScrollView>
           </View>
 
-          {/* Clear button (if active) */}
+          {/* Clear all */}
           {hasActiveFilters && (
-            <TouchableOpacity
-              onPress={onClearFilters}
-              style={{
-                marginHorizontal: 16,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-                borderRadius: 12,
-                paddingVertical: 9,
-                backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-              }}>
-              <X size={13} color={iconColor} />
-              <Text
+            <>
+              <FilterDivider isDark={isDark} />
+              <TouchableOpacity
+                onPress={() => {
+                  onClearFilters();
+                  toggle();
+                }}
+                activeOpacity={0.7}
                 style={{
-                  fontSize: 13,
-                  fontWeight: '500',
-                  color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
+                  marginHorizontal: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  borderRadius: 12,
+                  paddingVertical: 10,
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
                 }}>
-                Скинути всі фільтри
-              </Text>
-            </TouchableOpacity>
+                <X size={12} color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)'} />
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: '500',
+                    color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)',
+                  }}>
+                  {t('routes.clearAllFilters')}
+                </Text>
+              </TouchableOpacity>
+            </>
           )}
         </View>
-      )}
-
-      {/* Active filter summary (when collapsed and has active detail filters) */}
-      {!expanded && detailCount > 0 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16, gap: 6 }}>
-          {filters.grade && (
-            <TouchableOpacity
-              onPress={() => onGradeChange(null)}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 5,
-                paddingHorizontal: 10,
-                paddingVertical: 5,
-                borderRadius: 14,
-                backgroundColor: ACCENT + '1e',
-                borderWidth: 1,
-                borderColor: ACCENT + '50',
-              }}>
-              <Text style={{ fontSize: 12, fontWeight: '700', color: ACCENT }}>
-                {filters.grade}
-              </Text>
-              <X size={10} color={ACCENT} />
-            </TouchableOpacity>
-          )}
-          {filters.style && (
-            <TouchableOpacity
-              onPress={() => onStyleChange(null)}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 5,
-                paddingHorizontal: 10,
-                paddingVertical: 5,
-                borderRadius: 14,
-                backgroundColor: ACCENT + '1e',
-                borderWidth: 1,
-                borderColor: ACCENT + '50',
-              }}>
-              <Text style={{ fontSize: 12, fontWeight: '700', color: ACCENT }}>
-                {STYLE_LABELS[filters.style.toLowerCase()] ?? filters.style}
-              </Text>
-              <X size={10} color={ACCENT} />
-            </TouchableOpacity>
-          )}
-          {filters.color && (
-            <TouchableOpacity
-              onPress={() => onColorChange(null)}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 6,
-                paddingHorizontal: 10,
-                paddingVertical: 5,
-                borderRadius: 14,
-                backgroundColor: ACCENT + '1e',
-                borderWidth: 1,
-                borderColor: ACCENT + '50',
-              }}>
-              {(() => {
-                const entry = ROUTE_COLORS.find((c) => c.value === filters.color);
-                return entry ? (
-                  <View
-                    style={{
-                      width: 12,
-                      height: 12,
-                      borderRadius: 6,
-                      backgroundColor: entry.hex ?? '#f97316',
-                      overflow: 'hidden',
-                    }}>
-                    {entry.hex === null && (
-                      <LinearGradient
-                        colors={['#ef4444', '#22c55e', '#3b82f6']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={{ flex: 1 }}
-                      />
-                    )}
-                  </View>
-                ) : null;
-              })()}
-              <X size={10} color={ACCENT} />
-            </TouchableOpacity>
-          )}
-        </ScrollView>
       )}
     </View>
   );

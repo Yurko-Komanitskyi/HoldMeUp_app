@@ -14,32 +14,24 @@ import { ACCENT } from '@/shared/config/palette';
 export const ASCENT_TYPES = [
   {
     value: 'FLASH',
-    label: 'Flash',
-    sublabel: 'Першого разу з підказками',
     icon: Zap,
     color: '#eab308',
     bg: 'rgba(234,179,8,0.12)',
   },
   {
     value: 'ONSIGHT',
-    label: 'Onsight',
-    sublabel: 'Першого разу без підказок',
     icon: Eye,
     color: ACCENT,
     bg: 'rgba(123,173,207,0.12)',
   },
   {
     value: 'REDPOINT',
-    label: 'Redpoint',
-    sublabel: 'Після спроб — чисто',
     icon: Circle,
     color: '#ef4444',
     bg: 'rgba(239,68,68,0.12)',
   },
   {
     value: 'REPEAT',
-    label: 'Repeat',
-    sublabel: 'Повторний пролаз',
     icon: RefreshCw,
     color: '#6b7280',
     bg: 'rgba(107,114,128,0.12)',
@@ -47,24 +39,36 @@ export const ASCENT_TYPES = [
 ] as const;
 
 export const FEELINGS = [
-  { value: 1, icon: Frown, color: '#ef4444', label: 'Жахливо' },
-  { value: 2, icon: Frown, color: '#f97316', label: 'Погано' },
-  { value: 3, icon: Meh, color: '#6b7280', label: 'Нормально' },
-  { value: 4, icon: Smile, color: '#84cc16', label: 'Добре' },
-  { value: 5, icon: Flame, color: '#22c55e', label: 'Супер' },
+  { value: 1, icon: Frown, color: '#ef4444' },
+  { value: 2, icon: Frown, color: '#f97316' },
+  { value: 3, icon: Meh, color: '#6b7280' },
+  { value: 4, icon: Smile, color: '#84cc16' },
+  { value: 5, icon: Flame, color: '#22c55e' },
 ];
 
 export interface AscentTypeMeta {
   color: string;
   bg: string;
-  label: string;
 }
 
-export const ASCENT_TYPE_META: Record<string, AscentTypeMeta> = {
-  FLASH: { color: '#eab308', bg: 'rgba(234,179,8,0.12)', label: 'Flash' },
-  ONSIGHT: { color: '#7badcf', bg: 'rgba(123,173,207,0.12)', label: 'Onsight' },
-  REDPOINT: { color: '#ef4444', bg: 'rgba(239,68,68,0.12)', label: 'Redpoint' },
-  REPEAT: { color: '#6b7280', bg: 'rgba(107,114,128,0.1)', label: 'Repeat' },
+/** Ключі для logAscent.ascentTypeLabel.* та ASCENT_TYPE_META. */
+export type AscentTypeMetaKey = 'FLASH' | 'ONSIGHT' | 'REDPOINT' | 'REPEAT';
+
+/** Зводить тип з API до ключа метаданих (ONSIGHT / ON_SIGHT → ONSIGHT). */
+export function normalizeAscentTypeMetaKey(type: string | undefined | null): AscentTypeMetaKey {
+  const u = (type ?? '').toUpperCase().replace(/-/g, '_');
+  if (u === 'ON_SIGHT' || u === 'ONSIGHT') return 'ONSIGHT';
+  if (u === 'FLASH') return 'FLASH';
+  if (u === 'REDPOINT') return 'REDPOINT';
+  if (u === 'REPEAT') return 'REPEAT';
+  return 'REPEAT';
+}
+
+export const ASCENT_TYPE_META: Record<AscentTypeMetaKey, AscentTypeMeta> = {
+  FLASH: { color: '#eab308', bg: 'rgba(234,179,8,0.12)' },
+  ONSIGHT: { color: '#7badcf', bg: 'rgba(123,173,207,0.12)' },
+  REDPOINT: { color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+  REPEAT: { color: '#6b7280', bg: 'rgba(107,114,128,0.1)' },
 };
 
 export interface FeelingMeta {
@@ -104,9 +108,3 @@ export const GRADE_MAP: Record<string, number> = {
   '8c': 21,
   '8c+': 22,
 };
-
-export const PERIODS = [
-  { key: 'week', label: 'Тиждень' },
-  { key: 'month', label: 'Місяць' },
-  { key: 'year', label: 'Рік' },
-] as const;

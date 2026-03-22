@@ -23,6 +23,8 @@ export function useGymManage() {
   const {
     data: autoJoinGyms = [],
     isLoading: gymsLoading,
+    isError: gymsQueryError,
+    error: gymsQueryErrorDetail,
     refetch,
   } = useAutoJoinGymsQuery();
 
@@ -82,6 +84,9 @@ export function useGymManage() {
     currentGymId,
     availableGyms,
     gymsLoading,
+    gymsQueryError,
+    gymsQueryErrorDetail,
+    refetch,
     // ui state
     leavingId,
     joiningId,

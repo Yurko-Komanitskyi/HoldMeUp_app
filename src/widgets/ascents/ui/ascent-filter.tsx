@@ -16,22 +16,10 @@ import { SectionLabel } from '@/shared/ui/section-label';
 import type { AscentFilters } from '@/entities/ascent/model/ascentHooks';
 import { AscentType } from '@/entities/ascent/model/ascent';
 import { ACCENT } from '@/shared/config/palette';
+import { useTranslation } from 'react-i18next';
 
 // ─── types ───────────────────────────────────────────────
 type PeriodKey = 'all' | 'week' | 'month';
-
-// ─── constants ───────────────────────────────────────────
-const PERIODS: { key: PeriodKey; label: string; getDateFrom: () => string | undefined }[] = [
-  { key: 'all', label: 'Усі', getDateFrom: () => undefined },
-  { key: 'week', label: 'Тиждень', getDateFrom: () => subDays(7) },
-  { key: 'month', label: 'Місяць', getDateFrom: () => subDays(30) },
-];
-
-const ASCENT_TYPES: { value: AscentType; label: string }[] = [
-  { value: AscentType.FLASH, label: 'Флеш' },
-  { value: AscentType.ON_SIGHT, label: 'Онсайт' },
-  { value: AscentType.REDPOINT, label: 'Редпоінт' },
-];
 
 const CHIP_PILL_STYLE = {
   borderRadius: 99,
@@ -72,6 +60,24 @@ interface AscentFilterBarProps {
 }
 
 export function AscentFilterBar({ setFilters }: AscentFilterBarProps) {
+  const { t } = useTranslation();
+  const PERIODS = React.useMemo(
+    (): { key: PeriodKey; label: string; getDateFrom: () => string | undefined }[] => [
+      { key: 'all', label: t('ascents.filterPeriod.all'), getDateFrom: () => undefined },
+      { key: 'week', label: t('ascents.filterPeriod.week'), getDateFrom: () => subDays(7) },
+      { key: 'month', label: t('ascents.filterPeriod.month'), getDateFrom: () => subDays(30) },
+    ],
+    [t]
+  );
+  const ASCENT_TYPE_OPTIONS = React.useMemo(
+    (): { value: AscentType; label: string }[] => [
+      { value: AscentType.FLASH, label: t('ascents.filterTypeShort.FLASH') },
+      { value: AscentType.ON_SIGHT, label: t('ascents.filterTypeShort.ON_SIGHT') },
+      { value: AscentType.REDPOINT, label: t('ascents.filterTypeShort.REDPOINT') },
+    ],
+    [t]
+  );
+
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const [localFilters, setLocalFilters] = React.useState<AscentFilters>({});
@@ -160,7 +166,7 @@ export function AscentFilterBar({ setFilters }: AscentFilterBarProps) {
                   ? 'rgba(255,255,255,0.55)'
                   : 'rgba(0,0,0,0.5)',
             }}>
-            {'Фільтри'}
+            {t('ascents.filterPanel.title')}
           </Text>
 
           {/* active badge */}
@@ -216,7 +222,7 @@ export function AscentFilterBar({ setFilters }: AscentFilterBarProps) {
           <View style={{ padding: 14, gap: 14 }}>
             {/* Period */}
             <View>
-              <SectionLabel>{'Період'}</SectionLabel>
+              <SectionLabel>{t('ascents.filterPanel.period')}</SectionLabel>
               <View style={{ flexDirection: 'row', gap: 6 }}>
                 {PERIODS.map((p) => (
                   <FilterChip
@@ -233,9 +239,9 @@ export function AscentFilterBar({ setFilters }: AscentFilterBarProps) {
 
             {/* Type */}
             <View>
-              <SectionLabel>{'Тип'}</SectionLabel>
+              <SectionLabel>{t('ascents.filterPanel.type')}</SectionLabel>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-                {ASCENT_TYPES.map((item) => (
+                {ASCENT_TYPE_OPTIONS.map((item) => (
                   <FilterChip
                     key={item.value}
                     label={item.label}
@@ -250,17 +256,17 @@ export function AscentFilterBar({ setFilters }: AscentFilterBarProps) {
 
             {/* Success */}
             <View>
-              <SectionLabel>{'Результат'}</SectionLabel>
+              <SectionLabel>{t('ascents.filterPanel.result')}</SectionLabel>
               <View style={{ flexDirection: 'row', gap: 6 }}>
                 <FilterChip
-                  label={'Успіх'}
+                  label={t('ascents.filterPanel.success')}
                   active={localFilters.success === true}
                   onPress={() => toggleSuccess(true)}
                   isDark={isDark}
                   style={CHIP_PILL_STYLE}
                 />
                 <FilterChip
-                  label={'Провал'}
+                  label={t('ascents.filterPanel.fail')}
                   active={localFilters.success === false}
                   onPress={() => toggleSuccess(false)}
                   isDark={isDark}

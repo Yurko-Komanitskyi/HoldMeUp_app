@@ -3,6 +3,7 @@ import { View, TextInput } from 'react-native';
 
 import { Text } from '@/shared/ui/text';
 import { SectionLabel } from '@/shared/ui/section-label';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   value: string;
@@ -23,6 +24,7 @@ export function NotesSection({
   inputColor,
   placeholderColor,
 }: Props) {
+  const { t } = useTranslation();
   return (
     <View
       style={{
@@ -32,13 +34,13 @@ export function NotesSection({
         borderWidth: 1,
         borderColor,
       }}>
-      <SectionLabel>{"Нотатки (необов'язково)"}</SectionLabel>
+      <SectionLabel>{t('logAscent.notesOptional')}</SectionLabel>
       <TextInput
         value={value}
         onChangeText={onChange}
         multiline
         numberOfLines={4}
-        placeholder="Бета, де застряг, що спрацювало..."
+        placeholder={t('logAscent.notesPlaceholder')}
         placeholderTextColor={placeholderColor}
         style={{
           backgroundColor: inputBg,

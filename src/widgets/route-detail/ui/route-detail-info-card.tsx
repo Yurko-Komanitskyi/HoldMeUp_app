@@ -4,15 +4,17 @@ import { Calendar, Mountain, Ruler, TrendingUp, User } from 'lucide-react-native
 import { useColorScheme } from 'nativewind';
 
 import { Text } from '@/shared/ui/text';
+import { useTranslation } from 'react-i18next';
 
 type InfoRowProps = {
   icon: React.ComponentType<{ size?: number; color?: string }>;
   label: string;
   value: string;
   iconColor: string;
+  isDark: boolean;
 };
 
-function InfoRow({ icon: Icon, label, value, iconColor }: InfoRowProps) {
+function InfoRow({ icon: Icon, label, value, iconColor, isDark }: InfoRowProps) {
   return (
     <View
       style={{
@@ -23,9 +25,23 @@ function InfoRow({ icon: Icon, label, value, iconColor }: InfoRowProps) {
       }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <Icon size={16} color={iconColor} />
-        <Text style={{ fontSize: 13, color: 'rgba(148,163,184,1)' }}>{label}</Text>
+        <Text
+          style={{
+            fontSize: 13,
+            color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)',
+          }}>
+          {label}
+        </Text>
       </View>
-      <Text style={{ fontSize: 13, fontWeight: '600', color: 'rgba(15,23,42,0.92)' }}>
+      <Text
+        style={{
+          fontSize: 13,
+          fontWeight: '600',
+          color: isDark ? 'rgba(255,255,255,0.88)' : 'rgba(15,23,42,0.88)',
+          maxWidth: '55%',
+          textAlign: 'right',
+        }}
+        numberOfLines={1}>
         {value}
       </Text>
     </View>
@@ -47,10 +63,11 @@ export function RouteDetailInfoCard({
   setterName,
   addedDate,
 }: Props) {
+  const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  const dividerColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+  const dividerColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
 
   return (
     <View
@@ -60,7 +77,7 @@ export function RouteDetailInfoCard({
         borderRadius: 20,
         borderWidth: 1,
         borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)',
-        backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : '#fff',
+        backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : '#ffffff',
         overflow: 'hidden',
       }}>
       <View style={{ paddingHorizontal: 16 }}>
@@ -68,16 +85,23 @@ export function RouteDetailInfoCard({
           <>
             <InfoRow
               icon={Mountain}
-              label="Сектор"
+              label={t('routeDetail.sector')}
               value={sectorName}
               iconColor="#7badcf"
+              isDark={isDark}
             />
             <View style={{ height: 1, backgroundColor: dividerColor }} />
           </>
         )}
         {styleLabel && (
           <>
-            <InfoRow icon={TrendingUp} label="Стиль" value={styleLabel} iconColor="#a78bfa" />
+            <InfoRow
+              icon={TrendingUp}
+              label={t('routeDetail.style')}
+              value={styleLabel}
+              iconColor="#a78bfa"
+              isDark={isDark}
+            />
             <View style={{ height: 1, backgroundColor: dividerColor }} />
           </>
         )}
@@ -85,22 +109,30 @@ export function RouteDetailInfoCard({
           <>
             <InfoRow
               icon={Ruler}
-              label="Висота"
-              value={`${height} м`}
+              label={t('routeDetail.height')}
+              value={t('routeDetail.heightValue', { value: height })}
               iconColor="#f59e0b"
+              isDark={isDark}
             />
             <View style={{ height: 1, backgroundColor: dividerColor }} />
           </>
         ) : null}
-        <InfoRow icon={User} label="Setter" value={setterName} iconColor="#7badcf" />
+        <InfoRow
+          icon={User}
+          label={t('routeDetail.setter')}
+          value={setterName}
+          iconColor="#7badcf"
+          isDark={isDark}
+        />
         {addedDate && (
           <>
             <View style={{ height: 1, backgroundColor: dividerColor }} />
             <InfoRow
               icon={Calendar}
-              label="Додано"
+              label={t('routeDetail.added')}
               value={addedDate}
               iconColor={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}
+              isDark={isDark}
             />
           </>
         )}
@@ -108,4 +140,3 @@ export function RouteDetailInfoCard({
     </View>
   );
 }
-

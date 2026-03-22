@@ -3,20 +3,21 @@ import {
   View,
   ScrollView,
   Pressable,
-  TextInput,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useColorScheme } from 'nativewind';
 import { Controller } from 'react-hook-form';
 import { CheckCircle2 } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 
 import { Text } from '@/shared/ui/text';
 import { Input } from '@/shared/ui/input';
+import { Textarea } from '@/shared/ui/textarea';
 import { ServerErrorBanner } from '@/shared/ui/server-error-banner';
 import { RouteAnnotator } from '@/features/route-annotation/ui/route-annotator';
 import { ACCENT } from '@/shared/config/palette';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import { GRADES, HOLD_TYPES, ROUTE_COLORS } from '@/entities/route/lib/constants';
 import { useGymMemberStore } from '@/entities/gym-member/model/gymMemberStore';
 import {
@@ -24,10 +25,13 @@ import {
   type RouteFormInitialValues,
   type RouteFormSubmitData,
 } from '@/widgets/edit-route/ui/useRouteForm';
+import type { RouteStyle } from '@/entities/route/model/route';
+
 
 import { RouteFormPhoto } from './route-form-photo';
 import { RouteFormSubmitBar } from './route-form-submit';
 import { useSectorsQuery } from '@/entities/sector/model/sectorHooks';
+import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
 
 interface RouteFormWidgetProps {
   initialValues?: RouteFormInitialValues;
@@ -37,9 +41,11 @@ interface RouteFormWidgetProps {
   onSubmitForm: (data: RouteFormSubmitData) => Promise<void>;
 }
 
-function SectionTitle({ children }: { children: string }) {
+function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <Text className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+    <Text
+      className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+      style={{ marginBottom: 14 }}>
       {children}
     </Text>
   );
@@ -49,11 +55,15 @@ function SelectChip({
   label,
   selected,
   onPress,
+  accentColor,
 }: {
   label: string;
   selected: boolean;
   onPress: () => void;
+  accentColor?: string;
 }) {
+  const colors = useThemeColor();
+  const color = accentColor ?? ACCENT;
   return (
     <Pressable
       onPress={onPress}
@@ -62,14 +72,14 @@ function SelectChip({
         borderWidth: 1,
         paddingHorizontal: 14,
         paddingVertical: 8,
-        borderColor: selected ? ACCENT : 'rgba(128,128,128,0.3)',
-        backgroundColor: selected ? ACCENT + '22' : 'transparent',
+        borderColor: selected ? color : colors.border,
+        backgroundColor: selected ? color + '1a' : 'transparent',
       }}>
       <Text
         style={{
           fontSize: 14,
           fontWeight: selected ? '700' : '400',
-          color: selected ? ACCENT : 'rgba(128,128,128,0.8)',
+          color: selected ? color : colors.mutedForeground,
         }}>
         {label}
       </Text>
@@ -84,16 +94,30 @@ export function RouteFormWidget({
   submitLabel,
   onSubmitForm,
 }: RouteFormWidgetProps) {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { t } = useTranslation();
+  const colors = useThemeColor();
+  const isDark = colors.isDark;
+
+  const STYLE_OPTIONS = React.useMemo(
+    (): { value: RouteStyle; label: string; color: string }[] => [
+      { value: 'boulder', label: t('routes.styleKeys.boulder'), color: '#f59e0b' },
+      { value: 'lead', label: t('routes.styleKeys.lead'), color: '#3b82f6' },
+      { value: 'top_rope', label: t('routes.styleKeys.top_rope'), color: '#22c55e' },
+      { value: 'speed', label: t('routes.styleKeys.speed'), color: '#ef4444' },
+    ],
+    [t]
+  );
 
   const currentGymId = useGymMemberStore((s) => s.currentGymId);
-  const { data: sectors = [] } = useSectorsQuery(currentGymId ?? '');
+  const {
+    data: sectors = [],
+    isError: sectorsError,
+    isLoading: sectorsLoading,
+    error: sectorsQueryError,
+    refetch: refetchSectors,
+  } = useSectorsQuery(currentGymId ?? '');
 
-  const inputBg = isDark ? '#1a1a2e' : '#f4f4f8';
-  const inputColor = isDark ? '#ffffff' : '#000000';
-  const placeholderColor = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)';
-  const iconColor = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)';
+  const iconColor = colors.mutedForeground;
 
   const { form, state, actions } = useRouteForm(initialValues, onSubmitForm);
   const { control, setValue } = form;
@@ -108,14 +132,15 @@ export function RouteFormWidget({
     selectedSector,
     selectedHoldTypes,
     selectedStatus,
+    selectedStyle,
     errors,
     isSubmitting,
   } = state;
   const { setAnnotatorVisible, setAnnotationData, pickPhoto, removePhoto, toggleHoldType, submit } =
     actions;
 
-  const bgColor = isDark ? '#000000' : '#ffffff';
-  const borderTopColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+  const bgColor = colors.background;
+  const borderTopColor = colors.border;
 
   return (
     <View style={{ flex: 1 }}>
@@ -125,8 +150,14 @@ export function RouteFormWidget({
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingBottom: 110 }}>
-          <View style={{ gap: 24, paddingHorizontal: 16, paddingTop: 20 }}>
+          contentContainerStyle={{ paddingBottom: 128 }}>
+          <View style={{ gap: 28, paddingHorizontal: 20, paddingTop: 24 }}>
+            {sectorsError && !sectorsLoading ? (
+              <QueryErrorPanel
+                error={sectorsQueryError ?? new Error('')}
+                onRetry={() => void refetchSectors()}
+              />
+            ) : null}
             {(title || subtitle) && (
               <View>
                 {title && <Text className="text-2xl font-bold text-foreground">{title}</Text>}
@@ -140,7 +171,7 @@ export function RouteFormWidget({
 
             {/* Name */}
             <View>
-              <SectionTitle>Назва маршруту</SectionTitle>
+              <SectionTitle>{t('routeForm.routeName')}</SectionTitle>
               <Controller
                 control={control}
                 name="name"
@@ -149,7 +180,7 @@ export function RouteFormWidget({
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
-                    placeholder="напр. Стіна рапторів"
+                    placeholder={t('routeForm.namePlaceholder')}
                     returnKeyType="next"
                   />
                 )}
@@ -161,13 +192,14 @@ export function RouteFormWidget({
 
             {/* Status */}
             <View>
-              <SectionTitle>Статус</SectionTitle>
+              <SectionTitle>{t('routeForm.status')}</SectionTitle>
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 {(['active', 'draft'] as const).map((s) => {
                   const isSelected = selectedStatus === s;
                   const accentColor = s === 'active' ? '#22c55e' : '#f59e0b';
-                  const label = s === 'active' ? 'Активний' : 'Чернетка';
-                  const sub = s === 'active' ? 'Відкритий для пролазів' : 'Ще не відкрито';
+                  const label = s === 'active' ? t('routeForm.statusActive') : t('routeForm.statusDraft');
+                  const sub =
+                    s === 'active' ? t('routeForm.statusActiveSub') : t('routeForm.statusDraftSub');
                   return (
                     <Pressable
                       key={s}
@@ -178,26 +210,14 @@ export function RouteFormWidget({
                         borderRadius: 16,
                         paddingVertical: 13,
                         borderWidth: 1.5,
-                        borderColor: isSelected
-                          ? accentColor
-                          : isDark
-                            ? 'rgba(255,255,255,0.1)'
-                            : 'rgba(0,0,0,0.1)',
-                        backgroundColor: isSelected
-                          ? accentColor + '1a'
-                          : isDark
-                            ? 'rgba(255,255,255,0.03)'
-                            : 'rgba(0,0,0,0.02)',
+                        borderColor: isSelected ? accentColor : colors.border,
+                        backgroundColor: isSelected ? accentColor + '1a' : colors.muted,
                       }}>
                       <Text
                         style={{
                           fontSize: 14,
                           fontWeight: '700',
-                          color: isSelected
-                            ? accentColor
-                            : isDark
-                              ? 'rgba(255,255,255,0.55)'
-                              : 'rgba(0,0,0,0.5)',
+                          color: isSelected ? accentColor : colors.mutedForeground,
                         }}>
                         {label}
                       </Text>
@@ -205,7 +225,7 @@ export function RouteFormWidget({
                         style={{
                           marginTop: 3,
                           fontSize: 11,
-                          color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)',
+                          color: colors.mutedForeground,
                         }}>
                         {sub}
                       </Text>
@@ -215,9 +235,58 @@ export function RouteFormWidget({
               </View>
             </View>
 
+            {/* Style */}
+            <View>
+              <SectionTitle>{t('routeForm.style')}</SectionTitle>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {STYLE_OPTIONS.map((opt) => {
+                  const isSelected = selectedStyle === opt.value;
+                  return (
+                    <Pressable
+                      key={opt.value}
+                      onPress={() =>
+                        setValue('style', isSelected ? undefined : opt.value)
+                      }
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 7,
+                        borderRadius: 12,
+                        borderWidth: 1,
+                        paddingHorizontal: 14,
+                        paddingVertical: 9,
+                        borderColor: isSelected ? opt.color : colors.border,
+                        backgroundColor: isSelected ? opt.color + '1a' : 'transparent',
+                      }}>
+                      <View
+                        style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: 4,
+                          backgroundColor: isSelected ? opt.color : colors.muted,
+                        }}
+                      />
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: isSelected ? '700' : '400',
+                          color: isSelected ? opt.color : colors.mutedForeground,
+                        }}>
+                        {opt.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
             {/* Grade */}
             <View>
-              <SectionTitle>{`Категорія${selectedGrade ? ` — ${selectedGrade}` : ''}`}</SectionTitle>
+              <SectionTitle>
+                {selectedGrade
+                  ? t('routeForm.gradeWithValue', { grade: selectedGrade })
+                  : t('routeForm.gradeSection')}
+              </SectionTitle>
               {errors.grade && (
                 <Text className="mb-2 text-xs text-destructive">{errors.grade.message}</Text>
               )}
@@ -236,14 +305,14 @@ export function RouteFormWidget({
                           justifyContent: 'center',
                           borderRadius: 16,
                           borderWidth: 1,
-                          borderColor: isActive ? ACCENT : 'rgba(128,128,128,0.3)',
-                          backgroundColor: isActive ? ACCENT + '22' : 'transparent',
+                          borderColor: isActive ? ACCENT : colors.border,
+                          backgroundColor: isActive ? ACCENT + '1a' : 'transparent',
                         }}>
                         <Text
                           style={{
                             fontSize: 14,
                             fontWeight: '700',
-                            color: isActive ? ACCENT : 'rgba(128,128,128,0.8)',
+                            color: isActive ? ACCENT : colors.mutedForeground,
                           }}>
                           {g}
                         </Text>
@@ -256,48 +325,43 @@ export function RouteFormWidget({
 
             {/* Color */}
             <View>
-              <SectionTitle>Колір зачіпок</SectionTitle>
+              <SectionTitle>{t('routeForm.holdColor')}</SectionTitle>
               {errors.color && (
                 <Text className="mb-2 text-xs text-destructive">{errors.color.message}</Text>
               )}
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 14, paddingVertical: 6, paddingRight: 4 }}>
                 {ROUTE_COLORS.map((c) => {
                   const isSelected = selectedColor === c.value;
                   const isMulticolor = c.value === 'multicolor';
                   const isWhite = c.value === 'white';
-                  const textOnSwatch = isWhite || isMulticolor ? '#374151' : '#fff';
+                  const checkColor = isWhite ? '#1f2937' : '#ffffff';
                   return (
                     <Pressable
                       key={c.value}
                       onPress={() => setValue('color', c.value)}
-                      style={{ width: 68, alignItems: 'center', gap: 6 }}>
+                      style={{ width: 76, alignItems: 'center', gap: 8 }}>
                       <View
                         style={{
-                          width: 56,
-                          height: 56,
-                          borderRadius: 18,
+                          width: 52,
+                          height: 52,
+                          borderRadius: 16,
                           overflow: 'hidden',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          borderWidth: isSelected ? 3 : isWhite ? 1 : 0,
-                          borderColor: isSelected ? ACCENT : '#d1d5db',
-                          shadowColor: c.hex ?? '#000',
-                          shadowOpacity: isSelected ? 0.65 : 0.2,
-                          shadowRadius: isSelected ? 9 : 3,
+                          borderWidth: isSelected ? 3 : isWhite ? 1.5 : 0,
+                          borderColor: isSelected ? ACCENT : colors.border,
+                          shadowColor: '#000',
+                          shadowOpacity: isSelected ? 0.25 : 0.08,
+                          shadowRadius: isSelected ? 6 : 3,
                           shadowOffset: { width: 0, height: 2 },
-                          elevation: isSelected ? 7 : 2,
-                          transform: [{ scale: isSelected ? 1.1 : 1 }],
+                          elevation: isSelected ? 4 : 2,
                         }}>
                         {isMulticolor ? (
                           <LinearGradient
-                            colors={[
-                              '#ef4444',
-                              '#f97316',
-                              '#eab308',
-                              '#22c55e',
-                              '#3b82f6',
-                              '#a855f7',
-                            ]}
+                            colors={['#ef4444', '#eab308', '#22c55e', '#3b82f6', '#a855f7']}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
                             style={{
@@ -309,7 +373,7 @@ export function RouteFormWidget({
                               alignItems: 'center',
                               justifyContent: 'center',
                             }}>
-                            {isSelected && <CheckCircle2 size={22} color={textOnSwatch} />}
+                            {isSelected && <CheckCircle2 size={20} color={checkColor} />}
                           </LinearGradient>
                         ) : (
                           <View
@@ -323,34 +387,32 @@ export function RouteFormWidget({
                               alignItems: 'center',
                               justifyContent: 'center',
                             }}>
-                            {isSelected && <CheckCircle2 size={22} color={textOnSwatch} />}
+                            {isSelected && <CheckCircle2 size={20} color={checkColor} />}
                           </View>
                         )}
                       </View>
                       <Text
-                        className="text-center text-xs"
+                        className="text-center text-[11px] leading-tight"
                         style={{
                           color: isSelected
                             ? isMulticolor
                               ? '#f97316'
                               : (c.hex ?? ACCENT)
-                            : isDark
-                              ? 'rgba(255,255,255,0.5)'
-                              : 'rgba(0,0,0,0.5)',
-                          fontWeight: isSelected ? '700' : '400',
+                            : colors.mutedForeground,
+                          fontWeight: isSelected ? '700' : '500',
                         }}
-                        numberOfLines={1}>
-                        {c.label}
+                        numberOfLines={2}>
+                        {t(`routeColors.${c.value}`)}
                       </Text>
                     </Pressable>
                   );
                 })}
-              </View>
+              </ScrollView>
             </View>
 
             {/* Sector */}
             <View>
-              <SectionTitle>Сектор</SectionTitle>
+              <SectionTitle>{t('routeForm.sector')}</SectionTitle>
               {errors.sectorId && (
                 <Text className="mb-2 text-xs text-destructive">{errors.sectorId.message}</Text>
               )}
@@ -360,16 +422,16 @@ export function RouteFormWidget({
                     borderRadius: 16,
                     borderWidth: 1,
                     borderStyle: 'dashed',
-                    borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)',
+                    borderColor: colors.border,
                     paddingVertical: 24,
                     alignItems: 'center',
                   }}>
                   <Text
                     style={{
                       fontSize: 13,
-                      color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)',
+                      color: colors.mutedForeground,
                     }}>
-                    {currentGymId ? 'Секторів у залі немає' : 'Спершу оберіть зал'}
+                    {currentGymId ? t('routeForm.noSectorsInGym') : t('routeForm.selectGymFirst')}
                   </Text>
                 </View>
               ) : (
@@ -388,12 +450,12 @@ export function RouteFormWidget({
 
             {/* Hold Types */}
             <View>
-              <SectionTitle>{"Типи тримок (необов'язково)"}</SectionTitle>
+              <SectionTitle>{t('routeForm.holdTypesOptional')}</SectionTitle>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                 {HOLD_TYPES.map((h) => (
                   <SelectChip
                     key={h.value}
-                    label={h.label}
+                    label={t(`holdTypes.${h.value}`)}
                     selected={selectedHoldTypes.includes(h.value)}
                     onPress={() => toggleHoldType(h.value)}
                   />
@@ -403,73 +465,41 @@ export function RouteFormWidget({
 
             {/* Tags */}
             <View>
-              <SectionTitle>{"Теги (необов'язково)"}</SectionTitle>
+              <SectionTitle>{t('routeForm.tagsOptional')}</SectionTitle>
               <Controller
                 control={control}
                 name="tags"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
+                  <Input
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
-                    placeholder="напр. технічний, overhang, нависання"
-                    placeholderTextColor={placeholderColor}
-                    style={{
-                      backgroundColor: inputBg,
-                      color: inputColor,
-                      fontSize: 14,
-                      borderRadius: 14,
-                      paddingHorizontal: 16,
-                      paddingVertical: 12,
-                    }}
+                    placeholder={t('routeForm.tagsPlaceholder')}
                     returnKeyType="next"
                   />
                 )}
               />
-              <Text
-                style={{
-                  marginTop: 4,
-                  fontSize: 11,
-                  color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)',
-                }}>
-                Через кому
-              </Text>
+              <Text className="mt-1.5 text-[11px] text-muted-foreground">{t('common.tagsCommaHint')}</Text>
             </View>
 
             {/* Height */}
             <View>
-              <SectionTitle>{"Висота маршруту (необов'язково)"}</SectionTitle>
+              <SectionTitle>{t('routeForm.heightOptional')}</SectionTitle>
               <Controller
                 control={control}
                 name="height"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 12,
-                      borderRadius: 16,
-                      paddingHorizontal: 16,
-                      paddingVertical: 14,
-                      backgroundColor: inputBg,
-                    }}>
-                    <TextInput
+                  <View className="flex-row items-center gap-2">
+                    <Input
+                      className="flex-1"
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
                       keyboardType="decimal-pad"
-                      placeholder="напр. 5.5"
-                      placeholderTextColor={placeholderColor}
-                      style={{ flex: 1, color: inputColor, fontSize: 15 }}
+                      placeholder={t('routeForm.heightPlaceholder')}
                       returnKeyType="next"
                     />
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)',
-                      }}>
-                      м
-                    </Text>
+                    <Text className="text-sm text-muted-foreground">{t('common.meter')}</Text>
                   </View>
                 )}
               />
@@ -477,28 +507,18 @@ export function RouteFormWidget({
 
             {/* Description */}
             <View>
-              <SectionTitle>{"Опис (необов'язково)"}</SectionTitle>
+              <SectionTitle>{t('routeForm.descriptionOptional')}</SectionTitle>
               <Controller
                 control={control}
                 name="description"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
+                  <Textarea
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
-                    multiline
-                    numberOfLines={4}
-                    placeholder="Особливості маршруту, поради..."
-                    placeholderTextColor={placeholderColor}
-                    style={{
-                      backgroundColor: inputBg,
-                      color: inputColor,
-                      fontSize: 14,
-                      borderRadius: 16,
-                      padding: 16,
-                      minHeight: 96,
-                      textAlignVertical: 'top',
-                    }}
+                    placeholder={t('routeForm.descriptionPlaceholder')}
+                    numberOfLines={8}
+                    className="rounded-xl px-4 py-3"
                   />
                 )}
               />
@@ -506,7 +526,7 @@ export function RouteFormWidget({
 
             {/* Photo */}
             <View>
-              <SectionTitle>{"Фото маршруту (необов'язково)"}</SectionTitle>
+              <SectionTitle>{t('routeForm.photoOptional')}</SectionTitle>
               <RouteFormPhoto
                 localPhotoUri={localPhotoUri}
                 annotationData={annotationData}
@@ -524,7 +544,6 @@ export function RouteFormWidget({
         <RouteFormSubmitBar
           bgColor={bgColor}
           borderTopColor={borderTopColor}
-          isDark={isDark}
           isSubmitting={isSubmitting}
           uploading={uploading}
           submitLabel={submitLabel}

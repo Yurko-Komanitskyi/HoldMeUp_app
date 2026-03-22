@@ -8,11 +8,11 @@ import { Text } from '@/shared/ui/text';
 import { Icon } from '@/shared/ui/icon';
 import { useGymMemberStore } from '@/entities/gym-member/model/gymMemberStore';
 import { useGymMembersQuery } from '@/entities/gym-member/model/gymMemberHooks';
-import { useRoutesQuery } from '@/entities/route/model/routeHooks';
-import { useSectorsQuery } from '@/entities/sector/model/sectorHooks';
+import { useGymRoutesInventoryQuery } from '@/entities/stats/model/statsHooks';
 import { GymMemberRole } from '@/entities/gym-member/model/gym-member';
 import { MemberRow } from '@/entities/gym-member/ui/member-row';
 import { MetricCard } from '@/shared/ui/metric-card';
+import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
 
 export function GymStatsWidget() {
   const { t } = useTranslation();
@@ -24,27 +24,31 @@ export function GymStatsWidget() {
 
   const {
     data: members = [],
-    isLoading: membersLoading,
     refetch: refetchMembers,
+    isError: membersError,
+    error: membersQueryError,
   } = useGymMembersQuery(currentGymId ?? '');
 
   const {
-    data: routes = [],
-    isLoading: routesLoading,
-    refetch: refetchRoutes,
-  } = useRoutesQuery({ gymId: currentGymId ?? '', status: ['ACTIVE'] });
-
-  const { data: sectors = [], isLoading: sectorsLoading } = useSectorsQuery(currentGymId ?? '');
+    data: inventory,
+    refetch: refetchInventory,
+    isError: inventoryError,
+    isLoading: inventoryLoading,
+    error: inventoryQueryError,
+  } = useGymRoutesInventoryQuery(currentGymId ?? undefined, { enabled: !!currentGymId });
 
   const [refreshing, setRefreshing] = React.useState(false);
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([refetchMembers(), refetchRoutes()]);
+    await Promise.all([refetchMembers(), refetchInventory()]);
     setRefreshing(false);
-  }, [refetchMembers, refetchRoutes]);
+  }, [refetchMembers, refetchInventory]);
 
-  const activeRoutes = routes.filter((r) => r.status?.toLowerCase() === 'active').length;
+  const activeRoutes = inventory?.activeTotal ?? 0;
+  const archivedRoutes = inventory?.archivedTotal ?? 0;
+  const totalRoutes = inventory?.totalRoutes ?? 0;
+  const bySector = inventory?.bySector ?? [];
   const customerCount = members.filter(
     (m) => m.role.toLowerCase() === GymMemberRole.CUSTOMER.toLowerCase()
   ).length;
@@ -70,6 +74,23 @@ export function GymStatsWidget() {
     );
   }
 
+  if (inventoryError && !inventoryLoading && inventory == null) {
+    return (
+      <View className="flex-1 bg-background">
+        <View className="border-b border-border px-4 pb-4 pt-6">
+          <Text variant="h3" className="text-foreground">
+            {t('gymStats.title')}
+          </Text>
+          <Text className="mt-0.5 text-sm text-muted-foreground">{currentGym.name}</Text>
+        </View>
+        <QueryErrorPanel
+          error={inventoryQueryError ?? new Error('')}
+          onRetry={() => void refetchInventory()}
+        />
+      </View>
+    );
+  }
+
   return (
     <ScrollView
       className="flex-1 bg-background"
@@ -85,6 +106,16 @@ export function GymStatsWidget() {
           <Text className="mt-0.5 text-sm text-muted-foreground">{currentGym.name}</Text>
         </View>
 
+        {membersError ? (
+          <View className="px-4">
+            <QueryErrorPanel
+              variant="compact"
+              error={membersQueryError ?? new Error('')}
+              onRetry={() => void refetchMembers()}
+            />
+          </View>
+        ) : null}
+
         {/* Main Metrics */}
         <View className="gap-3 px-4">
           <View className="flex-row gap-3">
@@ -92,7 +123,7 @@ export function GymStatsWidget() {
               icon={RouteIcon}
               value={activeRoutes}
               label={t('gymStats.activeRoutes')}
-              sub={t('gymStats.totalRoutes', { total: routes.length })}
+              sub={t('gymStats.totalRoutes', { total: totalRoutes })}
               accent
             />
             <MetricCard
@@ -103,31 +134,35 @@ export function GymStatsWidget() {
             />
           </View>
           <View className="flex-row gap-3">
-            <MetricCard icon={Map} value={sectors.length} label={t('gymStats.sectors')} />
-            <MetricCard
-              icon={TrendingUp}
-              value={routes.filter((r) => r.status === 'archived').length}
-              label={t('gymStats.archived')}
-            />
+            <MetricCard icon={Map} value={bySector.length} label={t('gymStats.sectors')} />
+            <MetricCard icon={TrendingUp} value={archivedRoutes} label={t('gymStats.archived')} />
           </View>
         </View>
 
         {/* Routes by sector breakdown */}
-        {sectors.length > 0 && (
+        {bySector.length > 0 && (
           <View className="px-4">
             <Text className="mb-3 text-xs font-medium uppercase tracking-widest text-muted-foreground">
               {t('gymStats.routesBySector')}
             </Text>
             <View className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
-              {sectors.map((sector) => {
-                const count = routes.filter((r) => r.sectorId === sector.id).length;
-                const pct = routes.length > 0 ? Math.round((count / routes.length) * 100) : 0;
+              {bySector.map((sector) => {
+                const count = sector.activeRoutes + sector.archivedRoutes;
+                const pct = totalRoutes > 0 ? Math.round((count / totalRoutes) * 100) : 0;
                 return (
-                  <View key={sector.id} className="gap-2 px-4 py-3">
+                  <View key={sector.sectorId} className="gap-2 px-4 py-3">
                     <View className="flex-row items-center justify-between">
-                      <Text className="text-sm font-medium text-foreground">{sector.name}</Text>
-                      <Text className="text-sm font-semibold text-accent">{count}</Text>
+                      <Text className="text-sm font-medium text-foreground">
+                        {sector.sectorName ?? sector.sectorId}
+                      </Text>
+                      <Text className="text-sm font-semibold text-primary">{count}</Text>
                     </View>
+                    <Text className="text-xs text-muted-foreground">
+                      {t('gymStats.sectorRoutesBreakdown', {
+                        active: sector.activeRoutes,
+                        archived: sector.archivedRoutes,
+                      })}
+                    </Text>
                     <View className="h-1.5 w-full rounded-full bg-muted/40">
                       <View
                         className="h-1.5 rounded-full bg-accent/60"

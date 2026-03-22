@@ -3,12 +3,11 @@ import { View, Pressable, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, useRouter } from 'expo-router';
 import { Bell, ChevronDown, RefreshCw, Building2, Settings2 } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
 
 import { Button } from '@/shared/ui/button';
 import { Icon } from '@/shared/ui/icon';
 import { Text } from '@/shared/ui/text';
-import { Avatar, AvatarFallback } from '@/shared/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,8 +21,10 @@ import { ACCENT } from '@/shared/config/palette';
 import { useUserStore } from '@/entities/user/model/userStore';
 import { useGymMemberStore } from '@/entities/gym-member/model/gymMemberStore';
 import { useGymMembersQuery } from '@/entities/gym-member/model/gymMemberHooks';
+import { useTranslation } from 'react-i18next';
 
 function AppHeader() {
+  const { t } = useTranslation();
   const user = useUserStore((state) => state.currentUser);
   const memberships = useGymMemberStore((state) => state.memberships);
   const currentGymId = useGymMemberStore((state) => state.currentGymId);
@@ -39,40 +40,49 @@ function AppHeader() {
     [gyms, currentGymId]
   );
 
-  const { colorScheme } = useColorScheme();
-  const iconColor = colorScheme === 'dark' ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.55)';
-  const foregroundColor = colorScheme === 'dark' ? '#ffffff' : '#000000';
+  const themeColors = useThemeColor();
+  const iconColor = themeColors.mutedForeground;
+  const foregroundColor = themeColors.foreground;
 
   const initials =
-    user?.firstName?.charAt(0) ?? user?.lastName?.charAt(0) ?? user?.email?.charAt(0) ?? '?';
+    (user?.firstName?.charAt(0) ?? '') + (user?.lastName?.charAt(0) ?? '') ||
+    (user?.email?.charAt(0)?.toUpperCase() ?? '?');
 
   const gymLabel = isLoading
-    ? '...'
+    ? t('common.loading')
     : isError
-      ? 'Помилка'
+      ? t('common.error')
       : currentGym
         ? currentGym.name
-        : 'Оберіть зал';
+        : t('common.pickGym');
 
   return (
     <SafeAreaView edges={['top']} className="z-10 bg-background">
-      <View
-        className="border-b border-border/60 px-4"
-        style={{ paddingTop: 14, paddingBottom: 10 }}>
+      <View className="px-4" style={{ paddingTop: 14, paddingBottom: 10 }}>
         {user ? (
           <View className="relative flex-row items-center">
             <Pressable
               onPress={() => router.push('/(tabs)/profile')}
               className="flex-1 flex-row items-center gap-3">
-              <Avatar alt="User Avatar" className="h-10 w-10 rounded-2xl bg-accent/15">
-                <AvatarFallback className="rounded-2xl">
-                  <Text className="text-sm font-bold text-accent">{initials}</Text>
-                </AvatarFallback>
-              </Avatar>
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  backgroundColor: ACCENT + '20',
+                  borderWidth: 2,
+                  borderColor: ACCENT + '50',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                <Text style={{ fontSize: 14, fontWeight: '800', color: ACCENT, lineHeight: 17 }}>
+                  {initials}
+                </Text>
+              </View>
               <View className="gap-0.5">
-                <Text className="text-xs text-muted-foreground">Привіт</Text>
+                <Text className="text-xs text-muted-foreground">{t('common.hello')}</Text>
                 <Text className="text-sm font-semibold text-foreground" numberOfLines={1}>
-                  {user.firstName ?? 'Скелелаз'}
+                  {user.firstName ?? t('common.climberDefault')}
                 </Text>
               </View>
             </Pressable>
@@ -81,10 +91,8 @@ function AppHeader() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Pressable
-                    className={`flex-row items-center gap-1.5 rounded-xl border px-3 py-1.5 ${
-                      isError
-                        ? 'border-destructive/40 bg-destructive/10'
-                        : 'border-border/60 bg-card/60'
+                    className={`flex-row items-center gap-1.5 rounded-xl px-3 py-1.5 ${
+                      isError ? 'bg-destructive/10' : 'bg-card/60'
                     }`}>
                     {isLoading ? (
                       <ActivityIndicator size={12} color={iconColor} />
@@ -111,7 +119,7 @@ function AppHeader() {
                       onPress={() => refetch()}
                       className="flex-row items-center gap-2 px-3 py-3">
                       <Icon as={RefreshCw} size={13} color="#ef4444" />
-                      <Text className="text-sm text-destructive">Повторити</Text>
+                      <Text className="text-sm text-destructive">{t('common.retry')}</Text>
                     </Pressable>
                   ) : isLoading ? (
                     <View className="items-center py-3">
@@ -121,7 +129,7 @@ function AppHeader() {
                     <DropdownMenuItem onPress={() => router.push('/gym/manage' as never)}>
                       <Icon as={Settings2} size={14} color={ACCENT} />
                       <Text className="text-sm font-medium" style={{ color: ACCENT }}>
-                        Керувати залами
+                        {t('common.myGyms')}
                       </Text>
                     </DropdownMenuItem>
                   ) : (
@@ -139,7 +147,7 @@ function AppHeader() {
                       <DropdownMenuItem onPress={() => router.push('/gym/manage' as never)}>
                         <Icon as={Settings2} size={14} color={ACCENT} />
                         <Text className="text-sm" style={{ color: ACCENT }}>
-                          Керувати залами
+                          {t('common.myGyms')}
                         </Text>
                       </DropdownMenuItem>
                     </>
@@ -150,7 +158,7 @@ function AppHeader() {
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-9 w-9 rounded-xl border border-border/60 bg-card/60">
+                className="h-9 w-9 rounded-xl bg-card/60">
                 <Icon as={Bell} size={16} color={foregroundColor} />
               </Button>
             </View>
@@ -158,20 +166,20 @@ function AppHeader() {
         ) : (
           <View className="flex-row items-center">
             <View className="flex-1">
-              <Text variant="large">HoldMeUp</Text>
+              <Text variant="large">{t('common.brandName')}</Text>
               <Text variant="muted" className="text-xs">
-                Пролази та маршрути в кишені
+                {t('common.tagline')}
               </Text>
             </View>
             <View className="flex-row gap-2">
               <Link href={'/auth/login' as never} asChild>
                 <Button variant="ghost" className="px-3">
-                  <Text variant="small">Увійти</Text>
+                  <Text variant="small">{t('common.login')}</Text>
                 </Button>
               </Link>
               <Link href={'/auth/register' as never} asChild>
                 <Button className="px-3">
-                  <Text variant="small">Реєстрація</Text>
+                  <Text variant="small">{t('common.register')}</Text>
                 </Button>
               </Link>
             </View>

@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ascentKeys } from '@/entities/ascent/api/ascentApi';
 import { routeKeys } from '@/entities/route/api/routeApi';
 import { gymMemberKeys } from '@/entities/gym-member/api/gymMemberApi';
+import { statsKeys } from '@/entities/stats/api/statsApi';
 
 export function useHomeRefresh() {
   const queryClient = useQueryClient();
@@ -17,7 +18,7 @@ export function useHomeRefresh() {
         queryClient.invalidateQueries({ queryKey: ascentKeys.lists() }),
         queryClient.invalidateQueries({ queryKey: routeKeys.lists() }),
         queryClient.invalidateQueries({ queryKey: gymMemberKeys.all }),
-        //todo: invalidate stats
+        queryClient.invalidateQueries({ queryKey: statsKeys.all }),
       ]);
     } finally {
       setRefreshing(false);

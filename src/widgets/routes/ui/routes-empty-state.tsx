@@ -4,6 +4,7 @@ import { Mountain } from 'lucide-react-native';
 
 import { Text } from '@/shared/ui/text';
 import { ACCENT } from '@/shared/config/palette';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   isDark: boolean;
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export function RoutesEmptyState({ isDark, hasActiveFilters, onClearFilters }: Props) {
+  const { t } = useTranslation();
   return (
     <View
       style={{
@@ -31,7 +33,7 @@ export function RoutesEmptyState({ isDark, hasActiveFilters, onClearFilters }: P
           fontWeight: '600',
           color: isDark ? '#fff' : '#000',
         }}>
-        {hasActiveFilters ? 'Нічого не знайдено' : 'Маршрутів поки немає'}
+        {hasActiveFilters ? t('routes.emptyTitleFiltered') : t('routes.emptyTitleDefault')}
       </Text>
       <Text
         style={{
@@ -41,9 +43,7 @@ export function RoutesEmptyState({ isDark, hasActiveFilters, onClearFilters }: P
           color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)',
           lineHeight: 18,
         }}>
-        {hasActiveFilters
-          ? 'Спробуйте змінити або скинути фільтри'
-          : 'Маршрути ще не додані до вашого залу'}
+        {hasActiveFilters ? t('routes.emptyHintFiltered') : t('routes.emptyHintDefault')}
       </Text>
       {hasActiveFilters && (
         <TouchableOpacity
@@ -55,7 +55,7 @@ export function RoutesEmptyState({ isDark, hasActiveFilters, onClearFilters }: P
             borderRadius: 12,
             backgroundColor: ACCENT,
           }}>
-          <Text style={{ fontSize: 13, fontWeight: '700', color: '#fff' }}>Скинути фільтри</Text>
+          <Text style={{ fontSize: 13, fontWeight: '700', color: '#fff' }}>{t('routes.clearFilters')}</Text>
         </TouchableOpacity>
       )}
     </View>

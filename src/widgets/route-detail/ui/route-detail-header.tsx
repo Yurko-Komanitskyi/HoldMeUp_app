@@ -1,11 +1,12 @@
 import * as React from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Pencil } from 'lucide-react-native';
+import { ArrowLeft, Pencil, Trash2 } from 'lucide-react-native';
 
 import { Text } from '@/shared/ui/text';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   routeId: string;
@@ -20,6 +21,8 @@ type Props = {
   } | null;
   routeColor: string;
   heroTextColor: string;
+  onDeletePress?: () => void;
+  isDeleting?: boolean;
 };
 
 export function RouteDetailHeader({
@@ -32,7 +35,10 @@ export function RouteDetailHeader({
   status,
   routeColor,
   heroTextColor,
+  onDeletePress,
+  isDeleting,
 }: Props) {
+  const { t } = useTranslation();
   const router = useRouter();
 
   return (
@@ -75,7 +81,7 @@ export function RouteDetailHeader({
                 backgroundColor: 'rgba(0,0,0,0.22)',
               }}>
               <Text style={{ fontSize: 12, fontWeight: '600', color: heroTextColor, opacity: 0.9 }}>
-                {sectorName ?? 'Без сектора'}
+                {sectorName ?? t('routeDetail.noSector')}
               </Text>
             </View>
             {canManageRoute && (
@@ -91,6 +97,27 @@ export function RouteDetailHeader({
                   justifyContent: 'center',
                 }}>
                 <Pencil size={16} color={heroTextColor} />
+              </TouchableOpacity>
+            )}
+            {canManageRoute && onDeletePress && (
+              <TouchableOpacity
+                onPress={onDeletePress}
+                disabled={isDeleting}
+                hitSlop={8}
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 12,
+                  backgroundColor: 'rgba(0,0,0,0.22)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: isDeleting ? 0.65 : 1,
+                }}>
+                {isDeleting ? (
+                  <ActivityIndicator size="small" color={heroTextColor} />
+                ) : (
+                  <Trash2 size={16} color={heroTextColor} />
+                )}
               </TouchableOpacity>
             )}
           </View>
@@ -127,8 +154,7 @@ export function RouteDetailHeader({
                 </Text>
               </View>
             )}
-            {/* Status (only for managers) */}
-            {canManageRoute && status && (
+            {status && (
               <View
                 style={{
                   flexDirection: 'row',

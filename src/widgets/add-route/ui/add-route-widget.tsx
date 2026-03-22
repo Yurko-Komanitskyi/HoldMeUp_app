@@ -1,15 +1,16 @@
+import { View } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import { useUserStore } from '@/entities/user/model/userStore';
 import { useGymMemberStore } from '@/entities/gym-member/model/gymMemberStore';
 import { createRoute, routeKeys } from '@/entities/route/api/routeApi';
-import {
-  RouteFormWidget,
-  type RouteFormSubmitData,
-} from '@/widgets/route-form/ui/route-form-widget';
+import { RouteFormWidget } from '@/widgets/route-form/ui/route-form-widget';
+import type { RouteFormSubmitData } from '@/widgets/edit-route/ui/useRouteForm';
 
 export function AddRouteWidget() {
+  const { t } = useTranslation();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -34,6 +35,7 @@ export function AddRouteWidget() {
       color: data.color,
       sectorId: data.sectorId,
       setterId: user!.id,
+      style: data.style ?? null,
       description: data.description?.trim() || null,
       height: Number.isNaN(height as number) ? null : height,
       status: data.status,
@@ -47,10 +49,12 @@ export function AddRouteWidget() {
   }
 
   return (
-    <RouteFormWidget
-      subtitle={currentGym?.name}
-      submitLabel="Додати маршрут"
-      onSubmitForm={handleSubmit}
-    />
+    <View style={{ flex: 1, paddingTop: 8 }}>
+      <RouteFormWidget
+        subtitle={currentGym?.name}
+        submitLabel={t('routeForm.addRoute')}
+        onSubmitForm={handleSubmit}
+      />
+    </View>
   );
 }

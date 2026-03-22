@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { View, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { Dumbbell, ChevronRight } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import { useRouter } from 'expo-router';
 
 import { LogAscentCta } from './log-ascent-cta';
@@ -15,12 +15,15 @@ import { ACCENT } from '@/shared/config/palette';
 import { useHomeDashboard } from '@/features/home-dashboard/model/useHomeDashboard';
 import type { Route } from '@/entities/route/model/route';
 import { useUserStore } from '@/entities/user/model/userStore';
+import { useMyGymMembershipsQuery } from '@/entities/gym-member/model/gymMemberHooks';
 import { HomeUnlogin } from './home-unlogin';
+import { useTranslation } from 'react-i18next';
+import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
 
 export function HomeWidget() {
+  const { t } = useTranslation();
   const router = useRouter();
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const colors = useThemeColor();
   const user = useUserStore((s) => s.currentUser);
 
   const [pickerVisible, setPickerVisible] = React.useState(false);
@@ -29,11 +32,27 @@ export function HomeWidget() {
     ascents,
     routes,
     ascentsLoading,
+    ascentsError,
+    ascentsQueryError,
+    refetchAscents,
     routesLoading,
+    routesError,
+    routesQueryError,
+    refetchRoutes,
     weekStats,
+    weekStatsLoading,
+    weekStatsError,
+    weekStatsQueryError,
+    refetchWeekStats,
     refreshing,
     onRefresh,
   } = useHomeDashboard();
+
+  const {
+    isError: membershipsError,
+    error: membershipsQueryError,
+    refetch: refetchMemberships,
+  } = useMyGymMembershipsQuery();
 
   const handleRouteSelect = React.useCallback(
     (route: Route) => {
@@ -57,27 +76,110 @@ export function HomeWidget() {
       />
 
       <ScrollView
-        style={{ flex: 1, backgroundColor: isDark ? '#000' : '#f2f2f7' }}
+        style={{ flex: 1, backgroundColor: colors.background }}
         contentContainerStyle={{ paddingBottom: 110 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={ACCENT} />
         }>
         <View style={{ gap: 20, paddingTop: 16 }}>
+          {membershipsError ? (
+            <View style={{ paddingHorizontal: 16 }}>
+              <QueryErrorPanel
+                variant="compact"
+                error={membershipsQueryError ?? new Error('')}
+                onRetry={() => void refetchMemberships()}
+              />
+            </View>
+          ) : null}
           {hasGym ? (
             <>
               <LogAscentCta onPress={() => setPickerVisible(true)} />
-              <WeekStats
-                total={ascentsLoading ? '…' : weekStats.total}
-                success={ascentsLoading ? '…' : weekStats.success}
-                flash={ascentsLoading ? '…' : weekStats.flash}
-              />
-              <FeaturedRoutes routes={routes.slice(0, 3)} isLoading={routesLoading} />
-              <RecentAscents
-                ascents={ascents.slice(0, 4)}
-                isLoading={ascentsLoading}
-                onAddPress={() => setPickerVisible(true)}
-              />
+              {weekStatsError && !weekStatsLoading ? (
+                <View style={{ paddingHorizontal: 16 }}>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: '700',
+                      letterSpacing: 0.8,
+                      color: colors.mutedForeground,
+                      marginBottom: 12,
+                    }}>
+                    {t('home.weekStats').toUpperCase()}
+                  </Text>
+                  <QueryErrorPanel
+                    variant="compact"
+                    error={weekStatsQueryError ?? new Error('')}
+                    onRetry={() => void refetchWeekStats()}
+                  />
+                </View>
+              ) : (
+                <WeekStats
+                  total={weekStatsLoading ? '…' : weekStats.total}
+                  success={weekStatsLoading ? '…' : weekStats.success}
+                  flash={weekStatsLoading ? '…' : weekStats.flash}
+                />
+              )}
+              {routesError && !routesLoading ? (
+                <View style={{ paddingHorizontal: 16 }}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: 12,
+                    }}>
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: '700',
+                        letterSpacing: 0.8,
+                        color: colors.mutedForeground,
+                      }}>
+                      {t('home.featuredRoutes').toUpperCase()}
+                    </Text>
+                  </View>
+                  <QueryErrorPanel
+                    variant="compact"
+                    error={routesQueryError ?? new Error('')}
+                    onRetry={() => void refetchRoutes()}
+                  />
+                </View>
+              ) : (
+                <FeaturedRoutes routes={routes.slice(0, 3)} isLoading={routesLoading} />
+              )}
+              {ascentsError && !ascentsLoading ? (
+                <View style={{ paddingHorizontal: 16 }}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: 12,
+                    }}>
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: '700',
+                        letterSpacing: 0.8,
+                        color: colors.mutedForeground,
+                      }}>
+                      {t('home.recentAscents').toUpperCase()}
+                    </Text>
+                  </View>
+                  <QueryErrorPanel
+                    variant="compact"
+                    error={ascentsQueryError ?? new Error('')}
+                    onRetry={() => void refetchAscents()}
+                  />
+                </View>
+              ) : (
+                <RecentAscents
+                  ascents={ascents.slice(0, 4)}
+                  isLoading={ascentsLoading}
+                  onAddPress={() => setPickerVisible(true)}
+                />
+              )}
             </>
           ) : (
             <View
@@ -98,20 +200,19 @@ export function HomeWidget() {
                   style={{
                     fontSize: 20,
                     fontWeight: '800',
-                    color: isDark ? '#fff' : '#000',
+                    color: colors.foreground,
                     textAlign: 'center',
                   }}>
-                  Ще немає залу
+                  {t('home.noGymTitle')}
                 </Text>
                 <Text
                   style={{
                     fontSize: 14,
-                    color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
+                    color: colors.mutedForeground,
                     textAlign: 'center',
                     lineHeight: 20,
                   }}>
-                  Приєднайся до залу, щоб бачити маршрути та відстежувати підйоми. Або попроси
-                  адміна тебе додати.
+                  {t('home.noGymBody')}
                 </Text>
               </View>
               <Button
@@ -120,10 +221,14 @@ export function HomeWidget() {
                 style={{ borderRadius: 16 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Text
-                    style={{ fontSize: 15, fontWeight: '700', color: isDark ? '#000' : '#fff' }}>
-                    Знайти зал
+                    style={{
+                      fontSize: 15,
+                      fontWeight: '700',
+                      color: colors.destructiveForeground,
+                    }}>
+                    {t('home.findGym')}
                   </Text>
-                  <ChevronRight size={16} color={isDark ? '#000' : '#fff'} />
+                  <ChevronRight size={16} color={colors.destructiveForeground} />
                 </View>
               </Button>
             </View>

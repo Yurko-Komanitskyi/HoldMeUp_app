@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { View } from 'react-native';
 import { TrendingUp, Zap, Target } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
 import { useTranslation } from 'react-i18next';
 
 import { Text } from '@/shared/ui/text';
 import { Icon } from '@/shared/ui/icon';
 import { ACCENT } from '@/shared/config/palette';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
 
 interface WeekStatsProps {
   total:     number | string;
@@ -16,16 +16,15 @@ interface WeekStatsProps {
 
 export function WeekStats({ total, success, flash }: WeekStatsProps) {
   const { t } = useTranslation();
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const colors = useThemeColor();
 
-  const cardBg     = isDark ? '#1c1c1e' : '#fff';
-  const borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)';
+  const cardBg = colors.card;
+  const borderColor = colors.border;
 
   const cards = [
-    { label: t('home.statAscents'), value: total,   icon: TrendingUp, color: ACCENT    },
-    { label: t('home.statSuccess'), value: success,  icon: Target,     color: '#22c55e' },
-    { label: t('home.statFlash'),   value: flash,    icon: Zap,        color: '#eab308' },
+    { label: t('home.statAscents'), value: total, icon: TrendingUp, color: ACCENT },
+    { label: t('home.statSuccess'), value: success, icon: Target, color: colors.chart2 },
+    { label: t('home.statFlash'), value: flash, icon: Zap, color: colors.chart4 },
   ] as const;
 
   return (
@@ -35,7 +34,7 @@ export function WeekStats({ total, success, flash }: WeekStatsProps) {
           fontSize: 13,
           fontWeight: '700',
           letterSpacing: 0.8,
-          color: 'rgba(128,128,128,0.6)',
+          color: colors.mutedForeground,
           marginBottom: 12,
         }}>
         {t('home.weekStats').toUpperCase()}
@@ -54,10 +53,16 @@ export function WeekStats({ total, success, flash }: WeekStatsProps) {
               gap: 8,
             }}>
             <Icon as={s.icon} size={16} color={s.color} />
-            <Text style={{ fontSize: 24, fontWeight: '800', color: isDark ? '#fff' : '#000', letterSpacing: -0.5 }}>
+            <Text
+              style={{
+                fontSize: 24,
+                fontWeight: '800',
+                color: colors.foreground,
+                letterSpacing: -0.5,
+              }}>
               {s.value}
             </Text>
-            <Text style={{ fontSize: 11, color: 'rgba(128,128,128,0.6)', fontWeight: '600' }}>
+            <Text style={{ fontSize: 11, color: colors.mutedForeground, fontWeight: '600' }}>
               {s.label}
             </Text>
           </View>

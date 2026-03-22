@@ -1,5 +1,6 @@
 import { Route } from '@/entities/route/model/route';
 import { resolveRouteColor } from '@/shared/config/palette';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import { Text } from '@/shared/ui/text';
 import { ChevronRight } from 'lucide-react-native';
 import { TouchableOpacity, View } from 'react-native';
@@ -7,10 +8,10 @@ import { TouchableOpacity, View } from 'react-native';
 interface RoutePickerItemProps {
   route: Route;
   onPress: () => void;
-  isDark: boolean;
 }
 
-export function RoutePickerItem({ route, onPress, isDark }: RoutePickerItemProps) {
+export function RoutePickerItem({ route, onPress }: RoutePickerItemProps) {
+  const colors = useThemeColor();
   const hex = resolveRouteColor(route.color);
   const isWhite = route.color?.toLowerCase() === 'white';
 
@@ -24,7 +25,7 @@ export function RoutePickerItem({ route, onPress, isDark }: RoutePickerItemProps
         paddingHorizontal: 16,
         paddingVertical: 14,
         borderBottomWidth: 1,
-        borderBottomColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+        borderBottomColor: colors.border,
       }}
       activeOpacity={0.7}>
       <View
@@ -36,23 +37,28 @@ export function RoutePickerItem({ route, onPress, isDark }: RoutePickerItemProps
           alignItems: 'center',
           justifyContent: 'center',
           borderWidth: isWhite ? 1 : 0,
-          borderColor: '#e5e7eb',
+          borderColor: colors.border,
         }}>
-        <Text style={{ fontSize: 13, fontWeight: '900', color: isWhite ? '#374151' : '#fff' }}>
+        <Text
+          style={{
+            fontSize: 13,
+            fontWeight: '900',
+            color: isWhite ? colors.foreground : colors.destructiveForeground,
+          }}>
           {route.grade}
         </Text>
       </View>
       <View style={{ flex: 1 }}>
         <Text
-          style={{ fontSize: 15, fontWeight: '600', color: isDark ? '#fff' : '#000' }}
+          style={{ fontSize: 15, fontWeight: '600', color: colors.foreground }}
           numberOfLines={1}>
           {route.name}
         </Text>
-        <Text style={{ fontSize: 12, color: 'rgba(128,128,128,0.65)', marginTop: 2 }}>
+        <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
           {route.sector?.name ?? ''}
         </Text>
       </View>
-      <ChevronRight size={18} color="rgba(128,128,128,0.4)" />
+      <ChevronRight size={18} color={colors.mutedForeground} />
     </TouchableOpacity>
   );
 }

@@ -1,15 +1,15 @@
 import * as React from 'react';
 import { View, Pressable, TouchableOpacity } from 'react-native';
 import { Mountain, Plus, CheckCircle2, XCircle, Timer } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 
 import { Text } from '@/shared/ui/text';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { ACCENT } from '@/shared/config/palette';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import type { Ascent } from '@/entities/ascent/model/ascent';
-import { RecentAscentRow } from '@/entities/ascent/ui/recent-ascent-row';
+import { AscentCard } from '@/entities/ascent/ui/ascent-card';
 
 interface RecentAscentsProps {
   ascents: Ascent[];
@@ -20,11 +20,10 @@ interface RecentAscentsProps {
 export function RecentAscents({ ascents, isLoading, onAddPress }: RecentAscentsProps) {
   const { t } = useTranslation();
   const router = useRouter();
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const colors = useThemeColor();
 
-  const cardBg = isDark ? '#1c1c1e' : '#fff';
-  const borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)';
+  const cardBg = colors.card;
+  const borderColor = colors.border;
 
   return (
     <View style={{ paddingHorizontal: 16 }}>
@@ -40,12 +39,12 @@ export function RecentAscents({ ascents, isLoading, onAddPress }: RecentAscentsP
             fontSize: 13,
             fontWeight: '700',
             letterSpacing: 0.8,
-            color: 'rgba(128,128,128,0.6)',
+            color: colors.mutedForeground,
           }}>
           {t('home.recentAscents').toUpperCase()}
         </Text>
         <Pressable onPress={() => router.push('/(tabs)/ascents' as never)}>
-          <Text style={{ fontSize: 13, fontWeight: '600', color: ACCENT }}>Усі пролази</Text>
+          <Text style={{ fontSize: 13, fontWeight: '600', color: ACCENT }}>{t('home.allAscents')}</Text>
         </Pressable>
       </View>
 
@@ -68,8 +67,8 @@ export function RecentAscents({ ascents, isLoading, onAddPress }: RecentAscentsP
             borderColor,
           }}
           activeOpacity={0.8}>
-          <Mountain size={36} color="rgba(128,128,128,0.3)" />
-          <Text style={{ fontSize: 15, fontWeight: '600', color: 'rgba(128,128,128,0.55)' }}>
+          <Mountain size={36} color={colors.mutedForeground} />
+          <Text style={{ fontSize: 15, fontWeight: '600', color: colors.mutedForeground }}>
             {t('home.noAscents')}
           </Text>
           <View
@@ -91,7 +90,7 @@ export function RecentAscents({ ascents, isLoading, onAddPress }: RecentAscentsP
       ) : (
         <View style={{ gap: 8 }}>
           {ascents.map((ascent) => (
-            <RecentAscentRow key={ascent.id} ascent={ascent} />
+            <AscentCard key={ascent.id} ascent={ascent} variant="compact" />
           ))}
         </View>
       )}

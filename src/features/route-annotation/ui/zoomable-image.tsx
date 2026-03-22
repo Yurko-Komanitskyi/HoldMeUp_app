@@ -8,6 +8,7 @@ import Animated, {
   clamp,
 } from 'react-native-reanimated';
 import { X } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   uri: string;
@@ -17,6 +18,7 @@ type Props = {
 };
 
 export function ZoomableImage({ uri, width, height, borderRadius = 0 }: Props) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   const scale = useSharedValue(1);
@@ -98,6 +100,8 @@ export function ZoomableImage({ uri, width, height, borderRadius = 0 }: Props) {
         <StatusBar hidden />
         <View style={[StyleSheet.absoluteFill, { backgroundColor: '#000' }]}>
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('common.close')}
             onPress={() => {
               reset();
               setOpen(false);

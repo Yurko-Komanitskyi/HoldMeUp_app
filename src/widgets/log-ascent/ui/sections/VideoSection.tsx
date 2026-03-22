@@ -2,6 +2,7 @@ import * as React from 'react';
 import { View, TextInput } from 'react-native';
 
 import { SectionLabel } from '@/shared/ui/section-label';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   value: string;
@@ -22,6 +23,7 @@ export function VideoSection({
   inputColor,
   placeholderColor,
 }: Props) {
+  const { t } = useTranslation();
   return (
     <View
       style={{
@@ -31,11 +33,11 @@ export function VideoSection({
         borderWidth: 1,
         borderColor,
       }}>
-      <SectionLabel>{"Відео (необов'язково)"}</SectionLabel>
+      <SectionLabel>{t('logAscent.videoOptional')}</SectionLabel>
       <TextInput
         value={value}
         onChangeText={onChange}
-        placeholder="https://youtube.com/..."
+        placeholder={t('logAscent.videoPlaceholder')}
         placeholderTextColor={placeholderColor}
         keyboardType="url"
         autoCapitalize="none"

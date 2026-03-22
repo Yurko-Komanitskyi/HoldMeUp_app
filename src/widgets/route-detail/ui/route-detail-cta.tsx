@@ -5,6 +5,7 @@ import { useColorScheme } from 'nativewind';
 import { useRouter } from 'expo-router';
 
 import { Text } from '@/shared/ui/text';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   routeId: string;
@@ -13,6 +14,7 @@ type Props = {
 };
 
 export function RouteDetailCta({ routeId, backgroundColor, textColor }: Props) {
+  const { t } = useTranslation();
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -45,7 +47,7 @@ export function RouteDetailCta({ routeId, backgroundColor, textColor }: Props) {
         }}>
         <CheckCircle2 size={20} color={textColor} />
         <Text style={{ fontSize: 16, fontWeight: '800', color: textColor, letterSpacing: -0.3 }}>
-          Записати пролаз
+          {t('routeDetail.logAscent')}
         </Text>
       </TouchableOpacity>
     </View>

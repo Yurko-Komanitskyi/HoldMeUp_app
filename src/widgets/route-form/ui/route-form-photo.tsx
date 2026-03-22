@@ -5,6 +5,7 @@ import { ImagePlus, Upload, ScanLine, Pencil, X } from 'lucide-react-native';
 
 import { Text } from '@/shared/ui/text';
 import { ACCENT } from '@/shared/config/palette';
+import { useTranslation } from 'react-i18next';
 import type { AnnotationData } from '@/features/route-annotation';
 
 type Props = {
@@ -28,6 +29,7 @@ export function RouteFormPhoto({
   onRemovePhoto,
   onOpenAnnotator,
 }: Props) {
+  const { t } = useTranslation();
   if (!localPhotoUri) {
     return (
       <Pressable
@@ -44,7 +46,7 @@ export function RouteFormPhoto({
           paddingVertical: 32,
         }}>
         <ImagePlus size={22} color={iconColor} />
-        <Text className="text-sm font-medium text-muted-foreground">Вибрати з галереї</Text>
+        <Text className="text-sm font-medium text-muted-foreground">{t('routeForm.pickFromGallery')}</Text>
       </Pressable>
     );
   }
@@ -123,7 +125,7 @@ export function RouteFormPhoto({
             }}>
             <ScanLine size={12} color="#fff" />
             <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>
-              {annotationData.shapes.length} позначок
+              {t('routeDetail.marksCount', { count: annotationData.shapes.length })}
             </Text>
           </View>
         )}
@@ -142,12 +144,12 @@ export function RouteFormPhoto({
           {uploading ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <ActivityIndicator size="small" color={iconColor} />
-              <Text className="text-sm text-muted-foreground">Завантаження...</Text>
+              <Text className="text-sm text-muted-foreground">{t('routeForm.uploadingPhoto')}</Text>
             </View>
           ) : (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Upload size={13} color="#22c55e" />
-              <Text style={{ color: '#22c55e', fontSize: 13 }}>Фото завантажено</Text>
+              <Text style={{ color: '#22c55e', fontSize: 13 }}>{t('routeForm.photoUploadedLabel')}</Text>
             </View>
           )}
         </View>
@@ -167,7 +169,7 @@ export function RouteFormPhoto({
               }}>
               <Pencil size={13} color={ACCENT} />
               <Text style={{ color: ACCENT, fontSize: 12, fontWeight: '700' }}>
-                {annotationData ? 'Змінити' : 'Розмітити'}
+                {annotationData ? t('routeForm.annotateEdit') : t('routeForm.annotateAdd')}
               </Text>
             </TouchableOpacity>
           )}
