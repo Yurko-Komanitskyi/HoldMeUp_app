@@ -21,6 +21,8 @@ export interface User {
   firstName: string | null;
   lastName: string | null;
   photo?: FileType | null;
+  userTag?: string | null;
+  openToFollow?: boolean;
   role?: Role | null;
   status?: Status;
   createdAt: string;

@@ -21,11 +21,19 @@
     "back": "Back",
     "understood": "Got it",
     "errorTitle": "Error",
-    "weekdaysShort": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    "weekdaysShort": [
+      "Sun",
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat"
+    ],
     "galleryPermissionTitle": "Permission needed",
     "galleryPermissionBody": "Allow gallery access in Settings.",
     "photoUploadFailed": "Couldn't upload the photo. Try again.",
-    "brandName": "HoldMeUp",
+    "brandName": "Leptick",
     "close": "Close",
     "clear": "Clear",
     "dash": "—"
@@ -62,7 +70,8 @@
   "drawer": {
     "route": "Route",
     "routeEdit": "Edit route",
-    "ascent": "Ascent"
+    "ascent": "Ascent",
+    "userProfile": "Climber profile"
   },
   "validation": {
     "required": "This field is required",
@@ -86,7 +95,7 @@
     "noAccount": "No account yet?",
     "signUpLink": "Sign up",
     "registerTitle": "Sign up",
-    "registerSubtitle": "Create a HoldMeUp account to track your climbs",
+    "registerSubtitle": "Create a Leptick account to track your climbs",
     "createAccount": "Create account",
     "haveAccount": "Already have an account?",
     "signInLink": "Log in",
@@ -101,7 +110,11 @@
     "confirmPasswordLabel": "Confirm password",
     "email": "Email",
     "placeholderEmail": "you@example.com",
-    "placeholderPassword": "••••••••"
+    "placeholderPassword": "••••••••",
+    "orContinueWith": "or continue with",
+    "googleContinue": "Continue with Google",
+    "oauthMissingTokens": "Google did not return an idToken.",
+    "oauthFailed": "Google sign-in failed. Please try again."
   },
   "forgotPassword": {
     "title": "Reset password",
@@ -140,7 +153,8 @@
     "f4Title": "Route ratings",
     "f4Desc": "Community grades and tips",
     "ctaStart": "Start for free",
-    "ctaHaveAccount": "I already have an account"
+    "ctaHaveAccount": "I already have an account",
+    "ctaGoogle": "Continue with Google"
   },
   "notFound": {
     "title": "Page not found",
@@ -192,7 +206,10 @@
       "SOFT": "Soft",
       "FAIR": "Fair",
       "HARD": "Hard"
-    }
+    },
+    "reactionsSection": "Reactions",
+    "reactionsEmpty": "No reactions yet",
+    "reactionUserProfile": "Profile"
   },
   "gym": {
     "findGym": "Find a gym",
@@ -384,9 +401,36 @@
     "home": "Home",
     "routes": "Routes",
     "addRoute": "Add",
+    "logAscent": "Log",
     "ascents": "Ascents",
+    "community": "Community",
     "profile": "Profile",
     "gymStats": "Stats"
+  },
+  "community": {
+    "title": "Community",
+    "tabSearch": "Search",
+    "tabFollowing": "Following",
+    "tabFollowers": "Followers",
+    "searchPlaceholder": "Search by name or @tag…",
+    "searchHint": "Find climbers to follow",
+    "noSearchResults": "No users found",
+    "noFollowing": "You are not following anyone yet",
+    "noFollowers": "No followers yet",
+    "follow": "Follow",
+    "unfollow": "Unfollow",
+    "following": "Following",
+    "loadMore": "Loading more…"
+  },
+  "userProfile": {
+    "tabOverview": "Overview",
+    "tabFollowers": "Followers",
+    "tabFollowing": "Following",
+    "tabAscents": "Ascents",
+    "noAscents": "No ascents yet",
+    "countsHint": "Use the tabs above to open followers or following lists.",
+    "noFollowers": "No followers yet",
+    "noFollowing": "Not following anyone yet"
   },
   "home": {
     "logAscent": "Log Ascent",
@@ -412,7 +456,14 @@
     "noGymBody": "Join a gym to see routes and track climbs. Or ask an admin to add you.",
     "findGym": "Find a gym",
     "gymBannerTitle": "Pick your gym",
-    "gymBannerSubtitle": "Join a gym to see routes and track ascents"
+    "gymBannerSubtitle": "Join a gym to see routes and track ascents",
+    "feedTitle": "Ascent feed",
+    "feedEmpty": "No items in the feed yet",
+    "feedLoadMore": "Load more"
+  },
+  "ascent": {
+    "feedAuthorHint": "Author profile",
+    "reactionsTotal": "{{count}} reactions"
   },
   "ascents": {
     "title": "Ascents",
@@ -507,6 +558,10 @@
     "logoutConfirmAction": "Log out",
     "statAscents": "Ascents",
     "statFlash": "Flash",
-    "statSuccess": "Successful"
+    "statSuccess": "Successful",
+    "settingsModalTitle": "Settings",
+    "ascentsSection": "Ascents",
+    "viewAllAscents": "See all",
+    "gymSubtitle": "Training at {{name}}"
   }
 }

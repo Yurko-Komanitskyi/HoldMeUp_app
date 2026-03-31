@@ -14,12 +14,18 @@ export function useHomeRefresh() {
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
     try {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ascentKeys.lists() }),
-        queryClient.invalidateQueries({ queryKey: routeKeys.lists() }),
-        queryClient.invalidateQueries({ queryKey: gymMemberKeys.all }),
-        queryClient.invalidateQueries({ queryKey: statsKeys.all }),
-      ]);
+      const keys = [
+        ascentKeys.lists(),
+        ascentKeys.feeds(),
+        routeKeys.lists(),
+        gymMemberKeys.all,
+        statsKeys.all,
+      ] as const;
+
+      await Promise.all(keys.map((queryKey) => queryClient.invalidateQueries({ queryKey })));
+      await Promise.all(
+        keys.map((queryKey) => queryClient.refetchQueries({ queryKey, type: 'active' }))
+      );
     } finally {
       setRefreshing(false);
     }

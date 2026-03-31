@@ -8,6 +8,7 @@ import { LogAscentCta } from './log-ascent-cta';
 import { WeekStats } from './week-stats';
 import { FeaturedRoutes } from './featured-routes';
 import { RecentAscents } from './recent-ascents';
+import { AscentFeedSection } from './ascent-feed-section';
 import { RoutePickerModal } from '@/features/route-picker/ui/route-picker-modal';
 import { Text } from '@/shared/ui/text';
 import { Button } from '@/shared/ui/button';
@@ -95,6 +96,7 @@ export function HomeWidget() {
           {hasGym ? (
             <>
               <LogAscentCta onPress={() => setPickerVisible(true)} />
+              <AscentFeedSection />
               {weekStatsError && !weekStatsLoading ? (
                 <View style={{ paddingHorizontal: 16 }}>
                   <Text

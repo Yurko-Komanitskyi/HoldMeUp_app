@@ -43,7 +43,7 @@ export function RecentAscents({ ascents, isLoading, onAddPress }: RecentAscentsP
           }}>
           {t('home.recentAscents').toUpperCase()}
         </Text>
-        <Pressable onPress={() => router.push('/(tabs)/ascents' as never)}>
+        <Pressable onPress={() => router.push('/ascents/ascents' as never)}>
           <Text style={{ fontSize: 13, fontWeight: '600', color: ACCENT }}>{t('home.allAscents')}</Text>
         </Pressable>
       </View>

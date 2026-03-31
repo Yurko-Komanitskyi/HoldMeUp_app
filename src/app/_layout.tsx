@@ -8,6 +8,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@react-navigation/native';
 import { Drawer } from 'expo-router/drawer';
 import { PortalHost } from '@rn-primitives/portal';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 import { useUserStore } from '@/entities/user/model/userStore';
 import { useAppInterceptors } from '@/app/model/useAppInterceptors';
@@ -76,6 +77,14 @@ export default function RootLayout() {
   React.useEffect(() => {
     void i18n.changeLanguage(language);
   }, [language]);
+
+  React.useEffect(() => {
+    GoogleSignin.configure({
+      iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+      webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+      offlineAccess: false,
+    });
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -146,6 +155,22 @@ export default function RootLayout() {
                 title: t('gym.manageTitle'),
                 drawerItemStyle: { display: 'none' },
                 header: () => null,
+              }}
+            />
+            <Drawer.Screen
+              name="ascents/ascents"
+              options={{
+                title: t('ascents.title'),
+                drawerItemStyle: { display: 'none' },
+                header: () => null,
+              }}
+            />
+            <Drawer.Screen
+              name="user/[userId]"
+              options={{
+                title: t('drawer.userProfile'),
+                drawerItemStyle: { display: 'none' },
+                headerShown: false,
               }}
             />
           </Drawer>

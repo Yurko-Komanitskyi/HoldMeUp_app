@@ -5,6 +5,10 @@ export interface LoginInput {
   password: string;
 }
 
+export interface GoogleLoginInput {
+  idToken: string;
+}
+
 export interface RegisterInput {
   email:     string;
   password:  string;
@@ -19,6 +23,8 @@ export interface UpdateMeInput {
   password?:  string;
   oldPassword?: string;
   photo?: { id: string };
+  userTag?: string | null;
+  openToFollow?: boolean;
 }
 
 export interface AuthTokensResponse {
@@ -36,6 +42,8 @@ export interface AuthUserDto {
   firstName: string | null;
   lastName: string | null;
   photo?: FileType | null;
+  userTag?: string | null;
+  openToFollow?: boolean;
   role?: Role | null;
   status?: Status;
   createdAt: string;

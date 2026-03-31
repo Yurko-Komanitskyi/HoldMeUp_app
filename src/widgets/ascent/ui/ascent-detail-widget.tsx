@@ -1,11 +1,15 @@
 import * as React from 'react';
-import { Alert, RefreshControl, ScrollView, View } from 'react-native';
+import { Alert, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { Text } from '@/shared/ui/text';
 import { useAscentDetailsQuery, useAscentMutations } from '@/entities/ascent/model/ascentHooks';
+import { ascentKeys } from '@/entities/ascent/api/ascentApi';
+import { AscentReactionsBar } from '@/entities/ascent/ui/ascent-reactions-bar';
+import { useUserStore } from '@/entities/user/model/userStore';
 import { useToastStore } from '@/shared/ui/app-toast';
 import { ACCENT } from '@/shared/config/palette';
 import { formatAscentDate, formatAscentDateWithWeekday } from '@/widgets/ascent/lib/ascent-detail-format';
@@ -27,7 +31,9 @@ export function AscentDetailWidget() {
   const router = useRouter();
   const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
   const toast = useToastStore();
+  const myId = useUserStore((s) => s.currentUser?.id);
   const [editOpen, setEditOpen] = React.useState(false);
 
   const {
@@ -113,7 +119,15 @@ export function AscentDetailWidget() {
         refreshControl={
           <RefreshControl
             refreshing={isRefetching && !isLoading}
-            onRefresh={() => void refetch()}
+            onRefresh={() =>
+              void (async () => {
+                if (id) {
+                  await queryClient.invalidateQueries({ queryKey: ascentKeys.detail(id) });
+                  await queryClient.refetchQueries({ queryKey: ascentKeys.detail(id), type: 'active' });
+                }
+                await refetch();
+              })()
+            }
             tintColor={ACCENT}
           />
         }>
@@ -122,6 +136,45 @@ export function AscentDetailWidget() {
         <AscentDetailMetaCard ascent={ascent} formatDate={formatDate} />
         <AscentDetailNotesCard notes={ascent.notes} />
         {ascent.videoUrl ? <AscentDetailVideoCard url={ascent.videoUrl} /> : null}
+
+        <View className="gap-2">
+          <Text className="text-sm font-semibold text-foreground">
+            {t('ascentDetail.reactionsSection')}
+          </Text>
+          {(ascent.reactions?.length ?? 0) === 0 ? (
+            <Text className="text-sm text-muted-foreground">{t('ascentDetail.reactionsEmpty')}</Text>
+          ) : (
+            <View style={{ gap: 10 }}>
+              {(ascent.reactions ?? []).map((r) => (
+                <View
+                  key={r.id}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <Text style={{ fontSize: 20 }}>{r.emoji}</Text>
+                  <Pressable
+                    onPress={() => {
+                      if (myId && r.userId === myId) {
+                        router.push('/(tabs)/profile' as never);
+                        return;
+                      }
+                      router.push(`/user/${r.userId}` as never);
+                    }}
+                    hitSlop={6}>
+                    <Text style={{ fontSize: 14, fontWeight: '600', color: ACCENT }}>
+                      {t('ascentDetail.reactionUserProfile')}
+                    </Text>
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          )}
+          <AscentReactionsBar
+            ascentId={ascent.id}
+            reactions={ascent.reactions ?? []}
+            ascentOwnerId={ascent.userId}
+            currentUserId={myId}
+          />
+        </View>
+
         <AscentDetailFooterTip />
       </ScrollView>
 

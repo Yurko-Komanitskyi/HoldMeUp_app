@@ -10,6 +10,7 @@ import { parseApiError } from '@/shared/lib/api-error';
 import { ACCENT } from '@/shared/config/palette';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import { useAutoJoinGymsQuery, useGymMutations } from '@/entities/gym/model/gymHooks';
+import { gymKeys } from '@/entities/gym/api/gymApi';
 import { useGymMemberStore } from '@/entities/gym-member/model/gymMemberStore';
 import { GymCard } from '../../../entities/gym/ui/gym-card';
 import { useTranslation } from 'react-i18next';
@@ -54,8 +55,13 @@ export function GymJoinWidget() {
 
   async function onRefresh() {
     setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
+    try {
+      await queryClient.invalidateQueries({ queryKey: gymKeys.autoJoin() });
+      await queryClient.refetchQueries({ queryKey: gymKeys.autoJoin(), type: 'active' });
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
   }
 
   const bgColor = colors.background;

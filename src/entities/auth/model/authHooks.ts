@@ -66,6 +66,19 @@ export function useAuth() {
     },
   });
 
+  const googleLoginMutation = useMutation({
+    mutationFn: async ({ idToken }: Parameters<typeof authApi.loginWithGoogle>[0]) => {
+      const result = await authApi.loginWithGoogle({ idToken });
+      await authSecureStore.saveAccessToken(result.token);
+      await authSecureStore.saveRefreshToken(result.refreshToken);
+      setUser(result.user);
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: authKeys.me() });
+    },
+  });
+
   const registerMutation = useMutation({
     mutationFn: authApi.register,
   });
@@ -88,6 +101,7 @@ export function useAuth() {
 
   return {
     login: loginMutation,
+    googleLogin: googleLoginMutation,
     register: registerMutation,
     logout: logoutMutation,
     forgotPassword: forgotPasswordMutation,

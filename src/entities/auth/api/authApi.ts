@@ -3,6 +3,7 @@ import type { User } from '@/shared/model/types';
 import {
   type AuthTokensResponse,
   type AuthUserDto,
+  type GoogleLoginInput,
   type LoginInput,
   type LoginResult,
   type RegisterInput,
@@ -24,6 +25,16 @@ export const authKeys = {
 
 async function login(input: LoginInput): Promise<LoginResult> {
   const { data } = await authAxios.post<AuthTokensResponse>(`${AUTH_BASE}/email/login`, input);
+  return {
+    token: data.token,
+    refreshToken: data.refreshToken,
+    tokenExpires: data.tokenExpires,
+    user: data.user,
+  };
+}
+
+async function loginWithGoogle(input: GoogleLoginInput): Promise<LoginResult> {
+  const { data } = await authAxios.post<AuthTokensResponse>(`${AUTH_BASE}/google/login`, input);
   return {
     token: data.token,
     refreshToken: data.refreshToken,
@@ -60,6 +71,7 @@ async function deleteMe(): Promise<void> {
 
 export const authApi = {
   login,
+  loginWithGoogle,
   logout,
   getMe,
   register,

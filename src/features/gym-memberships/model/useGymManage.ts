@@ -1,10 +1,14 @@
 import * as React from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { useAutoJoinGymsQuery, useGymMutations } from '@/entities/gym/model/gymHooks';
 import { useGymMemberMutations } from '@/entities/gym-member/model/gymMemberHooks';
 import { useGymMemberStore } from '@/entities/gym-member/model/gymMemberStore';
+import { gymKeys } from '@/entities/gym/api/gymApi';
+import { gymMemberKeys } from '@/entities/gym-member/api/gymMemberApi';
 
 export function useGymManage() {
+  const queryClient = useQueryClient();
   const memberships = useGymMemberStore((s) => s.memberships);
   const currentGymId = useGymMemberStore((s) => s.currentGymId);
   const setCurrentGymId = useGymMemberStore((s) => s.setCurrentGymId);
@@ -72,6 +76,14 @@ export function useGymManage() {
   async function onRefresh() {
     setRefreshing(true);
     try {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: gymKeys.autoJoin() }),
+        queryClient.invalidateQueries({ queryKey: gymMemberKeys.all }),
+      ]);
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: gymKeys.autoJoin(), type: 'active' }),
+        queryClient.refetchQueries({ queryKey: gymMemberKeys.all, type: 'active' }),
+      ]);
       await refetch();
     } finally {
       setRefreshing(false);

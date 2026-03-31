@@ -5,7 +5,7 @@ This is a [React Native](https://reactnative.dev/) project built with [Expo](htt
 It was initialized using the following command:
 
 ```bash
-npx @react-native-reusables/cli@latest init -t HoldMeUp_app
+npx @react-native-reusables/cli@latest init -t Leptick
 ```
 
 ## Getting Started

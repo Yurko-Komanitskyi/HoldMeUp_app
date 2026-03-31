@@ -21,11 +21,19 @@
     "back": "Назад",
     "understood": "Зрозуміло",
     "errorTitle": "Помилка",
-    "weekdaysShort": ["Нд", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"],
+    "weekdaysShort": [
+      "Нд",
+      "Пн",
+      "Вт",
+      "Ср",
+      "Чт",
+      "Пт",
+      "Сб"
+    ],
     "galleryPermissionTitle": "Дозвіл потрібен",
     "galleryPermissionBody": "Дозволь доступ до галереї у налаштуваннях.",
     "photoUploadFailed": "Не вдалося завантажити фото. Спробуй ще раз.",
-    "brandName": "HoldMeUp",
+    "brandName": "Leptick",
     "close": "Закрити",
     "clear": "Очистити",
     "dash": "—"
@@ -62,7 +70,8 @@
   "drawer": {
     "route": "Маршрут",
     "routeEdit": "Редагувати маршрут",
-    "ascent": "Пролаз"
+    "ascent": "Пролаз",
+    "userProfile": "Профіль скелелаза"
   },
   "validation": {
     "required": "Обовʼязкове поле",
@@ -86,7 +95,7 @@
     "noAccount": "Ще немає акаунту?",
     "signUpLink": "Зареєструватись",
     "registerTitle": "Реєстрація",
-    "registerSubtitle": "Створи акаунт HoldMeUp, щоб відстежувати свої підйоми",
+    "registerSubtitle": "Створи акаунт Leptick, щоб відстежувати свої підйоми",
     "createAccount": "Створити акаунт",
     "haveAccount": "Вже маєш акаунт?",
     "signInLink": "Увійти",
@@ -101,7 +110,11 @@
     "confirmPasswordLabel": "Підтвердіть пароль",
     "email": "Email",
     "placeholderEmail": "you@example.com",
-    "placeholderPassword": "••••••••"
+    "placeholderPassword": "••••••••",
+    "orContinueWith": "або продовжити через",
+    "googleContinue": "Продовжити з Google",
+    "oauthMissingTokens": "Google не повернув idToken.",
+    "oauthFailed": "Не вдалося увійти через Google. Спробуйте ще раз."
   },
   "forgotPassword": {
     "title": "Відновити пароль",
@@ -140,7 +153,8 @@
     "f4Title": "Рейтинги маршрутів",
     "f4Desc": "Оцінки спільноти та рекомендації",
     "ctaStart": "Почати безкоштовно",
-    "ctaHaveAccount": "Вже маю акаунт"
+    "ctaHaveAccount": "Вже маю акаунт",
+    "ctaGoogle": "Увійти через Google"
   },
   "notFound": {
     "title": "Сторінку не знайдено",
@@ -192,7 +206,10 @@
       "SOFT": "Мяка",
       "FAIR": "Справедлива",
       "HARD": "Жорстка"
-    }
+    },
+    "reactionsSection": "Реакції",
+    "reactionsEmpty": "Ще немає реакцій",
+    "reactionUserProfile": "Профіль"
   },
   "gym": {
     "findGym": "Знайти зал",
@@ -384,9 +401,36 @@
     "home": "Головна",
     "routes": "Маршрути",
     "addRoute": "Додати",
+    "logAscent": "Пролаз",
     "ascents": "Пролази",
+    "community": "Спільнота",
     "profile": "Профіль",
     "gymStats": "Статистика"
+  },
+  "community": {
+    "title": "Спільнота",
+    "tabSearch": "Пошук",
+    "tabFollowing": "Підписки",
+    "tabFollowers": "Підписники",
+    "searchPlaceholder": "Ім'я або @тег…",
+    "searchHint": "Знайди скелелазів і підпишись",
+    "noSearchResults": "Нікого не знайдено",
+    "noFollowing": "Ви ще ні на кого не підписані",
+    "noFollowers": "Підписників поки немає",
+    "follow": "Підписатися",
+    "unfollow": "Відписатися",
+    "following": "Підписані",
+    "loadMore": "Завантаження…"
+  },
+  "userProfile": {
+    "tabOverview": "Огляд",
+    "tabFollowers": "Підписники",
+    "tabFollowing": "Підписки",
+    "tabAscents": "Пролази",
+    "noAscents": "Пролазів ще немає",
+    "countsHint": "Перейди на вкладки вище, щоб відкрити списки підписників чи підписок.",
+    "noFollowers": "Підписників поки немає",
+    "noFollowing": "Підписок ще немає"
   },
   "home": {
     "logAscent": "Записати пролаз",
@@ -412,7 +456,14 @@
     "noGymBody": "Приєднайся до залу, щоб бачити маршрути та відстежувати підйоми. Або попроси адміна тебе додати.",
     "findGym": "Знайти зал",
     "gymBannerTitle": "Обери свій зал",
-    "gymBannerSubtitle": "Приєднайся до залу, щоб бачити маршрути та відстежувати підйоми"
+    "gymBannerSubtitle": "Приєднайся до залу, щоб бачити маршрути та відстежувати підйоми",
+    "feedTitle": "Стрічка пролазів",
+    "feedEmpty": "Поки що немає записів у стрічці",
+    "feedLoadMore": "Більше"
+  },
+  "ascent": {
+    "feedAuthorHint": "Профіль автора",
+    "reactionsTotal": "{{count}} реакцій"
   },
   "ascents": {
     "title": "Пролази",
@@ -507,6 +558,10 @@
     "logoutConfirmAction": "Вийти",
     "statAscents": "Пролазів",
     "statFlash": "Flash",
-    "statSuccess": "Успішних"
+    "statSuccess": "Успішних",
+    "settingsModalTitle": "Налаштування",
+    "ascentsSection": "Пролази",
+    "viewAllAscents": "Більше",
+    "gymSubtitle": "Зал: {{name}}"
   }
 }

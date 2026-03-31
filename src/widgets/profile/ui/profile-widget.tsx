@@ -1,43 +1,151 @@
 import * as React from 'react';
-import { ScrollView, View, Switch, Alert } from 'react-native';
 import {
-  User,
-  Settings,
-  Moon,
-  Sun,
-  Globe,
-  LogOut,
+  ScrollView,
+  View,
+  TouchableOpacity,
+  useWindowDimensions,
+  Pressable,
+  ActivityIndicator,
+  StyleSheet,
+} from 'react-native';
+import {
   TrendingUp,
   Zap,
   Target,
-  Lock,
+  Settings,
+  ChevronRight,
+  CheckCircle2,
+  XCircle,
+  Mountain,
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { Text } from '@/shared/ui/text';
-import { ACCENT } from '@/shared/config/palette';
+import { ACCENT, resolveRouteColor } from '@/shared/config/palette';
 import { StatPill } from '@/shared/ui/stat-pill';
-import { SettingRow } from '@/shared/ui/setting-row';
 import { useUserStore } from '@/entities/user/model/userStore';
 import { useGymMemberStore } from '@/entities/gym-member/model/gymMemberStore';
-import { useAuth } from '@/entities/auth/model/authHooks';
 import { useMyStatsQuery } from '@/entities/stats/model/statsHooks';
 import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
-import { EditProfileModal } from '@/features/edit-profile/ui/edit-profile-modal';
-import { ChangePasswordModal } from '@/features/change-password/ui/change-password-modal';
+import { ProfileSettingsModal } from '@/widgets/profile/ui/profile-settings-modal';
+import { useAscentsQuery } from '@/entities/ascent/model/ascentHooks';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
+import { Icon } from '@/shared/ui/icon';
+
+const GRID_PREVIEW_COUNT = 9;
+const GRID_GAP = 8;
+
+export function ProfileAscentTile({
+  ascentId,
+  width,
+  height,
+  routeName,
+  routeGrade,
+  routeColor,
+  success,
+  reactionCount,
+}: {
+  ascentId: string;
+  width: number;
+  height: number;
+  routeName: string | null;
+  routeGrade: string | null;
+  routeColor: string | null;
+  success: boolean;
+  reactionCount?: number;
+}) {
+  const router = useRouter();
+  const colors = useThemeColor();
+  const fill = resolveRouteColor((routeColor ?? 'grey').trim());
+
+  const statusColor = success ? '#10b981' : colors.mutedForeground;
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={() => router.push(`/ascent-detail/${ascentId}` as never)}
+      style={{
+        width: width,
+        height: height,
+        borderRadius: 12,
+        backgroundColor: colors.card || '#ffffff',
+        borderWidth: 1,
+        borderColor: colors.border || 'rgba(0,0,0,0.05)',
+        padding: 8,
+      }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <View
+          style={{
+            width: 12,
+            height: 12,
+            borderRadius: 6,
+            backgroundColor: fill,
+            borderWidth: StyleSheet.hairlineWidth,
+            borderColor: 'rgba(0,0,0,0.2)',
+          }}
+        />
+        <Icon as={success ? CheckCircle2 : XCircle} size={16} color={statusColor} />
+      </View>
+
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
+        <Text
+          numberOfLines={1}
+          style={{
+            fontSize: 20,
+            fontWeight: '800',
+            color: colors.foreground,
+          }}>
+          {routeGrade || '-'}
+        </Text>
+
+        {routeName ? (
+          <Text
+            numberOfLines={1}
+            style={{
+              fontSize: 10,
+              fontWeight: '500',
+              color: colors.mutedForeground,
+              marginTop: 2,
+              textAlign: 'center',
+            }}>
+            {routeName}
+          </Text>
+        ) : null}
+      </View>
+
+      {reactionCount != null && reactionCount > 0 ? (
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 6,
+            right: 6,
+            minWidth: 20,
+            height: 18,
+            borderRadius: 9,
+            paddingHorizontal: 5,
+            backgroundColor: ACCENT + '28',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+          <Text style={{ fontSize: 10, fontWeight: '800', color: ACCENT }}>{reactionCount}</Text>
+        </View>
+      ) : null}
+    </TouchableOpacity>
+  );
+}
 
 export function ProfileWidget() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { width: windowWidth } = useWindowDimensions();
+  const colors = useThemeColor();
   const user = useUserStore((s) => s.currentUser);
-  const theme = useUserStore((s) => s.theme);
-  const language = useUserStore((s) => s.language);
-  const setTheme = useUserStore((s) => s.setTheme);
-  const setLanguage = useUserStore((s) => s.setLanguage);
-  const setUser = useUserStore((s) => s.setUser);
-  const clearGymMembers = useGymMemberStore((s) => s.clearAll);
-  const { logout } = useAuth();
+  const currentGymId = useGymMemberStore((s) => s.currentGymId);
+  const memberships = useGymMemberStore((s) => s.memberships);
+
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
+
   const {
     data: profileStats,
     isError: profileStatsError,
@@ -45,146 +153,236 @@ export function ProfileWidget() {
     isLoading: profileStatsLoading,
     refetch: refetchProfileStats,
   } = useMyStatsQuery({ period: 'all', compareWithPrevious: false }, { enabled: !!user });
+
   const ascentsTotal = profileStats?.current?.totalAscents ?? 0;
   const flashCount = profileStats?.current?.byType?.FLASH ?? 0;
   const successCount = profileStats?.current?.successfulAscents ?? 0;
 
-  const [showEditProfile, setShowEditProfile] = React.useState(false);
-  const [showChangePassword, setShowChangePassword] = React.useState(false);
+  const {
+    items: ascentItems,
+    isLoading: ascentsLoading,
+    isError: ascentsError,
+    error: ascentsQueryError,
+    refetch: refetchAscents,
+  } = useAscentsQuery(undefined, { enabled: !!user });
+
+  const previewAscents = React.useMemo(
+    () => ascentItems.slice(0, GRID_PREVIEW_COUNT),
+    [ascentItems]
+  );
+
+  const currentGym = React.useMemo(
+    () => memberships.find((m) => m.gym.id === currentGymId)?.gym,
+    [memberships, currentGymId]
+  );
 
   const initials =
     (user?.firstName?.charAt(0) ?? '') + (user?.lastName?.charAt(0) ?? '') ||
     (user?.email?.charAt(0)?.toUpperCase() ?? '?');
 
-  const isDark = theme === 'dark';
-
-  async function doLogout() {
-    await logout.mutateAsync();
-    setUser(null);
-    clearGymMembers();
-    router.replace('/auth/login');
-  }
-
-  function handleLogout() {
-    Alert.alert(t('profile.logoutConfirmTitle'), t('profile.logoutConfirmMessage'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('profile.logoutConfirmAction'),
-        style: 'destructive',
-        onPress: () => {
-          void doLogout();
-        },
-      },
-    ]);
-  }
-
+  const horizontalPad = 16;
+  const gridWidth = windowWidth - horizontalPad * 2;
+  const tileSize = (gridWidth - GRID_GAP * 2) / 3;
+  const tileHeight = tileSize * 0.7;
   return (
     <ScrollView
       className="flex-1 bg-background"
       contentContainerStyle={{ paddingBottom: 100 }}
       showsVerticalScrollIndicator={false}>
-      <EditProfileModal visible={showEditProfile} onClose={() => setShowEditProfile(false)} />
-      <ChangePasswordModal
-        visible={showChangePassword}
-        onClose={() => setShowChangePassword(false)}
+      <ProfileSettingsModal visible={settingsOpen} onClose={() => setSettingsOpen(false)} />
+
+      <View className="absolute right-3 top-0">
+        <Pressable
+          onPress={() => setSettingsOpen(true)}
+          hitSlop={12}
+          style={{ padding: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel={t('profile.settingsModalTitle')}>
+          <Settings size={24} color={colors.mutedForeground} />
+        </Pressable>
+      </View>
+
+      <View className="items-center gap-3 px-4 pt-1">
+        <View
+          style={{
+            width: 96,
+            height: 96,
+            borderRadius: 48,
+            backgroundColor: ACCENT + '18',
+            borderWidth: 3,
+            borderColor: ACCENT + '55',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+          <Text style={{ fontSize: 34, fontWeight: '800', color: ACCENT, lineHeight: 40 }}>
+            {initials}
+          </Text>
+        </View>
+        <View className="items-center gap-1">
+          <Text className="text-center text-2xl font-bold text-foreground">
+            {[user?.firstName, user?.lastName].filter(Boolean).join(' ') ||
+              t('profile.defaultName')}
+          </Text>
+          {user?.userTag ? (
+            <Text className="text-sm font-medium text-muted-foreground">@{user.userTag}</Text>
+          ) : null}
+        </View>
+      </View>
+
+      {profileStatsError && !profileStatsLoading ? (
+        <View className="mt-4 px-4">
+          <QueryErrorPanel
+            variant="compact"
+            error={profileStatsQueryError ?? new Error('')}
+            onRetry={() => void refetchProfileStats()}
+          />
+        </View>
+      ) : (
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginTop: 24,
+            paddingHorizontal: 16,
+          }}>
+          {/* Total Ascents */}
+          <View style={{ flex: 1, alignItems: 'center' }}>
+            <Text style={{ fontSize: 24, fontWeight: '800', color: colors.foreground }}>
+              {ascentsTotal}
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+              <TrendingUp size={14} color={colors.mutedForeground} />
+              <Text style={{ fontSize: 12, fontWeight: '500', color: colors.mutedForeground }}>
+                {t('profile.statAscents')}
+              </Text>
+            </View>
+          </View>
+
+          {/* Divider */}
+          <View style={{ width: 1, height: 32, backgroundColor: colors.border }} />
+
+          {/* Flashes */}
+          <View style={{ flex: 1, alignItems: 'center' }}>
+            <Text style={{ fontSize: 24, fontWeight: '800', color: colors.foreground }}>
+              {flashCount}
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+              <Zap size={14} color={colors.mutedForeground} />
+              <Text style={{ fontSize: 12, fontWeight: '500', color: colors.mutedForeground }}>
+                {t('profile.statFlash')}
+              </Text>
+            </View>
+          </View>
+
+          {/* Divider */}
+          <View style={{ width: 1, height: 32, backgroundColor: colors.border }} />
+
+          {/* Success */}
+          <View style={{ flex: 1, alignItems: 'center' }}>
+            <Text style={{ fontSize: 24, fontWeight: '800', color: colors.foreground }}>
+              {successCount}
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+              <Target size={14} color={colors.mutedForeground} />
+              <Text style={{ fontSize: 12, fontWeight: '500', color: colors.mutedForeground }}>
+                {t('profile.statSuccess')}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
+
+      <View
+        style={{
+          marginTop: 22,
+          marginHorizontal: horizontalPad,
+          height: 1,
+          backgroundColor: colors.border,
+        }}
       />
 
-      <View className="gap-6 pt-6">
-        <View className="items-center gap-3 px-4">
-          <View
-            style={{
-              width: 84,
-              height: 84,
-              borderRadius: 26,
-              backgroundColor: ACCENT + '20',
-              borderWidth: 2,
-              borderColor: ACCENT + '50',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-            <Text style={{ fontSize: 30, fontWeight: '800', color: ACCENT, lineHeight: 36 }}>
-              {initials}
+      <View className="mt-5 px-4">
+        <View className="mb-3 flex-row items-center justify-between">
+          <Text className="text-base font-bold text-foreground">{t('profile.ascentsSection')}</Text>
+          <Pressable
+            onPress={() => router.push('/ascents/ascents' as never)}
+            hitSlop={8}
+            className="flex-row items-center gap-0.5">
+            <Text className="text-sm font-semibold" style={{ color: ACCENT }}>
+              {t('profile.viewAllAscents')}
             </Text>
-          </View>
-          <View className="items-center gap-1">
-            <Text className="text-xl font-bold text-foreground">
-              {[user?.firstName, user?.lastName].filter(Boolean).join(' ') ||
-                t('profile.defaultName')}
-            </Text>
-            {user?.email && <Text className="text-sm text-muted-foreground">{user.email}</Text>}
-          </View>
+            <ChevronRight size={18} color={ACCENT} />
+          </Pressable>
         </View>
 
-        {profileStatsError && !profileStatsLoading ? (
-          <View className="px-4">
+        {ascentsLoading && previewAscents.length === 0 ? (
+          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        ) : ascentsError && previewAscents.length === 0 ? (
+          <View style={{ paddingVertical: 16 }}>
             <QueryErrorPanel
               variant="compact"
-              error={profileStatsQueryError ?? new Error('')}
-              onRetry={() => void refetchProfileStats()}
+              error={ascentsQueryError ?? new Error('')}
+              onRetry={() => void refetchAscents()}
             />
+          </View>
+        ) : previewAscents.length === 0 ? (
+          <View
+            style={{
+              alignItems: 'center',
+              borderRadius: 16,
+              borderWidth: 1,
+              borderStyle: 'dashed',
+              borderColor: colors.border,
+              paddingVertical: 36,
+              paddingHorizontal: 24,
+            }}>
+            <Mountain size={36} color={colors.mutedForeground} />
+            <Text
+              style={{
+                marginTop: 12,
+                fontSize: 15,
+                fontWeight: '600',
+                color: colors.mutedForeground,
+                textAlign: 'center',
+              }}>
+              {t('ascents.noAscents')}
+            </Text>
+            <Text
+              style={{
+                marginTop: 6,
+                fontSize: 13,
+                color: colors.mutedForeground,
+                textAlign: 'center',
+              }}>
+              {t('ascents.logFirst')}
+            </Text>
           </View>
         ) : (
-          <View className="flex-row gap-3 px-4">
-            <StatPill icon={TrendingUp} value={ascentsTotal} label={t('profile.statAscents')} />
-            <StatPill icon={Zap} value={flashCount} label={t('profile.statFlash')} />
-            <StatPill icon={Target} value={successCount} label={t('profile.statSuccess')} />
+          <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              gap: GRID_GAP,
+              justifyContent: 'flex-start',
+            }}>
+            {previewAscents.map((a) => (
+              <ProfileAscentTile
+                key={a.id}
+                ascentId={a.id}
+                width={tileSize}
+                height={tileHeight}
+                routeName={a.routeName?.trim() ?? null}
+                routeGrade={a.routeGrade ?? null}
+                routeColor={a.routeColor ?? null}
+                success={a.success}
+                reactionCount={a.reactions?.length ?? 0}
+              />
+            ))}
           </View>
         )}
-
-        <View className="gap-1">
-          <Text className="mb-1 px-4 text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            {t('profile.accountSection')}
-          </Text>
-          <View className="mx-4 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
-            <SettingRow
-              icon={User}
-              label={t('profile.editProfile')}
-              onPress={() => setShowEditProfile(true)}
-            />
-            <SettingRow
-              icon={Lock}
-              label={t('profile.changePassword')}
-              onPress={() => setShowChangePassword(true)}
-            />
-          </View>
-        </View>
-
-        <View className="gap-1">
-          <Text className="mb-1 px-4 text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            {t('profile.settingsSection')}
-          </Text>
-          <View className="mx-4 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
-            <SettingRow
-              icon={isDark ? Moon : Sun}
-              label={t('profile.darkTheme')}
-              rightElement={
-                <Switch
-                  value={isDark}
-                  onValueChange={(val) => setTheme(val ? 'dark' : 'light')}
-                  trackColor={{ true: ACCENT, false: undefined }}
-                  thumbColor="#ffffff"
-                />
-              }
-            />
-            <SettingRow
-              icon={Globe}
-              label={t('profile.language')}
-              value={language === 'ua' ? t('profile.langUA') : t('profile.langEN')}
-              onPress={() => setLanguage(language === 'ua' ? 'en' : 'ua')}
-            />
-            <SettingRow
-              icon={Settings}
-              label={t('profile.moreSettings')}
-              onPress={() => router.push('/gym/manage' as never)}
-            />
-          </View>
-        </View>
-
-        <View className="gap-1">
-          <View className="mx-4 overflow-hidden rounded-2xl border border-destructive/30 bg-destructive/5">
-            <SettingRow icon={LogOut} label={t('profile.logout')} onPress={handleLogout} danger />
-          </View>
-        </View>
       </View>
     </ScrollView>
   );

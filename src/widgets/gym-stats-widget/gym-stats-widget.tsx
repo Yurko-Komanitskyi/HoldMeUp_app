@@ -3,6 +3,7 @@ import { ScrollView, View, RefreshControl } from 'react-native';
 import { Users, Route as RouteIcon, TrendingUp, BarChart2, Map } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { Text } from '@/shared/ui/text';
 import { Icon } from '@/shared/ui/icon';
@@ -10,6 +11,8 @@ import { useGymMemberStore } from '@/entities/gym-member/model/gymMemberStore';
 import { useGymMembersQuery } from '@/entities/gym-member/model/gymMemberHooks';
 import { useGymRoutesInventoryQuery } from '@/entities/stats/model/statsHooks';
 import { GymMemberRole } from '@/entities/gym-member/model/gym-member';
+import { gymMemberKeys } from '@/entities/gym-member/api/gymMemberApi';
+import { statsKeys } from '@/entities/stats/api/statsApi';
 import { MemberRow } from '@/entities/gym-member/ui/member-row';
 import { MetricCard } from '@/shared/ui/metric-card';
 import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
@@ -17,6 +20,7 @@ import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
 export function GymStatsWidget() {
   const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
+  const queryClient = useQueryClient();
   const memberships = useGymMemberStore((state) => state.memberships);
   const currentGymId = useGymMemberStore((state) => state.currentGymId);
 
@@ -41,9 +45,22 @@ export function GymStatsWidget() {
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([refetchMembers(), refetchInventory()]);
-    setRefreshing(false);
-  }, [refetchMembers, refetchInventory]);
+    try {
+      if (currentGymId) {
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: gymMemberKeys.list(currentGymId) }),
+          queryClient.invalidateQueries({ queryKey: statsKeys.gymInventory(currentGymId) }),
+        ]);
+        await Promise.all([
+          queryClient.refetchQueries({ queryKey: gymMemberKeys.list(currentGymId), type: 'active' }),
+          queryClient.refetchQueries({ queryKey: statsKeys.gymInventory(currentGymId), type: 'active' }),
+        ]);
+      }
+      await Promise.all([refetchMembers(), refetchInventory()]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [currentGymId, queryClient, refetchMembers, refetchInventory]);
 
   const activeRoutes = inventory?.activeTotal ?? 0;
   const archivedRoutes = inventory?.archivedTotal ?? 0;

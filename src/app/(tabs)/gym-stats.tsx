@@ -1,5 +1,6 @@
-import { GymStatsWidget } from "@/widgets/gym-stats-widget/gym-stats-widget";
+// import { GymStatsWidget } from "@/widgets/gym-stats-widget/gym-stats-widget";
 
 export default function GymStatsScreen() {
-  return <GymStatsWidget />;
+  // return <GymStatsWidget />;
+  return null;
 }

@@ -1,3 +1,18 @@
+import type { AscentType } from '../model/ascent';
+import type { BaseListParams } from '@/shared/types/pagination';
+
+export type AscentFeedParams = BaseListParams & {
+  dateFrom?: string;
+  dateTo?: string;
+  type?: AscentType;
+  routeId?: string;
+  success?: boolean;
+};
+
+export interface AddAscentReactionInput {
+  emoji: string;
+}
+
 export interface CreateAscentInput {
   userId: string;
   routeId: string;

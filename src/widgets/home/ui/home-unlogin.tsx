@@ -64,7 +64,6 @@ export function HomeUnlogin() {
           paddingTop: 32,
           paddingBottom: 40,
         }}>
-
         {/* ── Hero ── */}
         <View style={{ alignItems: 'center', marginBottom: 36 }}>
           {/* Icon */}
@@ -118,7 +117,18 @@ export function HomeUnlogin() {
             }}>
             {t('homeUnlogin.headline1')}
             {'\n'}
-            <Text style={{ color: ACCENT }}>{t('homeUnlogin.headlineAccent')}</Text>
+            <Text
+              style={{
+                color: ACCENT,
+                fontSize: 32,
+                fontWeight: '900',
+                textAlign: 'center',
+                letterSpacing: -0.8,
+                lineHeight: 38,
+                marginBottom: 12,
+              }}>
+              {t('homeUnlogin.headlineAccent')}
+            </Text>{' '}
             {t('homeUnlogin.headline2')}
           </Text>
 
@@ -173,64 +183,10 @@ export function HomeUnlogin() {
                   }}>
                   {f.title}
                 </Text>
-                <Text style={{ fontSize: 12, color: mutedColor, lineHeight: 17 }}>
-                  {f.desc}
-                </Text>
+                <Text style={{ fontSize: 12, color: mutedColor, lineHeight: 17 }}>{f.desc}</Text>
               </View>
             </View>
           ))}
-        </View>
-
-        {/* ── CTA Buttons ── */}
-        <View style={{ gap: 10 }}>
-          <Pressable
-            onPress={() => router.push('/auth/register' as never)}
-            style={({ pressed }) => ({
-              backgroundColor: ACCENT,
-              borderRadius: 18,
-              paddingVertical: 16,
-              alignItems: 'center',
-              flexDirection: 'row',
-              justifyContent: 'center',
-              gap: 8,
-              opacity: pressed ? 0.88 : 1,
-              shadowColor: ACCENT,
-              shadowOpacity: 0.35,
-              shadowRadius: 12,
-              shadowOffset: { width: 0, height: 4 },
-            })}>
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: '800',
-                color: colors.destructiveForeground,
-                letterSpacing: -0.3,
-              }}>
-              {t('homeUnlogin.ctaStart')}
-            </Text>
-            <ChevronRight size={18} color={colors.destructiveForeground} />
-          </Pressable>
-
-          <Pressable
-            onPress={() => router.push('/auth/login' as never)}
-            style={({ pressed }) => ({
-              borderRadius: 18,
-              paddingVertical: 16,
-              alignItems: 'center',
-              borderWidth: 1,
-              borderColor: colors.border,
-              backgroundColor: colors.muted,
-              opacity: pressed ? 0.75 : 1,
-            })}>
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: '600',
-                color: colors.mutedForeground,
-              }}>
-              {t('homeUnlogin.ctaHaveAccount')}
-            </Text>
-          </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>

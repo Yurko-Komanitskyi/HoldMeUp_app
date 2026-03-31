@@ -1,13 +1,21 @@
 import { apiClient } from '@/shared/api/axios';
 
-import type { Ascent } from '../model/ascent';
-import type { CreateAscentInput, UpdateAscentInput } from './types';
+import type { Ascent, AscentFeedItem } from '../model/ascent';
+import type {
+  AddAscentReactionInput,
+  AscentFeedParams,
+  CreateAscentInput,
+  UpdateAscentInput,
+} from './types';
 import { PaginatedListResponse } from '@/shared/types/pagination';
 
 export const ascentKeys = {
   all: ['ascents'] as const,
   lists: () => [...ascentKeys.all, 'list'] as const,
   list: () => [...ascentKeys.lists()] as const,
+  feeds: () => [...ascentKeys.all, 'feed'] as const,
+  feed: (params?: Omit<AscentFeedParams, 'page' | 'limit'>) =>
+    [...ascentKeys.feeds(), params ?? {}] as const,
   details: () => [...ascentKeys.all, 'detail'] as const,
   detail: (id: string) => [...ascentKeys.details(), id] as const,
 };
@@ -17,6 +25,7 @@ const ASCENTS_BASE = '/api/v1/ascents';
 export type AscentListParams = {
   page?: number;
   limit?: number;
+  userId?: string;
 };
 
 export async function fetchAscents(
@@ -26,6 +35,27 @@ export async function fetchAscents(
     params,
   });
   return data;
+}
+
+export async function fetchAscentFeed(
+  params?: AscentFeedParams
+): Promise<PaginatedListResponse<AscentFeedItem>> {
+  const { data } = await apiClient.get<PaginatedListResponse<AscentFeedItem>>(
+    `${ASCENTS_BASE}/feed`,
+    { params }
+  );
+  return data;
+}
+
+export async function addAscentReaction(
+  ascentId: string,
+  input: AddAscentReactionInput
+): Promise<void> {
+  await apiClient.post(`${ASCENTS_BASE}/${ascentId}/reactions`, input);
+}
+
+export async function deleteAscentReaction(ascentId: string): Promise<void> {
+  await apiClient.delete(`${ASCENTS_BASE}/${ascentId}/reactions`);
 }
 
 export async function fetchAscentById(id: string): Promise<Ascent> {

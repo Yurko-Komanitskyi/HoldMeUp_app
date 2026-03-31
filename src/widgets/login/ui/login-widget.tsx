@@ -16,6 +16,7 @@ import { ACCENT } from '@/shared/config/palette';
 import { THEME } from '@/shared/config/tokens';
 import { parseApiError } from '@/shared/lib/api-error';
 import { useAuth } from '@/entities/auth/model/authHooks';
+import { useGoogleAuth } from '@/entities/auth/model/useGoogleAuth';
 import { ForgotPasswordModal } from '@/features/auth/forgot-password/ui/forgot-password-modal';
 import { useMyGymMembershipsQuery } from '@/entities/gym-member/model/gymMemberHooks';
 import { useTranslation } from 'react-i18next';
@@ -38,6 +39,8 @@ export function LoginWidget() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const iconColor = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)';
+  const { signIn: signInWithGoogle, loading: googleLoading, error: googleError, setError: setGoogleError } =
+    useGoogleAuth();
 
   const [serverError, setServerError] = React.useState<string | null>(null);
   const [showForgot, setShowForgot] = React.useState(false);
@@ -70,6 +73,16 @@ export function LoginWidget() {
       if (!hasFieldErrors) setServerError(message);
     }
   }
+
+  const onGooglePress = React.useCallback(async () => {
+    setServerError(null);
+    setGoogleError(null);
+    const user = await signInWithGoogle();
+    if (user) {
+      await myMembershipsQuery.refetch();
+      router.replace('/(tabs)');
+    }
+  }, [myMembershipsQuery, router, setGoogleError, signInWithGoogle]);
 
   return (
     <KeyboardAvoidingView
@@ -165,7 +178,7 @@ export function LoginWidget() {
               )}
             </View>
 
-            <ServerErrorBanner message={serverError} />
+            <ServerErrorBanner message={serverError ?? googleError} />
 
             <Button onPress={handleSubmit(onSubmit)} disabled={isSubmitting} className="mt-1 h-12">
               {isSubmitting ? (
@@ -176,6 +189,69 @@ export function LoginWidget() {
                 <Text className="font-semibold">{t('auth.signIn')}</Text>
               )}
             </Button>
+
+            <View style={{ marginTop: 4, gap: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View
+                  style={{
+                    flex: 1,
+                    height: 1,
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)',
+                  }}
+                />
+                <Text className="text-xs text-muted-foreground">{t('auth.orContinueWith')}</Text>
+                <View
+                  style={{
+                    flex: 1,
+                    height: 1,
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)',
+                  }}
+                />
+              </View>
+
+              <TouchableOpacity
+                onPress={() => void onGooglePress()}
+                disabled={isSubmitting || googleLoading}
+                activeOpacity={0.9}
+                style={{
+                  borderRadius: 14,
+                  overflow: 'hidden',
+                  opacity: isSubmitting || googleLoading ? 0.7 : 1,
+                }}>
+                <View
+                  style={{
+                    minHeight: 50,
+                    borderRadius: 14,
+                    paddingHorizontal: 14,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 10,
+                    backgroundColor: ACCENT + '16',
+                    borderWidth: 1,
+                    borderColor: ACCENT + '55',
+                  }}>
+                  <View
+                    style={{
+                      width: 26,
+                      height: 26,
+                      borderRadius: 13,
+                      backgroundColor: isDark ? ACCENT + '33' : '#fff',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                    <Text style={{ color: ACCENT, fontSize: 14, fontWeight: '800' }}>G</Text>
+                  </View>
+                  {googleLoading ? (
+                    <ActivityIndicator color={ACCENT} />
+                  ) : (
+                    <Text style={{ color: isDark ? '#fff' : '#111', fontWeight: '700', fontSize: 15 }}>
+                      {t('auth.googleContinue')}
+                    </Text>
+                  )}
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View

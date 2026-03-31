@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "HoldMeUp_app",
-    "slug": "HoldMeUp_app",
+    "name": "Leptick",
+    "slug": "leptick",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./src/shared/assets/icon.png",
-    "scheme": "HoldMeUp_app",
+    "scheme": "leptick",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -17,9 +17,11 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.leptick.app"
     },
     "android": {
+      "package": "com.leptick.app",
       "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./src/shared/assets/icon.png",
@@ -33,10 +35,25 @@
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store"
+      "expo-dev-client",
+      "expo-secure-store",
+      "expo-web-browser",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.REPLACE_WITH_IOS_REVERSED_CLIENT_ID"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "02bb8f4b-eb60-471e-900d-9b28dfe02d96"
+      }
+    },
+    "owner": "leptick"
   }
 }
