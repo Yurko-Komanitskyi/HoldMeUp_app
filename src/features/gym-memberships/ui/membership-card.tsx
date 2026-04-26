@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { View, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Dumbbell, MapPin, LogOut, ShieldCheck, Wrench, Crown, User } from 'lucide-react-native';
+import { View, TouchableOpacity, ActivityIndicator, Pressable } from 'react-native';
+import { Dumbbell, MapPin, LogOut, ShieldCheck, Wrench, Crown, User, ChevronRight } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 
 import { Text } from '@/shared/ui/text';
 import { ACCENT } from '@/shared/config/palette';
@@ -24,11 +25,13 @@ interface Props {
 
 export function MembershipCard({ membership, isDark, leaving, onLeavePress }: Props) {
   const { t } = useTranslation();
+  const router = useRouter();
   const RoleIcon = ROLE_ICON[membership.role] ?? User;
   const isOwner = membership.role === GymMemberRole.OWNER;
 
   return (
-    <View
+    <Pressable
+      onPress={() => router.push(`/gym/${membership.gym.id}` as never)}
       style={{
         borderRadius: 18,
         borderWidth: 1,
@@ -75,27 +78,33 @@ export function MembershipCard({ membership, isDark, leaving, onLeavePress }: Pr
           </View>
         </View>
 
-        {!isOwner && (
-          <TouchableOpacity
-            onPress={() => onLeavePress(membership.gym.id, membership.gym.name)}
-            disabled={leaving}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              backgroundColor: isDark ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.08)',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-            {leaving ? (
-              <ActivityIndicator size="small" color="#ef4444" />
-            ) : (
-              <LogOut size={15} color="#ef4444" />
-            )}
-          </TouchableOpacity>
-        )}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          {!isOwner && (
+            <TouchableOpacity
+              onPress={(e) => {
+                e.stopPropagation();
+                onLeavePress(membership.gym.id, membership.gym.name);
+              }}
+              disabled={leaving}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                backgroundColor: isDark ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.08)',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              {leaving ? (
+                <ActivityIndicator size="small" color="#ef4444" />
+              ) : (
+                <LogOut size={15} color="#ef4444" />
+              )}
+            </TouchableOpacity>
+          )}
+          <ChevronRight size={16} color={isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)'} />
+        </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 

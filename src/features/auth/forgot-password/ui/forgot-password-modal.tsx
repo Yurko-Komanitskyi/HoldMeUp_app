@@ -189,4 +189,3 @@ export function ForgotPasswordModal({ visible, onClose }: Props) {
     </Modal>
   );
 }
-

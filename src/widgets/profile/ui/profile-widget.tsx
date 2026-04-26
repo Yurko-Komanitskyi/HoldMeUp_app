@@ -31,10 +31,46 @@ import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
 import { ProfileSettingsModal } from '@/widgets/profile/ui/profile-settings-modal';
 import { useAscentsQuery } from '@/entities/ascent/model/ascentHooks';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
+import { useScrollToTopOnFocus } from '@/shared/hooks/use-scroll-to-top-on-focus';
 import { Icon } from '@/shared/ui/icon';
+import type { Ascent, AscentReaction } from '@/entities/ascent/model/ascent';
 
 const GRID_PREVIEW_COUNT = 9;
 const GRID_GAP = 8;
+const REACTION_PREVIEW_LIMIT = 2;
+
+function aggregateReactions(reactions: AscentReaction[]): Array<{ emoji: string; count: number }> {
+  const byEmoji = new Map<string, number>();
+  for (const reaction of reactions) {
+    byEmoji.set(reaction.emoji, (byEmoji.get(reaction.emoji) ?? 0) + 1);
+  }
+  return Array.from(byEmoji.entries())
+    .map(([emoji, count]) => ({ emoji, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
+type GroupedProfileAscent = Ascent & {
+  groupedCount: number;
+  groupedReactions: AscentReaction[];
+};
+
+function groupConsecutiveAscentsByRoute(items: Ascent[]): GroupedProfileAscent[] {
+  const grouped: GroupedProfileAscent[] = [];
+  for (const item of items) {
+    const previous = grouped[grouped.length - 1];
+    if (previous && previous.routeId === item.routeId) {
+      previous.groupedCount += 1;
+      previous.groupedReactions.push(...(item.reactions ?? []));
+      continue;
+    }
+    grouped.push({
+      ...item,
+      groupedCount: 1,
+      groupedReactions: [...(item.reactions ?? [])],
+    });
+  }
+  return grouped;
+}
 
 export function ProfileAscentTile({
   ascentId,
@@ -44,7 +80,8 @@ export function ProfileAscentTile({
   routeGrade,
   routeColor,
   success,
-  reactionCount,
+  reactions,
+  groupedCount,
 }: {
   ascentId: string;
   width: number;
@@ -53,13 +90,18 @@ export function ProfileAscentTile({
   routeGrade: string | null;
   routeColor: string | null;
   success: boolean;
-  reactionCount?: number;
+  reactions?: AscentReaction[];
+  groupedCount?: number;
 }) {
   const router = useRouter();
   const colors = useThemeColor();
   const fill = resolveRouteColor((routeColor ?? 'grey').trim());
 
   const statusColor = success ? '#10b981' : colors.mutedForeground;
+  const reactionPreview = React.useMemo(
+    () => aggregateReactions(reactions ?? []).slice(0, REACTION_PREVIEW_LIMIT),
+    [reactions]
+  );
 
   return (
     <TouchableOpacity
@@ -85,7 +127,25 @@ export function ProfileAscentTile({
             borderColor: 'rgba(0,0,0,0.2)',
           }}
         />
-        <Icon as={success ? CheckCircle2 : XCircle} size={16} color={statusColor} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          {groupedCount && groupedCount > 1 ? (
+            <View
+              style={{
+                minWidth: 24,
+                height: 18,
+                borderRadius: 9,
+                paddingHorizontal: 6,
+                backgroundColor: colors.border + '80',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              <Text style={{ fontSize: 10, fontWeight: '800', color: colors.foreground }}>
+                x{groupedCount}
+              </Text>
+            </View>
+          ) : null}
+          <Icon as={success ? CheckCircle2 : XCircle} size={16} color={statusColor} />
+        </View>
       </View>
 
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
@@ -114,23 +174,25 @@ export function ProfileAscentTile({
         ) : null}
       </View>
 
-      {reactionCount != null && reactionCount > 0 ? (
-        <View
-          style={{
-            position: 'absolute',
-            bottom: 6,
-            right: 6,
-            minWidth: 20,
-            height: 18,
-            borderRadius: 9,
-            paddingHorizontal: 5,
-            backgroundColor: ACCENT + '28',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-          <Text style={{ fontSize: 10, fontWeight: '800', color: ACCENT }}>{reactionCount}</Text>
-        </View>
-      ) : null}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 18 }}>
+        {reactionPreview.map((reaction) => (
+          <View
+            key={reaction.emoji}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              borderRadius: 999,
+              paddingHorizontal: 5,
+              paddingVertical: 2,
+              backgroundColor: ACCENT + '22',
+            }}>
+            <Text style={{ fontSize: 10 }}>{reaction.emoji}</Text>
+            <Text style={{ marginLeft: 2, fontSize: 9, fontWeight: '800', color: ACCENT }}>
+              {reaction.count}
+            </Text>
+          </View>
+        ))}
+      </View>
     </TouchableOpacity>
   );
 }
@@ -145,6 +207,7 @@ export function ProfileWidget() {
   const memberships = useGymMemberStore((s) => s.memberships);
 
   const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const profileScrollRef = useScrollToTopOnFocus<ScrollView>();
 
   const {
     data: profileStats,
@@ -166,10 +229,10 @@ export function ProfileWidget() {
     refetch: refetchAscents,
   } = useAscentsQuery(undefined, { enabled: !!user });
 
-  const previewAscents = React.useMemo(
-    () => ascentItems.slice(0, GRID_PREVIEW_COUNT),
-    [ascentItems]
-  );
+  const previewAscents = React.useMemo(() => {
+    const grouped = groupConsecutiveAscentsByRoute(ascentItems);
+    return grouped.slice(0, GRID_PREVIEW_COUNT);
+  }, [ascentItems]);
 
   const currentGym = React.useMemo(
     () => memberships.find((m) => m.gym.id === currentGymId)?.gym,
@@ -182,10 +245,11 @@ export function ProfileWidget() {
 
   const horizontalPad = 16;
   const gridWidth = windowWidth - horizontalPad * 2;
-  const tileSize = (gridWidth - GRID_GAP * 2) / 3;
-  const tileHeight = tileSize * 0.7;
+  const tileSize = Math.floor((gridWidth - GRID_GAP * 2) / 3);
+  const tileHeight = tileSize * 0.9;
   return (
     <ScrollView
+      ref={profileScrollRef}
       className="flex-1 bg-background"
       contentContainerStyle={{ paddingBottom: 100 }}
       showsVerticalScrollIndicator={false}>
@@ -378,7 +442,8 @@ export function ProfileWidget() {
                 routeGrade={a.routeGrade ?? null}
                 routeColor={a.routeColor ?? null}
                 success={a.success}
-                reactionCount={a.reactions?.length ?? 0}
+                reactions={a.groupedReactions}
+                groupedCount={a.groupedCount}
               />
             ))}
           </View>

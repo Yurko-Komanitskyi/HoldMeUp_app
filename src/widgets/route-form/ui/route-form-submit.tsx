@@ -1,12 +1,9 @@
-import * as React from 'react';
-import { View, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import { View, TouchableOpacity, ActivityIndicator } from 'react-native';
 
 import { Text } from '@/shared/ui/text';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
 
 type Props = {
-  bgColor: string;
-  borderTopColor: string;
   isSubmitting: boolean;
   uploading: boolean;
   submitLabel: string;
@@ -14,8 +11,6 @@ type Props = {
 };
 
 export function RouteFormSubmitBar({
-  bgColor,
-  borderTopColor,
   isSubmitting,
   uploading,
   submitLabel,
@@ -28,16 +23,8 @@ export function RouteFormSubmitBar({
   return (
     <View
       style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        borderTopWidth: 1,
-        borderTopColor,
-        backgroundColor: bgColor,
-        paddingHorizontal: 16,
-        paddingTop: 12,
-        paddingBottom: Platform.OS === 'ios' ? 32 : 20,
+        marginTop: 8,
+        paddingBottom: 16,
       }}>
       <TouchableOpacity
         onPress={onSubmit}

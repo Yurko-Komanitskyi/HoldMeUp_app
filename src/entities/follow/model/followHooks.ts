@@ -4,6 +4,7 @@ import {
   createFollow,
   unfollow,
   searchFollowUsers,
+  fetchFollowSuggestions,
   fetchUserByTag,
   fetchFollowersByFollowerId,
   fetchFollowingByFollowingId,
@@ -21,6 +22,16 @@ export function useFollowSearchQuery(q: string) {
     params: { q: trimmed },
     pageSize: FOLLOW_PAGE_SIZE,
     enabled: trimmed.length > 0,
+  });
+}
+
+export function useFollowSuggestionsQuery(enabled = true) {
+  return useInfiniteListQuery({
+    queryKey: followKeys.suggestions(),
+    fetchFn: fetchFollowSuggestions,
+    params: {},
+    pageSize: FOLLOW_PAGE_SIZE,
+    enabled,
   });
 }
 

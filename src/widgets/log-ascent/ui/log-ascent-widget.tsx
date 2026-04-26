@@ -6,9 +6,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  LayoutChangeEvent,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
+import { useScrollToTopOnFocus } from '@/shared/hooks/use-scroll-to-top-on-focus';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import { ArrowLeft, CheckCircle2, XCircle } from 'lucide-react-native';
@@ -19,6 +21,8 @@ import { StopwatchCard } from '@/features/stopwatch/ui/stopwatch-card';
 import { useRouteDetailsQuery } from '@/entities/route/model/routeHooks';
 import { useUserStore } from '@/entities/user/model/userStore';
 import { useLogAscentForm } from '@/widgets/log-ascent/ui/useLogAscentForm';
+
+type LogAscentScrollSectionKey = 'ascentType' | 'attemptNumber' | 'notes' | 'videoUrl';
 import { RouteHeaderCard } from '@/widgets/log-ascent/ui/sections/RouteHeaderCard';
 import { AscentTypeSection } from '@/widgets/log-ascent/ui/sections/AscentTypeSection';
 import { ResultAttemptsSection } from '@/widgets/log-ascent/ui/sections/ResultAttemptsSection';
@@ -49,14 +53,37 @@ export function LogAscentWidget() {
   const { reset: resetStopwatch } = stopwatch;
   const toast = useToastStore();
 
-  const scrollRef = React.useRef<ScrollView | null>(null);
+  const scrollRef = useScrollToTopOnFocus<ScrollView>();
+  const sectionScrollY = React.useRef<Partial<Record<LogAscentScrollSectionKey, number>>>({});
+
+  const captureSectionY = React.useCallback((key: LogAscentScrollSectionKey) => {
+    return (e: LayoutChangeEvent) => {
+      sectionScrollY.current[key] = e.nativeEvent.layout.y;
+    };
+  }, []);
+
+  const scrollToValidationSection = React.useCallback((key: LogAscentScrollSectionKey) => {
+    const y = sectionScrollY.current[key];
+    requestAnimationFrame(() => {
+      if (typeof y === 'number') {
+        scrollRef.current?.scrollTo({ y: Math.max(0, y - 16), animated: true });
+      }
+    });
+  }, [scrollRef]);
+
+  const scrollFormToTop = React.useCallback(() => {
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+    });
+  }, [scrollRef]);
 
   const timeSeconds = stopwatch.seconds > 0 ? stopwatch.seconds : null;
-  const { state, actions, submit, isPending, reset } = useLogAscentForm(
+  const { state, previousAttempts, validationErrors, actions, submit, isPending, reset } =
+    useLogAscentForm(
     user?.id,
     routeId,
     timeSeconds
-  );
+    );
   const {
     ascentType,
     success,
@@ -70,7 +97,6 @@ export function LogAscentWidget() {
   const {
     setAscentType,
     setSuccess,
-    setAttemptNumber,
     setFeeling,
     setGradePerception,
     setNotes,
@@ -85,10 +111,11 @@ export function LogAscentWidget() {
 
   useFocusEffect(
     React.useCallback(() => {
-      requestAnimationFrame(() => {
-        scrollRef.current?.scrollTo({ y: 0, animated: false });
-      });
-    }, [])
+      return () => {
+        reset();
+        resetStopwatch();
+      };
+    }, [reset, resetStopwatch])
   );
 
   if (!routeId) {
@@ -169,19 +196,24 @@ export function LogAscentWidget() {
   }
 
   async function handleSubmit() {
-    try {
-      await submit();
-      toast.show('success', t('logAscent.toastSuccess'));
-      setTimeout(() => {
-        reset();
-        resetStopwatch();
-        setTimeout(() => {
-          router.back();
-        }, 10);
-      }, 700);
-    } catch {
-      // помилка вже показана через serverError
+    const result = await submit();
+    if (result.outcome === 'skipped') return;
+    if (result.outcome === 'validation') {
+      scrollToValidationSection(result.firstField);
+      return;
     }
+    if (result.outcome === 'server') {
+      scrollFormToTop();
+      return;
+    }
+    toast.show('success', t('logAscent.toastSuccess'));
+    setTimeout(() => {
+      reset();
+      resetStopwatch();
+      setTimeout(() => {
+        router.back();
+      }, 10);
+    }, 700);
   }
 
   return (
@@ -231,21 +263,31 @@ export function LogAscentWidget() {
           {/* Stopwatch */}
           <StopwatchCard {...stopwatch} />
 
-          <AscentTypeSection
-            ascentType={ascentType}
-            cardBg={cardBg}
-            borderColor={borderColor}
-            onChange={setAscentType}
-          />
+          <View onLayout={captureSectionY('ascentType')}>
+            <AscentTypeSection
+              ascentType={ascentType}
+              disableFlash={previousAttempts > 0}
+              errorText={
+                validationErrors.ascentType ? t(validationErrors.ascentType) : undefined
+              }
+              cardBg={cardBg}
+              borderColor={borderColor}
+              onChange={setAscentType}
+            />
+          </View>
 
-          <ResultAttemptsSection
-            success={success}
-            attemptNumber={attemptNumber}
-            cardBg={cardBg}
-            borderColor={borderColor}
-            onChangeSuccess={setSuccess}
-            onChangeAttempt={setAttemptNumber}
-          />
+          <View onLayout={captureSectionY('attemptNumber')}>
+            <ResultAttemptsSection
+              success={success}
+              attemptNumber={attemptNumber}
+              attemptErrorText={
+                validationErrors.attemptNumber ? t(validationErrors.attemptNumber) : undefined
+              }
+              cardBg={cardBg}
+              borderColor={borderColor}
+              onChangeSuccess={setSuccess}
+            />
+          </View>
 
           <FeelingSection
             feeling={feeling}
@@ -261,25 +303,31 @@ export function LogAscentWidget() {
             onChange={setGradePerception}
           />
 
-          <NotesSection
-            value={notes}
-            onChange={setNotes}
-            cardBg={cardBg}
-            borderColor={borderColor}
-            inputBg={inputBg}
-            inputColor={inputColor}
-            placeholderColor={placeholderColor}
-          />
+          <View onLayout={captureSectionY('notes')}>
+            <NotesSection
+              value={notes}
+              onChange={setNotes}
+              errorText={validationErrors.notes ? t(validationErrors.notes) : undefined}
+              cardBg={cardBg}
+              borderColor={borderColor}
+              inputBg={inputBg}
+              inputColor={inputColor}
+              placeholderColor={placeholderColor}
+            />
+          </View>
 
-          <VideoSection
-            value={videoUrl}
-            onChange={setVideoUrl}
-            cardBg={cardBg}
-            borderColor={borderColor}
-            inputBg={inputBg}
-            inputColor={inputColor}
-            placeholderColor={placeholderColor}
-          />
+          <View onLayout={captureSectionY('videoUrl')}>
+            <VideoSection
+              value={videoUrl}
+              onChange={setVideoUrl}
+              errorText={validationErrors.videoUrl ? t(validationErrors.videoUrl) : undefined}
+              cardBg={cardBg}
+              borderColor={borderColor}
+              inputBg={inputBg}
+              inputColor={inputColor}
+              placeholderColor={placeholderColor}
+            />
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
 

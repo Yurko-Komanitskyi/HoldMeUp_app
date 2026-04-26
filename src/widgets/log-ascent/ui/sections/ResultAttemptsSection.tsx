@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { View, TouchableOpacity } from 'react-native';
-import { CheckCircle2, XCircle, ChevronUp, ChevronDown } from 'lucide-react-native';
+import { CheckCircle2, XCircle } from 'lucide-react-native';
 
 import { Text } from '@/shared/ui/text';
 import { SectionLabel } from '@/shared/ui/section-label';
@@ -10,10 +10,10 @@ import { useTranslation } from 'react-i18next';
 interface Props {
   success: boolean;
   attemptNumber: number;
+  attemptErrorText?: string;
   cardBg: string;
   borderColor: string;
   onChangeSuccess: (value: boolean) => void;
-  onChangeAttempt: (updater: (n: number) => number) => void;
 }
 
 //todo: add auto increment for attempt number
@@ -21,10 +21,10 @@ interface Props {
 export function ResultAttemptsSection({
   success,
   attemptNumber,
+  attemptErrorText,
   cardBg,
   borderColor,
   onChangeSuccess,
-  onChangeAttempt,
 }: Props) {
   const { t } = useTranslation();
   const colors = useThemeColor();
@@ -80,50 +80,33 @@ export function ResultAttemptsSection({
 
       <View>
         <SectionLabel>{t('logAscent.attemptNumber')}</SectionLabel>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-          <TouchableOpacity
-            onPress={() => onChangeAttempt((n) => Math.max(1, n - 1))}
+        <View
+          style={{
+            borderWidth: 1,
+            borderColor,
+            borderRadius: 14,
+            paddingVertical: 14,
+            paddingHorizontal: 16,
+            backgroundColor: colors.muted,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+          <Text
             style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              borderWidth: 1,
-              borderColor,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: colors.muted,
+              fontSize: 36,
+              lineHeight: 42,
+              fontWeight: '200',
+              color: colors.foreground,
             }}>
-            <ChevronDown size={20} color={colors.foreground} />
-          </TouchableOpacity>
-          <View style={{ flex: 1, alignItems: 'center' }}>
-            <Text
-              style={{
-                fontSize: 36,
-                lineHeight: 42,
-                fontWeight: '200',
-                color: colors.foreground,
-              }}>
-              {attemptNumber}
-            </Text>
-            <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: -4 }}>
-              {attemptNumber === 1 ? t('logAscent.firstAttempt') : t('logAscent.attempt')}
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => onChangeAttempt((n) => n + 1)}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              borderWidth: 1,
-              borderColor,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: colors.muted,
-            }}>
-            <ChevronUp size={20} color={colors.foreground} />
-          </TouchableOpacity>
+            {attemptNumber}
+          </Text>
+          <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: -4 }}>
+            {attemptNumber === 1 ? t('logAscent.firstAttempt') : t('logAscent.attempt')}
+          </Text>
         </View>
+        {attemptErrorText ? (
+          <Text style={{ marginTop: 8, fontSize: 12, color: colors.destructive }}>{attemptErrorText}</Text>
+        ) : null}
       </View>
     </View>
   );

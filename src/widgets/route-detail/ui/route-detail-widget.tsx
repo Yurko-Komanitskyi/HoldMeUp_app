@@ -1,11 +1,13 @@
 import * as React from 'react';
-import { View, ScrollView, useWindowDimensions, Alert } from 'react-native';
+import { View, ScrollView, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useColorScheme } from 'nativewind';
-
 import { resolveRouteColor } from '@/shared/config/palette';
+import { useScrollToTopOnFocus } from '@/shared/hooks/use-scroll-to-top-on-focus';
 import { useRouteMutations } from '@/entities/route/model/routeHooks';
 import { useRouteDetail } from '@/widgets/route-detail/model/useRouteDetail';
+import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
+import { useToastStore } from '@/shared/ui/app-toast';
 
 import { RouteDetailLoading } from './route-detail-loading';
 import { RouteDetailError } from './route-detail-error';
@@ -28,6 +30,10 @@ export function RouteDetailWidget() {
   const isDark = colorScheme === 'dark';
   const { width: screenWidth } = useWindowDimensions();
   const { deleteRouteMutation } = useRouteMutations();
+  const toast = useToastStore();
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
+  const scrollRef = useScrollToTopOnFocus<ScrollView>();
 
   const {
     route,
@@ -45,31 +51,18 @@ export function RouteDetailWidget() {
     parsedAnnotation,
   } = useRouteDetail(id ?? '');
 
-  const confirmDeleteRoute = React.useCallback(() => {
+  async function handleDeleteConfirm() {
     if (!route) return;
-    Alert.alert(
-      t('routeDetail.deleteTitle'),
-      t('routeDetail.deleteMessage', { name: route.name }),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('routeDetail.delete'),
-          style: 'destructive',
-          onPress: () => {
-            void (async () => {
-              try {
-                await deleteRouteMutation.mutateAsync(route.id);
-                router.back();
-              } catch (e) {
-                const message = e instanceof Error ? e.message : t('routeDetail.deleteFailed');
-                Alert.alert(t('common.errorTitle'), message);
-              }
-            })();
-          },
-        },
-      ]
-    );
-  }, [route, deleteRouteMutation, router, t]);
+    try {
+      await deleteRouteMutation.mutateAsync(route.id);
+      setShowDeleteConfirm(false);
+      router.back();
+    } catch (e) {
+      setShowDeleteConfirm(false);
+      const message = e instanceof Error ? e.message : t('routeDetail.deleteFailed');
+      toast.show('error', message);
+    }
+  }
 
   if (isLoading) return <RouteDetailLoading />;
   if (isError || !route)
@@ -84,6 +77,18 @@ export function RouteDetailWidget() {
 
   return (
     <View style={{ flex: 1 }} className="bg-background">
+      <ConfirmDialog
+        visible={showDeleteConfirm}
+        title={t('routeDetail.deleteTitle')}
+        message={t('routeDetail.deleteMessage', { name: route.name })}
+        confirmLabel={t('routeDetail.delete')}
+        cancelLabel={t('common.cancel')}
+        destructive
+        loading={deleteRouteMutation.isPending}
+        onConfirm={() => void handleDeleteConfirm()}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
+
       <RouteDetailHeader
         routeId={route.id}
         routeName={route.name}
@@ -93,12 +98,14 @@ export function RouteDetailWidget() {
         canManageRoute={canManageRoute}
         status={canManageRoute ? status : null}
         routeColor={routeColor}
+        routeColorKey={route.color}
         heroTextColor={heroText}
-        onDeletePress={canManageRoute ? confirmDeleteRoute : undefined}
+        onDeletePress={canManageRoute ? () => setShowDeleteConfirm(true) : undefined}
         isDeleting={deleteRouteMutation.isPending}
       />
 
       <ScrollView
+        ref={scrollRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 120 }}>
         <RouteDetailStats

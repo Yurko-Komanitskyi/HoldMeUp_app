@@ -32,6 +32,8 @@
     ],
     "galleryPermissionTitle": "Дозвіл потрібен",
     "galleryPermissionBody": "Дозволь доступ до галереї у налаштуваннях.",
+    "cameraPermissionTitle": "Дозвіл на камеру",
+    "cameraPermissionBody": "Дозволь доступ до камери у налаштуваннях.",
     "photoUploadFailed": "Не вдалося завантажити фото. Спробуй ще раз.",
     "brandName": "Leptick",
     "close": "Закрити",
@@ -84,7 +86,10 @@
     "max80": "Максимум 80 символів",
     "pickGrade": "Оберіть категорію",
     "pickColor": "Оберіть колір",
-    "pickSector": "Оберіть сектор"
+    "pickSector": "Оберіть сектор",
+    "maxDescription": "Максимум 2000 символів",
+    "maxTags": "Максимум 500 символів",
+    "heightInvalid": "Вкажи висоту в метрах: додатне число до 200 (наприклад 15 або 12.5)"
   },
   "auth": {
     "loginTitle": "Привіт знову",
@@ -233,10 +238,18 @@
     "roleOwner": "Власник",
     "roleManager": "Менеджер",
     "roleSetter": "Постановник",
-    "roleCustomer": "Учасник"
+    "roleCustomer": "Учасник",
+    "detailTitle": "Зал",
+    "description": "Про зал",
+    "staff": "Персонал",
+    "viewGym": "Переглянути зал",
+    "members": "Учасники",
+    "browseRoutes": "Переглянути маршрути",
+    "since": "З {{year}} р."
   },
   "routeForm": {
     "addRoute": "Додати маршрут",
+    "createSuccess": "Маршрут створено",
     "saveChanges": "Зберегти зміни",
     "saving": "Збереження…",
     "editTitle": "Редагування маршруту",
@@ -245,9 +258,9 @@
     "namePlaceholder": "напр. Стіна рапторів",
     "status": "Статус",
     "statusActive": "Активний",
-    "statusDraft": "Чернетка",
+    "statusArchived": "Архів",
     "statusActiveSub": "Відкритий для пролазів",
-    "statusDraftSub": "Ще не відкрито",
+    "statusArchivedSub": "Знятий з активних маршрутів",
     "style": "Стиль",
     "gradeSection": "Категорія",
     "gradeWithValue": "Категорія — {{grade}}",
@@ -255,7 +268,7 @@
     "sector": "Сектор",
     "noSectorsInGym": "Секторів у залі немає",
     "selectGymFirst": "Спершу оберіть зал",
-    "holdTypesOptional": "Типи тримок (необов'язково)",
+    "holdTypesOptional": "Типи зачіпок (необов'язково)",
     "tagsOptional": "Теги (необов'язково)",
     "tagsPlaceholder": "напр. технічний, overhang, нависання",
     "heightOptional": "Висота маршруту (необов'язково)",
@@ -264,6 +277,10 @@
     "descriptionPlaceholder": "Особливості маршруту, поради...",
     "photoOptional": "Фото маршруту (необов'язково)",
     "pickFromGallery": "Вибрати з галереї",
+    "photoSourceTitle": "Додати фото",
+    "photoSourceBody": "Обери, як додати фото маршруту",
+    "photoSourceCamera": "Зробити фото",
+    "photoSourceGallery": "Обрати з галереї",
     "uploadingPhoto": "Завантаження…",
     "photoUploadedLabel": "Фото завантажено",
     "annotateEdit": "Змінити",
@@ -288,6 +305,7 @@
     "title": "Розмітка маршруту",
     "hintCircle": "Натисни на зачіпку щоб позначити",
     "hintPath": "Проведи пальцем по шляху маршруту",
+    "hintErase": "Торкнись біля позначки, щоб прибрати",
     "toolCircle": "Коло",
     "toolLine": "Лінія",
     "toolEraser": "Стирач",
@@ -325,8 +343,16 @@
       "FLASH": "Першого разу з підказками",
       "ONSIGHT": "Першого разу без підказок",
       "REDPOINT": "Після спроб — чисто",
-      "REPEAT": "Повторний пролаз"
+      "TOP": "Топ із допомогою / не чисто",
+      "PROJECT": "Маршрут у процесі"
     },
+    "flashDisabledAfterAttempt": "Флеш доступний лише до першої спроби",
+    "validationTypeRequired": "Оберіть тип пролазу",
+    "validationAttemptPositive": "Номер спроби має бути не менше 1",
+    "validationAttemptMax": "Номер спроби занадто великий",
+    "validationNotesMax": "Нотатки занадто довгі (макс. 2000 символів)",
+    "validationVideoUrl": "Посилання на відео має починатися з http:// або https://",
+    "validationVideoUrlLength": "Посилання на відео занадто довге",
     "feeling": {
       "1": "Жахливо",
       "2": "Погано",
@@ -351,6 +377,11 @@
   "stopwatch": {
     "label": "СЕКУНДОМІР",
     "saved": "✓ Зафіксовано",
+    "start": "Старт",
+    "stop": "Стоп",
+    "resume": "Продовжити",
+    "expand": "Збільшити на весь екран",
+    "reset": "Скинути",
     "setTime": "Вказати час",
     "modalTitle": "Вкажи час спроби",
     "modalHint": "Обери хвилини та секунди, як у годиннику."
@@ -391,11 +422,13 @@
     "noGymTitle": "Оберіть зал",
     "noGymBody": "Щоб переглядати маршрути, спершу приєднайтесь до залу",
     "findGym": "Знайти зал",
-    "holdTypesSection": "Типи тримок",
+    "holdTypesSection": "Типи зачіпок",
     "emptyTitleFiltered": "Нічого не знайдено",
     "emptyTitleDefault": "Маршрутів поки немає",
     "emptyHintFiltered": "Спробуйте змінити або скинути фільтри",
-    "emptyHintDefault": "Маршрути ще не додані до вашого залу"
+    "emptyHintDefault": "Маршрути ще не додані до вашого залу",
+    "loadArchived": "Завантажити архівні",
+    "hideArchived": "Сховати архівні"
   },
   "tabs": {
     "home": "Головна",
@@ -414,6 +447,7 @@
     "tabFollowers": "Підписники",
     "searchPlaceholder": "Ім'я або @тег…",
     "searchHint": "Знайди скелелазів і підпишись",
+    "noSuggestions": "Поки немає рекомендацій",
     "noSearchResults": "Нікого не знайдено",
     "noFollowing": "Ви ще ні на кого не підписані",
     "noFollowers": "Підписників поки немає",
@@ -462,7 +496,7 @@
     "feedLoadMore": "Більше"
   },
   "ascent": {
-    "feedAuthorHint": "Профіль автора",
+    "feedAuthorHint": "Профіль клаймера",
     "reactionsTotal": "{{count}} реакцій"
   },
   "ascents": {
@@ -480,6 +514,10 @@
     "statSuccess": "Успіх",
     "statFlash": "Flash",
     "statMax": "Макс.",
+    "statRoutes": "Маршрути",
+    "frequency": "Частота тренувань",
+    "activeDays": "{{count}} активних днів",
+    "perWeek": "за тиждень",
     "weeklyActivity": "Активність тижня",
     "statsNoChart": "Немає поденної розбивки для цього періоду.",
     "gradeProgress": "Прогрес рівня",
@@ -487,9 +525,10 @@
     "filter": {
       "all": "Усі",
       "FLASH": "Flash",
-      "ONSIGHT": "Onsight",
+      "ON_SIGHT": "Onsight",
       "REDPOINT": "Redpoint",
-      "REPEAT": "Repeat"
+      "TOP": "Топ",
+      "PROJECT": "Проєкт"
     },
     "noAscents": "Пролазів поки немає",
     "logFirst": "Зафіксуй свій перший пролаз",
@@ -502,8 +541,10 @@
     "gradesUp": "+{{count}} рівнів",
     "filterPeriod": {
       "all": "Усі",
+      "day": "Сьогодні",
       "week": "Тиждень",
-      "month": "Місяць"
+      "month": "Місяць",
+      "threeMonths": "3 місяці"
     },
     "filterTypeShort": {
       "FLASH": "Флеш",

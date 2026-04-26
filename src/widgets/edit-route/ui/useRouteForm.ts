@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { Alert } from 'react-native';
-import { useForm } from 'react-hook-form';
+import { useForm, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import * as ImagePicker from 'expo-image-picker';
@@ -10,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { parseApiError } from '@/shared/lib/api-error';
 import { AnnotationData } from '@/features/route-annotation';
 import { uploadFile } from '@/entities/file/api/files';
+import { useToastStore } from '@/shared/ui/app-toast';
 
 const ROUTE_STYLES = ['boulder', 'lead', 'top_rope', 'speed'] as const;
 
@@ -20,10 +20,10 @@ export type FormValues = {
   sectorId: string;
   style?: (typeof ROUTE_STYLES)[number];
   description?: string;
-  height?: string;
+  height: string;
   holdTypes?: string[];
   tags?: string;
-  status: 'active' | 'draft';
+  status: 'active' | 'archived';
   photoUrl?: string;
 };
 
@@ -37,9 +37,14 @@ export type RouteFormSubmitData = {
   height: string | undefined;
   holdTypes: string[];
   tags: string | undefined;
-  status: 'active' | 'draft';
+  status: 'active' | 'archived';
   photoUrl: string | undefined;
   annotationData: AnnotationData | null;
+};
+
+export type RouteFormScrollOptions = {
+  onInvalidSubmit?: (errors: FieldErrors<FormValues>) => void;
+  onServerError?: () => void;
 };
 
 export interface RouteFormInitialValues {
@@ -52,7 +57,7 @@ export interface RouteFormInitialValues {
   height?: string;
   holdTypes?: string[];
   tags?: string;
-  status?: 'active' | 'draft';
+  status?: 'active' | 'archived';
   photoUrl?: string;
   photoDisplayUri?: string;
   annotationData?: AnnotationData | null;
@@ -60,9 +65,13 @@ export interface RouteFormInitialValues {
 
 export function useRouteForm(
   initialValues: RouteFormInitialValues | undefined,
-  onSubmitForm: (data: RouteFormSubmitData) => Promise<void>
+  onSubmitForm: (data: RouteFormSubmitData) => Promise<void>,
+  scrollOptions?: RouteFormScrollOptions
 ) {
   const { t } = useTranslation();
+  const toast = useToastStore();
+  const scrollOptionsRef = React.useRef(scrollOptions);
+  scrollOptionsRef.current = scrollOptions;
 
   const schema = React.useMemo(
     () =>
@@ -72,11 +81,21 @@ export function useRouteForm(
         color: z.string().min(1, t('validation.pickColor')),
         sectorId: z.string().min(1, t('validation.pickSector')),
         style: z.enum(ROUTE_STYLES).optional(),
-        description: z.string().optional(),
-        height: z.string().optional(),
+        description: z.string().max(2000, t('validation.maxDescription')).optional(),
+        height: z
+          .string()
+          .refine(
+            (val) => {
+              const v = val.trim();
+              if (v === '') return true;
+              const n = parseFloat(v);
+              return !Number.isNaN(n) && n > 0 && n <= 200;
+            },
+            { message: t('validation.heightInvalid') }
+          ),
         holdTypes: z.array(z.string()).optional(),
-        tags: z.string().optional(),
-        status: z.enum(['active', 'draft']),
+        tags: z.string().max(500, t('validation.maxTags')).optional(),
+        status: z.enum(['active', 'archived']),
         photoUrl: z.string().optional(),
       }),
     [t]
@@ -90,6 +109,7 @@ export function useRouteForm(
     initialValues?.annotationData ?? null
   );
   const [annotatorVisible, setAnnotatorVisible] = useState(false);
+  const [photoSourceVisible, setPhotoSourceVisible] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
@@ -123,10 +143,26 @@ export function useRouteForm(
   const selectedStatus = watch('status');
   const selectedStyle = watch('style');
 
-  async function pickPhoto() {
+  async function uploadPickedAsset(asset: ImagePicker.ImagePickerAsset) {
+    setLocalPhotoUri(asset.uri);
+    setAnnotationData(null);
+    setUploading(true);
+    try {
+      const uploaded = await uploadFile(asset.uri);
+      setValue('photoUrl', uploaded.path);
+    } catch {
+      toast.show('error', t('common.photoUploadFailed'));
+      setLocalPhotoUri(null);
+      setValue('photoUrl', '');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function pickFromGallery() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(t('common.galleryPermissionTitle'), t('common.galleryPermissionBody'));
+      toast.show('error', t('common.galleryPermissionTitle'));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -135,20 +171,37 @@ export function useRouteForm(
       allowsEditing: false,
     });
     if (result.canceled || !result.assets[0]) return;
+    await uploadPickedAsset(result.assets[0]);
+  }
 
-    const asset = result.assets[0];
-    setLocalPhotoUri(asset.uri);
-    setAnnotationData(null);
-    setUploading(true);
-    try {
-      const uploaded = await uploadFile(asset.uri);
-      setValue('photoUrl', uploaded.path);
-    } catch {
-      Alert.alert(t('common.errorTitle'), t('common.photoUploadFailed'));
-      setLocalPhotoUri(null);
-    } finally {
-      setUploading(false);
+  async function pickFromCamera() {
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) {
+      toast.show('error', t('common.cameraPermissionTitle'));
+      return;
     }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      quality: 0.9,
+      allowsEditing: false,
+      cameraType: ImagePicker.CameraType.back,
+    });
+    if (result.canceled || !result.assets[0]) return;
+    await uploadPickedAsset(result.assets[0]);
+  }
+
+  function pickPhoto() {
+    setPhotoSourceVisible(true);
+  }
+
+  async function pickPhotoFromGallery() {
+    setPhotoSourceVisible(false);
+    await pickFromGallery();
+  }
+
+  async function pickPhotoFromCamera() {
+    setPhotoSourceVisible(false);
+    await pickFromCamera();
   }
 
   function removePhoto() {
@@ -183,6 +236,7 @@ export function useRouteForm(
     } catch (error: unknown) {
       const { message } = parseApiError(error);
       setServerError(message);
+      scrollOptionsRef.current?.onServerError?.();
     }
   }
 
@@ -193,6 +247,7 @@ export function useRouteForm(
       uploading,
       annotationData,
       annotatorVisible,
+      photoSourceVisible,
       serverError,
       selectedGrade,
       selectedColor,
@@ -205,11 +260,16 @@ export function useRouteForm(
     },
     actions: {
       setAnnotatorVisible,
+      setPhotoSourceVisible,
       setAnnotationData,
       pickPhoto,
+      pickPhotoFromGallery,
+      pickPhotoFromCamera,
       removePhoto,
       toggleHoldType,
-      submit: handleSubmit(onSubmit),
+      submit: handleSubmit(onSubmit, (errors) => {
+        scrollOptionsRef.current?.onInvalidSubmit?.(errors);
+      }),
       setValue,
     },
   };

@@ -3,11 +3,13 @@ import { View, TextInput } from 'react-native';
 
 import { Text } from '@/shared/ui/text';
 import { SectionLabel } from '@/shared/ui/section-label';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import { useTranslation } from 'react-i18next';
 
 interface Props {
   value: string;
   onChange: (value: string) => void;
+  errorText?: string;
   cardBg: string;
   borderColor: string;
   inputBg: string;
@@ -18,6 +20,7 @@ interface Props {
 export function NotesSection({
   value,
   onChange,
+  errorText,
   cardBg,
   borderColor,
   inputBg,
@@ -25,6 +28,7 @@ export function NotesSection({
   placeholderColor,
 }: Props) {
   const { t } = useTranslation();
+  const colors = useThemeColor();
   return (
     <View
       style={{
@@ -52,6 +56,9 @@ export function NotesSection({
           textAlignVertical: 'top',
         }}
       />
+      {errorText ? (
+        <Text style={{ marginTop: 8, fontSize: 12, color: colors.destructive }}>{errorText}</Text>
+      ) : null}
     </View>
   );
 }

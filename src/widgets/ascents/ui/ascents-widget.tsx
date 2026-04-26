@@ -1,22 +1,25 @@
 import * as React from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, type FlatList } from 'react-native';
 
 import { useTranslation } from 'react-i18next';
 import { InfiniteList } from '@/shared/ui/Infinite-list';
 import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
 import { AscentHeader } from './acsent-header';
 import { AscentCard } from '@/entities/ascent/ui/ascent-card';
+import type { Ascent } from '@/entities/ascent/model/ascent';
 import { AscentFilters, useAscentsQuery } from '@/entities/ascent/model/ascentHooks';
 import { ascentFiltersToMyStatsParams } from '@/entities/stats/lib/ascent-filters-to-stats';
 import { useMyStatsQuery } from '@/entities/stats/model/statsHooks';
 import { Mountain } from 'lucide-react-native';
 import { Text } from '@/shared/ui/text';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
+import { useScrollToTopOnFocus } from '@/shared/hooks/use-scroll-to-top-on-focus';
 
 export function AscentsWidget() {
   const { t } = useTranslation();
   const colors = useThemeColor();
   const [filters, setFilters] = React.useState<AscentFilters>({});
+  const ascentsListRef = useScrollToTopOnFocus<FlatList<Ascent>>();
 
   const {
     items,
@@ -54,6 +57,7 @@ export function AscentsWidget() {
   return (
     <View style={{ flex: 1, paddingHorizontal: 16 }}>
       <InfiniteList
+        listRef={ascentsListRef}
         items={items}
         ListHeaderComponent={ascentHeader}
         renderItem={(ascent) => <AscentCard ascent={ascent} />}

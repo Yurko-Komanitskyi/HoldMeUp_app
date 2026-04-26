@@ -30,3 +30,5 @@ export type FollowerListParams = BaseListParams & {
 export type FollowingListParams = BaseListParams & {
   followingId: string;
 };
+
+export type FollowSuggestionsParams = BaseListParams;

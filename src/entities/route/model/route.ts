@@ -27,6 +27,7 @@ export interface Route {
   photoUrl?: string | null;
   holdTypes?: HoldType[] | string[];
   tags?: string[];
+  annotation?: string | null;
   annotationData?: string | null;
   ascentCount?: number;
   flashCount?: number;

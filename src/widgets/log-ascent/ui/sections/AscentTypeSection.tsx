@@ -4,18 +4,27 @@ import { CheckCircle2 } from 'lucide-react-native';
 
 import { Text } from '@/shared/ui/text';
 import { SectionLabel } from '@/shared/ui/section-label';
-import { ASCENT_TYPES } from '@/entities/ascent/lib/constants';
+import { ASCENT_TYPES, normalizeAscentTypeMetaKey } from '@/entities/ascent/lib/constants';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import { useTranslation } from 'react-i18next';
 
 interface Props {
   ascentType: string;
+  disableFlash?: boolean;
+  errorText?: string;
   cardBg: string;
   borderColor: string;
   onChange: (value: string) => void;
 }
 
-export function AscentTypeSection({ ascentType, cardBg, borderColor, onChange }: Props) {
+export function AscentTypeSection({
+  ascentType,
+  disableFlash = false,
+  errorText,
+  cardBg,
+  borderColor,
+  onChange,
+}: Props) {
   const { t } = useTranslation();
   const colors = useThemeColor();
   return (
@@ -31,10 +40,13 @@ export function AscentTypeSection({ ascentType, cardBg, borderColor, onChange }:
       <View style={{ gap: 8 }}>
         {ASCENT_TYPES.map((type) => {
           const isActive = ascentType === type.value;
+          const labelKey = normalizeAscentTypeMetaKey(type.value);
           const IconComp = type.icon;
+          const isDisabled = disableFlash && type.value === 'FLASH';
           return (
             <TouchableOpacity
               key={type.value}
+              disabled={isDisabled}
               onPress={() => onChange(type.value)}
               style={{
                 flexDirection: 'row',
@@ -45,6 +57,7 @@ export function AscentTypeSection({ ascentType, cardBg, borderColor, onChange }:
                 borderWidth: isActive ? 2 : 1,
                 borderColor: isActive ? type.color : borderColor,
                 backgroundColor: isActive ? type.bg : 'transparent',
+                opacity: isDisabled ? 0.45 : 1,
               }}>
               <View
                 style={{
@@ -66,11 +79,16 @@ export function AscentTypeSection({ ascentType, cardBg, borderColor, onChange }:
                     fontWeight: '700',
                     color: isActive ? type.color : colors.foreground,
                   }}>
-                  {t(`logAscent.ascentTypeLabel.${type.value}`)}
+                  {t(`logAscent.ascentTypeLabel.${labelKey}`)}
                 </Text>
                 <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
-                  {t(`logAscent.ascentTypeSublabel.${type.value}`)}
+                  {t(`logAscent.ascentTypeSublabel.${labelKey}`)}
                 </Text>
+                {isDisabled ? (
+                  <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 3 }}>
+                    {t('logAscent.flashDisabledAfterAttempt')}
+                  </Text>
+                ) : null}
               </View>
               {isActive && (
                 <View
@@ -89,6 +107,9 @@ export function AscentTypeSection({ ascentType, cardBg, borderColor, onChange }:
           );
         })}
       </View>
+      {errorText ? (
+        <Text style={{ marginTop: 8, fontSize: 12, color: colors.destructive }}>{errorText}</Text>
+      ) : null}
     </View>
   );
 }

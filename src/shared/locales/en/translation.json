@@ -32,6 +32,8 @@
     ],
     "galleryPermissionTitle": "Permission needed",
     "galleryPermissionBody": "Allow gallery access in Settings.",
+    "cameraPermissionTitle": "Camera permission",
+    "cameraPermissionBody": "Allow camera access in Settings.",
     "photoUploadFailed": "Couldn't upload the photo. Try again.",
     "brandName": "Leptick",
     "close": "Close",
@@ -84,7 +86,10 @@
     "max80": "Maximum 80 characters",
     "pickGrade": "Select a grade",
     "pickColor": "Pick a color",
-    "pickSector": "Select a sector"
+    "pickSector": "Select a sector",
+    "maxDescription": "Maximum 2000 characters",
+    "maxTags": "Maximum 500 characters",
+    "heightInvalid": "Enter a positive height up to 200 m (e.g. 15 or 12.5)"
   },
   "auth": {
     "loginTitle": "Welcome back",
@@ -233,10 +238,18 @@
     "roleOwner": "Owner",
     "roleManager": "Manager",
     "roleSetter": "Setter",
-    "roleCustomer": "Member"
+    "roleCustomer": "Member",
+    "detailTitle": "Gym",
+    "description": "About",
+    "staff": "Staff",
+    "viewGym": "View gym",
+    "members": "Members",
+    "browseRoutes": "Browse routes",
+    "since": "Since {{year}}"
   },
   "routeForm": {
     "addRoute": "Add route",
+    "createSuccess": "Route created",
     "saveChanges": "Save changes",
     "saving": "Saving…",
     "editTitle": "Edit route",
@@ -245,9 +258,9 @@
     "namePlaceholder": "e.g. Raptor wall",
     "status": "Status",
     "statusActive": "Active",
-    "statusDraft": "Draft",
+    "statusArchived": "Archived",
     "statusActiveSub": "Open for ascents",
-    "statusDraftSub": "Not open yet",
+    "statusArchivedSub": "Removed from active set",
     "style": "Style",
     "gradeSection": "Grade",
     "gradeWithValue": "Grade — {{grade}}",
@@ -264,6 +277,10 @@
     "descriptionPlaceholder": "Route beta, tips…",
     "photoOptional": "Route photo (optional)",
     "pickFromGallery": "Choose from gallery",
+    "photoSourceTitle": "Add photo",
+    "photoSourceBody": "Choose how to add the route photo",
+    "photoSourceCamera": "Take photo",
+    "photoSourceGallery": "Choose from gallery",
     "uploadingPhoto": "Uploading…",
     "photoUploadedLabel": "Photo uploaded",
     "annotateEdit": "Edit",
@@ -288,6 +305,7 @@
     "title": "Route markup",
     "hintCircle": "Tap a hold to mark it",
     "hintPath": "Draw the route path with your finger",
+    "hintErase": "Tap near a mark to remove it",
     "toolCircle": "Circle",
     "toolLine": "Line",
     "toolEraser": "Eraser",
@@ -325,8 +343,16 @@
       "FLASH": "First go with beta",
       "ONSIGHT": "First go without beta",
       "REDPOINT": "Clean after working it",
-      "REPEAT": "Repeat ascent"
+      "TOP": "Top with aid / not clean",
+      "PROJECT": "Work in progress"
     },
+    "flashDisabledAfterAttempt": "Flash is available only before the first attempt",
+    "validationTypeRequired": "Select ascent type",
+    "validationAttemptPositive": "Attempt number must be at least 1",
+    "validationAttemptMax": "Attempt number is too large",
+    "validationNotesMax": "Notes are too long (max 2000 characters)",
+    "validationVideoUrl": "Video URL must start with http:// or https://",
+    "validationVideoUrlLength": "Video link is too long",
     "feeling": {
       "1": "Awful",
       "2": "Bad",
@@ -351,6 +377,11 @@
   "stopwatch": {
     "label": "STOPWATCH",
     "saved": "✓ Saved",
+    "start": "Start",
+    "stop": "Stop",
+    "resume": "Resume",
+    "expand": "Expand full screen",
+    "reset": "Reset",
     "setTime": "Set time",
     "modalTitle": "Set attempt time",
     "modalHint": "Pick minutes and seconds like a clock."
@@ -395,7 +426,9 @@
     "emptyTitleFiltered": "Nothing found",
     "emptyTitleDefault": "No routes yet",
     "emptyHintFiltered": "Try changing or clearing filters",
-    "emptyHintDefault": "Routes haven't been added to your gym yet"
+    "emptyHintDefault": "Routes haven't been added to your gym yet",
+    "loadArchived": "Load archived",
+    "hideArchived": "Hide archived"
   },
   "tabs": {
     "home": "Home",
@@ -414,6 +447,7 @@
     "tabFollowers": "Followers",
     "searchPlaceholder": "Search by name or @tag…",
     "searchHint": "Find climbers to follow",
+    "noSuggestions": "No suggestions yet",
     "noSearchResults": "No users found",
     "noFollowing": "You are not following anyone yet",
     "noFollowers": "No followers yet",
@@ -462,7 +496,7 @@
     "feedLoadMore": "Load more"
   },
   "ascent": {
-    "feedAuthorHint": "Author profile",
+    "feedAuthorHint": "Climber profile",
     "reactionsTotal": "{{count}} reactions"
   },
   "ascents": {
@@ -480,6 +514,10 @@
     "statSuccess": "Success",
     "statFlash": "Flash",
     "statMax": "Max.",
+    "statRoutes": "Routes",
+    "frequency": "Frequency",
+    "activeDays": "{{count}} active days",
+    "perWeek": "per week",
     "weeklyActivity": "Weekly Activity",
     "statsNoChart": "No daily breakdown for this period.",
     "gradeProgress": "Grade Progress",
@@ -487,9 +525,10 @@
     "filter": {
       "all": "All",
       "FLASH": "Flash",
-      "ONSIGHT": "Onsight",
+      "ON_SIGHT": "Onsight",
       "REDPOINT": "Redpoint",
-      "REPEAT": "Repeat"
+      "TOP": "Top",
+      "PROJECT": "Project"
     },
     "noAscents": "No ascents yet",
     "logFirst": "Log your first ascent",
@@ -502,8 +541,10 @@
     "gradesUp": "+{{count}} levels",
     "filterPeriod": {
       "all": "All",
+      "day": "Today",
       "week": "Week",
-      "month": "Month"
+      "month": "Month",
+      "threeMonths": "3 months"
     },
     "filterTypeShort": {
       "FLASH": "Flash",

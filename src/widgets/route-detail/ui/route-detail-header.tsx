@@ -4,9 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react-native';
+import type { ColorValue } from 'react-native';
 
 import { Text } from '@/shared/ui/text';
 import { useTranslation } from 'react-i18next';
+import { routeAccentGradientStops } from '@/entities/route/lib/route-accent-visual';
 
 type Props = {
   routeId: string;
@@ -20,6 +22,7 @@ type Props = {
     color: string;
   } | null;
   routeColor: string;
+  routeColorKey?: string | null;
   heroTextColor: string;
   onDeletePress?: () => void;
   isDeleting?: boolean;
@@ -34,15 +37,25 @@ export function RouteDetailHeader({
   canManageRoute,
   status,
   routeColor,
+  routeColorKey,
   heroTextColor,
   onDeletePress,
   isDeleting,
 }: Props) {
   const { t } = useTranslation();
   const router = useRouter();
+  const accentStops = routeAccentGradientStops(routeColorKey ?? 'blue') as readonly [
+    ColorValue,
+    ColorValue,
+    ...ColorValue[],
+  ];
 
   return (
-    <View style={{ backgroundColor: routeColor }}>
+    <LinearGradient
+      colors={accentStops}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ backgroundColor: routeColor }}>
       <LinearGradient
         colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.25)']}
         style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
@@ -78,7 +91,7 @@ export function RouteDetailHeader({
                 paddingHorizontal: 12,
                 paddingVertical: 5,
                 borderRadius: 10,
-                backgroundColor: 'rgba(0,0,0,0.22)',
+                backgroundColor: 'rgba(255,255,255,0.24)',
               }}>
               <Text style={{ fontSize: 12, fontWeight: '600', color: heroTextColor, opacity: 0.9 }}>
                 {sectorName ?? t('routeDetail.noSector')}
@@ -132,7 +145,7 @@ export function RouteDetailHeader({
                 paddingHorizontal: 16,
                 paddingVertical: 8,
                 borderRadius: 14,
-                backgroundColor: 'rgba(0,0,0,0.28)',
+                backgroundColor: 'rgba(255,255,255,0.24)',
               }}>
               <Text
                 style={{ fontSize: 22, fontWeight: '900', color: heroTextColor, letterSpacing: -0.5 }}>
@@ -146,7 +159,7 @@ export function RouteDetailHeader({
                   paddingHorizontal: 12,
                   paddingVertical: 7,
                   borderRadius: 12,
-                  backgroundColor: 'rgba(0,0,0,0.22)',
+                  backgroundColor: 'rgba(255,255,255,0.22)',
                 }}>
                 <Text
                   style={{ fontSize: 13, fontWeight: '600', color: heroTextColor, opacity: 0.9 }}>
@@ -163,7 +176,7 @@ export function RouteDetailHeader({
                   paddingHorizontal: 10,
                   paddingVertical: 6,
                   borderRadius: 10,
-                  backgroundColor: 'rgba(0,0,0,0.28)',
+                  backgroundColor: 'rgba(255,255,255,0.24)',
                 }}>
                 <View
                   style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: status.color }}
@@ -184,7 +197,7 @@ export function RouteDetailHeader({
           </Text>
         </View>
       </SafeAreaView>
-    </View>
+    </LinearGradient>
   );
 }
 

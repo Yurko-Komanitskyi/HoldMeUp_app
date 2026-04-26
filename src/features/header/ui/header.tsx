@@ -2,7 +2,7 @@ import * as React from 'react';
 import { View, Pressable, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, useRouter } from 'expo-router';
-import { Bell, ChevronDown, RefreshCw, Building2, Settings2 } from 'lucide-react-native';
+import { Bell, ChevronDown, Building2, Settings2 } from 'lucide-react-native';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
 
 import { Button } from '@/shared/ui/button';
@@ -20,7 +20,6 @@ import {
 import { ACCENT } from '@/shared/config/palette';
 import { useUserStore } from '@/entities/user/model/userStore';
 import { useGymMemberStore } from '@/entities/gym-member/model/gymMemberStore';
-import { useGymMembersQuery } from '@/entities/gym-member/model/gymMemberHooks';
 import { useTranslation } from 'react-i18next';
 
 function AppHeader() {
@@ -30,9 +29,6 @@ function AppHeader() {
   const currentGymId = useGymMemberStore((state) => state.currentGymId);
   const setCurrentGymId = useGymMemberStore((state) => state.setCurrentGymId);
   const router = useRouter();
-
-
-  const { isLoading, isError, refetch } = useGymMembersQuery(currentGymId ?? '');
 
   const gyms = React.useMemo(() => memberships?.map((m) => m.gym) ?? [], [memberships]);
   const currentGym = React.useMemo(
@@ -48,13 +44,7 @@ function AppHeader() {
     (user?.firstName?.charAt(0) ?? '') + (user?.lastName?.charAt(0) ?? '') ||
     (user?.email?.charAt(0)?.toUpperCase() ?? '?');
 
-  const gymLabel = isLoading
-    ? t('common.loading')
-    : isError
-      ? t('common.error')
-      : currentGym
-        ? currentGym.name
-        : t('common.pickGym');
+  const gymLabel = currentGym ? currentGym.name : t('common.pickGym');
 
   return (
     <SafeAreaView edges={['top']} className="z-10 bg-background">
@@ -79,10 +69,10 @@ function AppHeader() {
                   {initials}
                 </Text>
               </View>
-              <View className="gap-0.5">
-                <Text className="text-xs text-muted-foreground">{t('common.hello')}</Text>
-                <Text className="text-sm font-semibold text-foreground" numberOfLines={1}>
-                  {user.firstName ?? t('common.climberDefault')}
+              <View className="gap-0.5 flex-1">
+                <Text className="text-[10px] text-muted-foreground">{t('common.hello')}</Text>
+                <Text className="text-base font-extrabold text-foreground" numberOfLines={1}>
+                  {user.firstName || t('common.climberDefault')}
                 </Text>
               </View>
             </Pressable>
@@ -91,41 +81,24 @@ function AppHeader() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Pressable
-                    className={`flex-row items-center gap-1.5 rounded-xl px-3 py-1.5 ${
-                      isError ? 'bg-destructive/10' : 'bg-card/60'
-                    }`}>
-                    {isLoading ? (
-                      <ActivityIndicator size={12} color={iconColor} />
-                    ) : (
-                      <Icon
-                        as={isError ? RefreshCw : Building2}
-                        size={12}
-                        color={isError ? '#ef4444' : iconColor}
-                      />
-                    )}
+                    className="flex-row items-center gap-1.5 rounded-xl px-3 py-1.5 bg-card/60"
+                    style={{ maxWidth: 170 }}>
+                    <Icon as={Building2} size={12} color={iconColor} />
                     <Text
-                      className={`text-xs font-medium ${isError ? 'text-destructive' : 'text-muted-foreground'}`}>
+                      className="text-xs font-medium text-muted-foreground"
+                      style={{ maxWidth: 120 }}
+                      numberOfLines={1}
+                      ellipsizeMode="tail">
                       {gymLabel}
                     </Text>
-                    {!isLoading && !isError && gyms.length > 1 && (
+                    {gyms.length > 1 && (
                       <Icon as={ChevronDown} size={11} color={iconColor} />
                     )}
                   </Pressable>
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent sideOffset={8} align="end" className="min-w-[180px]">
-                  {isError ? (
-                    <Pressable
-                      onPress={() => refetch()}
-                      className="flex-row items-center gap-2 px-3 py-3">
-                      <Icon as={RefreshCw} size={13} color="#ef4444" />
-                      <Text className="text-sm text-destructive">{t('common.retry')}</Text>
-                    </Pressable>
-                  ) : isLoading ? (
-                    <View className="items-center py-3">
-                      <ActivityIndicator size="small" />
-                    </View>
-                  ) : gyms.length === 0 ? (
+                  {gyms.length === 0 ? (
                     <DropdownMenuItem onPress={() => router.push('/gym/manage' as never)}>
                       <Icon as={Settings2} size={14} color={ACCENT} />
                       <Text className="text-sm font-medium" style={{ color: ACCENT }}>

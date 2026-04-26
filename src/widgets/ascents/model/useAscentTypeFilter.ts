@@ -4,9 +4,10 @@ import type { Ascent } from '@/entities/ascent/model/ascent';
 export const ASCENT_FILTERS = [
   { key: 'all', tKey: 'ascents.filter.all' },
   { key: 'FLASH', tKey: 'ascents.filter.FLASH' },
-  { key: 'ONSIGHT', tKey: 'ascents.filter.ONSIGHT' },
+  { key: 'ON_SIGHT', tKey: 'ascents.filter.ON_SIGHT' },
   { key: 'REDPOINT', tKey: 'ascents.filter.REDPOINT' },
-  { key: 'REPEAT', tKey: 'ascents.filter.REPEAT' },
+  { key: 'TOP', tKey: 'ascents.filter.TOP' },
+  { key: 'PROJECT', tKey: 'ascents.filter.PROJECT' },
 ] as const;
 
 export type AscentFilterKey = (typeof ASCENT_FILTERS)[number]['key'];

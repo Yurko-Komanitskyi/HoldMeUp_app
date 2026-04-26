@@ -1,6 +1,5 @@
 import * as React from 'react';
-import { ActivityIndicator, Pressable, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
+import { Pressable, View } from 'react-native';
 
 import { Text } from '@/shared/ui/text';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
@@ -8,7 +7,7 @@ import { ACCENT } from '@/shared/config/palette';
 import type { AscentReaction } from '@/entities/ascent/model/ascent';
 import { useAscentReactionMutations } from '@/entities/ascent/model/ascentHooks';
 
-const QUICK_EMOJIS = ['👍', '🔥', '💪', '❤️'] as const;
+const QUICK_EMOJIS = ['🔥', '💪', '⚡', '🙌', '👏', '🎯'] as const;
 
 function aggregateByEmoji(reactions: AscentReaction[]): Map<string, number> {
   const m = new Map<string, number>();
@@ -23,7 +22,7 @@ export interface AscentReactionsBarProps {
   reactions: AscentReaction[];
   ascentOwnerId: string;
   currentUserId?: string | null;
-  /** Якщо true — лише перегляд (наприклад, власний пролаз без можливості ставити реакцію самому собі) */
+  /** Якщо true — лише перегляд (власний пролаз без можливості ставити реакцію самому собі) */
   readOnly?: boolean;
   compact?: boolean;
 }
@@ -36,35 +35,76 @@ export function AscentReactionsBar({
   readOnly: readOnlyProp,
   compact,
 }: AscentReactionsBarProps) {
-  const { t } = useTranslation();
   const colors = useThemeColor();
   const { addReactionMutation, deleteReactionMutation } = useAscentReactionMutations();
 
   const isOwner = !!(currentUserId && currentUserId === ascentOwnerId);
   const readOnly = readOnlyProp ?? isOwner;
-  const myReaction = React.useMemo(
-    () => (currentUserId ? reactions.find((r) => r.userId === currentUserId) : undefined),
-    [reactions, currentUserId]
-  );
 
-  const byEmoji = React.useMemo(() => aggregateByEmoji(reactions), [reactions]);
-  const busy =
-    (addReactionMutation.isPending && addReactionMutation.variables?.ascentId === ascentId) ||
-    (deleteReactionMutation.isPending && deleteReactionMutation.variables === ascentId);
+  // Optimistic local state — синхронізується з сервером після мутації
+  const [localReactions, setLocalReactions] = React.useState<AscentReaction[]>(reactions);
+  const isPressing = React.useRef(false);
+
+  // Синхронізація з сервером (після успішного invalidate + refetch)
+  React.useEffect(() => {
+    if (!isPressing.current) {
+      setLocalReactions(reactions);
+    }
+  }, [reactions]);
+
+  const localMyReaction = React.useMemo(() => {
+    if (!currentUserId) return undefined;
+    const mine = localReactions.filter((r) => r.userId === currentUserId);
+    if (mine.length === 0) return undefined;
+    return mine.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))[0];
+  }, [localReactions, currentUserId]);
+
+  const byEmoji = React.useMemo(() => aggregateByEmoji(localReactions), [localReactions]);
 
   const onEmojiPress = React.useCallback(
-    (emoji: string) => {
-      if (readOnly || !currentUserId) return;
-      if (myReaction?.emoji === emoji) {
-        deleteReactionMutation.mutate(ascentId);
-        return;
+    async (emoji: string) => {
+      if (readOnly || !currentUserId || isPressing.current) return;
+      isPressing.current = true;
+
+      const serverSnapshot = reactions;
+      const withoutMine = localReactions.filter((r) => r.userId !== currentUserId);
+      const isSameEmoji = localMyReaction?.emoji === emoji;
+
+      // Optimistic update — одразу показуємо результат
+      if (isSameEmoji) {
+        setLocalReactions(withoutMine);
+      } else {
+        const optimistic: AscentReaction = {
+          id: 'optimistic',
+          userId: currentUserId,
+          emoji,
+          createdAt: new Date().toISOString(),
+        };
+        setLocalReactions([...withoutMine, optimistic]);
       }
-      addReactionMutation.mutate({ ascentId, emoji });
+
+      try {
+        if (isSameEmoji) {
+          await deleteReactionMutation.mutateAsync(ascentId);
+        } else {
+          if (localMyReaction) {
+            await deleteReactionMutation.mutateAsync(ascentId);
+          }
+          await addReactionMutation.mutateAsync({ ascentId, emoji });
+        }
+      } catch {
+        // Відкат при помилці
+        setLocalReactions(serverSnapshot);
+      } finally {
+        isPressing.current = false;
+      }
     },
     [
       readOnly,
       currentUserId,
-      myReaction?.emoji,
+      reactions,
+      localReactions,
+      localMyReaction,
       ascentId,
       addReactionMutation,
       deleteReactionMutation,
@@ -85,32 +125,36 @@ export function AscentReactionsBar({
         flexWrap: 'wrap',
         alignItems: 'center',
         gap: compact ? 6 : 8,
-        paddingTop: compact ? 6 : 8,
       }}>
-      {busy ? <ActivityIndicator size="small" color={ACCENT} style={{ marginRight: 4 }} /> : null}
       {showEmojis.map((emoji) => {
         const count = byEmoji.get(emoji) ?? 0;
-        const active = myReaction?.emoji === emoji;
+        const active = localMyReaction?.emoji === emoji;
         const showCount = count > 0;
+
         if (!showCount && readOnly) return null;
 
         return (
           <Pressable
             key={emoji}
             disabled={readOnly && !showCount}
-            onPress={() => onEmojiPress(emoji)}
-            style={{
+            onPress={() => void onEmojiPress(emoji)}
+            style={({ pressed }) => ({
               flexDirection: 'row',
               alignItems: 'center',
-              paddingHorizontal: 10,
+              paddingHorizontal: showCount ? 10 : 9,
               paddingVertical: 5,
               borderRadius: 999,
-              borderWidth: 1,
+              borderWidth: 1.5,
               borderColor: active ? ACCENT : colors.border,
-              backgroundColor: active ? ACCENT + '22' : colors.card,
-              opacity: readOnly && !showCount ? 0.4 : 1,
-            }}>
-            <Text style={{ fontSize: compact ? 15 : 16 }}>{emoji}</Text>
+              backgroundColor: active
+                ? ACCENT + '28'
+                : pressed
+                  ? colors.border + '60'
+                  : colors.card,
+              opacity: readOnly && !showCount ? 0.35 : 1,
+              transform: [{ scale: pressed && !readOnly ? 0.92 : 1 }],
+            })}>
+            <Text style={{ fontSize: compact ? 16 : 17 }}>{emoji}</Text>
             {showCount ? (
               <Text
                 style={{
@@ -125,11 +169,6 @@ export function AscentReactionsBar({
           </Pressable>
         );
       })}
-      {reactions.length > 0 && readOnly ? (
-        <Text style={{ fontSize: 11, color: colors.mutedForeground, marginLeft: 4 }}>
-          {t('ascent.reactionsTotal', { count: reactions.length })}
-        </Text>
-      ) : null}
     </View>
   );
 }

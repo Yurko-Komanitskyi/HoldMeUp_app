@@ -6,12 +6,13 @@ import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@react-navigation/native';
-import { Drawer } from 'expo-router/drawer';
+import { Stack } from 'expo-router';
 import { PortalHost } from '@rn-primitives/portal';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { LogBox } from 'react-native';
+import Constants from 'expo-constants';
 
 import { useUserStore } from '@/entities/user/model/userStore';
-import { useAppInterceptors } from '@/app/model/useAppInterceptors';
+import { useAppInterceptors } from '@/shared/hooks/useAppInterceptors';
 import { AppHeader } from '@/features/header/ui/header';
 import { AppLoadingScreen } from '@/shared/ui/app-loading-screen';
 import { AppToastOverlay } from '@/shared/ui/app-toast';
@@ -24,6 +25,10 @@ import { useMyGymMembershipsQuery } from '@/entities/gym-member/model/gymMemberH
 export { ErrorBoundary } from 'expo-router';
 
 SplashScreen.preventAutoHideAsync();
+LogBox.ignoreLogs([
+  'SafeAreaView has been deprecated',
+  'setLayoutAnimationEnabledExperimental is currently a no-op in the New Architecture.',
+]);
 
 // ─── AppBootstrap ─────────────────────────────────────────────────────────────
 
@@ -79,11 +84,18 @@ export default function RootLayout() {
   }, [language]);
 
   React.useEffect(() => {
-    GoogleSignin.configure({
-      iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-      webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-      offlineAccess: false,
-    });
+    if (Constants.appOwnership === 'expo') return;
+
+    try {
+      const { GoogleSignin } = require('@react-native-google-signin/google-signin');
+      GoogleSignin.configure({
+        iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+        webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+        offlineAccess: false,
+      });
+    } catch {
+      // Native Google Sign-In module is unavailable in Expo Go.
+    }
   }, []);
 
   return (
@@ -91,89 +103,86 @@ export default function RootLayout() {
       <ThemeProvider value={NAV_THEME[theme]}>
         <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
         <AppBootstrap>
-          <Drawer screenOptions={{ header: () => <AppHeader /> }}>
-            <Drawer.Screen name="(tabs)" options={{ title: t('tabs.home') }} />
-            <Drawer.Screen
+          <Stack screenOptions={{ header: () => <AppHeader /> }}>
+            <Stack.Screen name="(tabs)" options={{ title: t('tabs.home') }} />
+            <Stack.Screen
               name="auth/login"
               options={{
                 title: t('common.login'),
-                drawerItemStyle: { display: 'none' },
                 headerShown: false,
               }}
             />
-            <Drawer.Screen
+            <Stack.Screen
               name="auth/register"
               options={{
                 title: t('common.register'),
-                drawerItemStyle: { display: 'none' },
                 headerShown: false,
               }}
             />
-            <Drawer.Screen
+            <Stack.Screen
               name="route/[id]"
               options={{
                 title: t('drawer.route'),
-                drawerItemStyle: { display: 'none' },
                 headerShown: false,
               }}
             />
-            <Drawer.Screen
+            <Stack.Screen
               name="route/edit/[id]"
               options={{
                 title: t('drawer.routeEdit'),
-                drawerItemStyle: { display: 'none' },
                 header: () => null,
               }}
             />
-            <Drawer.Screen
+            <Stack.Screen
               name="ascent/[routeId]"
               options={{
                 title: t('drawer.ascent'),
-                drawerItemStyle: { display: 'none' },
                 headerShown: false,
               }}
             />
-            <Drawer.Screen
+            <Stack.Screen
               name="ascent-detail/[id]"
               options={{
                 title: t('ascentDetail.title'),
-                drawerItemStyle: { display: 'none' },
                 headerShown: false,
               }}
             />
-            <Drawer.Screen
+            <Stack.Screen
               name="gym/join"
               options={{
                 title: t('gym.findGym'),
-                drawerItemStyle: { display: 'none' },
                 header: () => null,
               }}
             />
-            <Drawer.Screen
+            <Stack.Screen
               name="gym/manage"
               options={{
                 title: t('gym.manageTitle'),
-                drawerItemStyle: { display: 'none' },
                 header: () => null,
               }}
             />
-            <Drawer.Screen
+            <Stack.Screen
+              name="gym/[id]"
+              options={{
+                title: t('gym.detailTitle'),
+                header: () => null,
+              }}
+            />
+            <Stack.Screen
               name="ascents/ascents"
               options={{
                 title: t('ascents.title'),
-                drawerItemStyle: { display: 'none' },
                 header: () => null,
               }}
             />
-            <Drawer.Screen
+            <Stack.Screen
               name="user/[userId]"
               options={{
                 title: t('drawer.userProfile'),
-                drawerItemStyle: { display: 'none' },
                 headerShown: false,
               }}
             />
-          </Drawer>
+          </Stack>
         </AppBootstrap>
         <PortalHost />
         <AppToastOverlay />

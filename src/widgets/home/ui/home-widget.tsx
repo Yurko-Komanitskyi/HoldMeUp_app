@@ -2,9 +2,9 @@ import * as React from 'react';
 import { View, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { Dumbbell, ChevronRight } from 'lucide-react-native';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
+import { useScrollToTopOnFocus } from '@/shared/hooks/use-scroll-to-top-on-focus';
 import { useRouter } from 'expo-router';
 
-import { LogAscentCta } from './log-ascent-cta';
 import { WeekStats } from './week-stats';
 import { FeaturedRoutes } from './featured-routes';
 import { RecentAscents } from './recent-ascents';
@@ -28,6 +28,7 @@ export function HomeWidget() {
   const user = useUserStore((s) => s.currentUser);
 
   const [pickerVisible, setPickerVisible] = React.useState(false);
+  const homeScrollRef = useScrollToTopOnFocus<ScrollView>();
   const {
     hasGym,
     ascents,
@@ -77,6 +78,7 @@ export function HomeWidget() {
       />
 
       <ScrollView
+        ref={homeScrollRef}
         style={{ flex: 1, backgroundColor: colors.background }}
         contentContainerStyle={{ paddingBottom: 110 }}
         showsVerticalScrollIndicator={false}
@@ -95,7 +97,6 @@ export function HomeWidget() {
           ) : null}
           {hasGym ? (
             <>
-              <LogAscentCta onPress={() => setPickerVisible(true)} />
               <AscentFeedSection />
               {weekStatsError && !weekStatsLoading ? (
                 <View style={{ paddingHorizontal: 16 }}>

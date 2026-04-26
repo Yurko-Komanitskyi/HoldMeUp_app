@@ -2,11 +2,14 @@ import * as React from 'react';
 import { View, TextInput } from 'react-native';
 
 import { SectionLabel } from '@/shared/ui/section-label';
+import { Text } from '@/shared/ui/text';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import { useTranslation } from 'react-i18next';
 
 interface Props {
   value: string;
   onChange: (value: string) => void;
+  errorText?: string;
   cardBg: string;
   borderColor: string;
   inputBg: string;
@@ -17,6 +20,7 @@ interface Props {
 export function VideoSection({
   value,
   onChange,
+  errorText,
   cardBg,
   borderColor,
   inputBg,
@@ -24,6 +28,7 @@ export function VideoSection({
   placeholderColor,
 }: Props) {
   const { t } = useTranslation();
+  const colors = useThemeColor();
   return (
     <View
       style={{
@@ -50,6 +55,9 @@ export function VideoSection({
           paddingVertical: 12,
         }}
       />
+      {errorText ? (
+        <Text style={{ marginTop: 8, fontSize: 12, color: colors.destructive }}>{errorText}</Text>
+      ) : null}
     </View>
   );
 }

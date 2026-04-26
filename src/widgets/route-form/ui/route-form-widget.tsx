@@ -5,7 +5,10 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
+  LayoutChangeEvent,
 } from 'react-native';
+import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Controller } from 'react-hook-form';
 import { CheckCircle2 } from 'lucide-react-native';
@@ -20,18 +23,21 @@ import { ACCENT } from '@/shared/config/palette';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import { GRADES, HOLD_TYPES, ROUTE_COLORS } from '@/entities/route/lib/constants';
 import { useGymMemberStore } from '@/entities/gym-member/model/gymMemberStore';
+import type { FieldErrors } from 'react-hook-form';
 import {
   useRouteForm,
+  type FormValues,
   type RouteFormInitialValues,
+  type RouteFormScrollOptions,
   type RouteFormSubmitData,
 } from '@/widgets/edit-route/ui/useRouteForm';
 import type { RouteStyle } from '@/entities/route/model/route';
-
 
 import { RouteFormPhoto } from './route-form-photo';
 import { RouteFormSubmitBar } from './route-form-submit';
 import { useSectorsQuery } from '@/entities/sector/model/sectorHooks';
 import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
+import { BottomSheet } from '@/shared/ui/bottom-sheet';
 
 interface RouteFormWidgetProps {
   initialValues?: RouteFormInitialValues;
@@ -119,13 +125,40 @@ export function RouteFormWidget({
 
   const iconColor = colors.mutedForeground;
 
-  const { form, state, actions } = useRouteForm(initialValues, onSubmitForm);
+  const scrollRef = React.useRef<ScrollView>(null);
+  const validatedFieldY = React.useRef<
+    Partial<Record<'name' | 'grade' | 'color' | 'sectorId' | 'tags' | 'height' | 'description', number>>
+  >({});
+
+  const routeFormScrollOptions = React.useMemo<RouteFormScrollOptions>(
+    () => ({
+      onInvalidSubmit(errors: FieldErrors<FormValues>) {
+        const order = ['name', 'grade', 'color', 'sectorId', 'tags', 'height', 'description'] as const;
+        const first = order.find((k) => errors[k]);
+        const y = first ? validatedFieldY.current[first] : undefined;
+        requestAnimationFrame(() => {
+          if (typeof y === 'number') {
+            scrollRef.current?.scrollTo({ y: Math.max(0, y - 16), animated: true });
+          }
+        });
+      },
+      onServerError() {
+        requestAnimationFrame(() => {
+          scrollRef.current?.scrollTo({ y: 0, animated: true });
+        });
+      },
+    }),
+    []
+  );
+
+  const { form, state, actions } = useRouteForm(initialValues, onSubmitForm, routeFormScrollOptions);
   const { control, setValue } = form;
   const {
     localPhotoUri,
     uploading,
     annotationData,
     annotatorVisible,
+    photoSourceVisible,
     serverError,
     selectedGrade,
     selectedColor,
@@ -136,11 +169,22 @@ export function RouteFormWidget({
     errors,
     isSubmitting,
   } = state;
-  const { setAnnotatorVisible, setAnnotationData, pickPhoto, removePhoto, toggleHoldType, submit } =
-    actions;
+  const {
+    setAnnotatorVisible,
+    setPhotoSourceVisible,
+    setAnnotationData,
+    pickPhoto,
+    pickPhotoFromGallery,
+    pickPhotoFromCamera,
+    removePhoto,
+    toggleHoldType,
+    submit,
+  } = actions;
 
   const bgColor = colors.background;
-  const borderTopColor = colors.border;
+  const safeInsets = useSafeAreaInsets();
+  const tabBarHeight = React.useContext(BottomTabBarHeightContext) ?? 0;
+  const scrollBottomPadding = 24 + (tabBarHeight > 0 ? tabBarHeight : safeInsets.bottom);
 
   return (
     <View style={{ flex: 1 }}>
@@ -148,9 +192,10 @@ export function RouteFormWidget({
         style={{ flex: 1, backgroundColor: bgColor }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView
+          ref={scrollRef}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingBottom: 128 }}>
+          contentContainerStyle={{ paddingBottom: scrollBottomPadding }}>
           <View style={{ gap: 28, paddingHorizontal: 20, paddingTop: 24 }}>
             {sectorsError && !sectorsLoading ? (
               <QueryErrorPanel
@@ -170,7 +215,10 @@ export function RouteFormWidget({
             <ServerErrorBanner message={serverError} />
 
             {/* Name */}
-            <View>
+            <View
+              onLayout={(e: LayoutChangeEvent) => {
+                validatedFieldY.current.name = e.nativeEvent.layout.y;
+              }}>
               <SectionTitle>{t('routeForm.routeName')}</SectionTitle>
               <Controller
                 control={control}
@@ -194,12 +242,13 @@ export function RouteFormWidget({
             <View>
               <SectionTitle>{t('routeForm.status')}</SectionTitle>
               <View style={{ flexDirection: 'row', gap: 10 }}>
-                {(['active', 'draft'] as const).map((s) => {
+                {(['active', 'archived'] as const).map((s) => {
                   const isSelected = selectedStatus === s;
-                  const accentColor = s === 'active' ? '#22c55e' : '#f59e0b';
-                  const label = s === 'active' ? t('routeForm.statusActive') : t('routeForm.statusDraft');
+                  const accentColor = s === 'active' ? '#22c55e' : '#9ca3af';
+                  const label =
+                    s === 'active' ? t('routeForm.statusActive') : t('routeForm.statusArchived');
                   const sub =
-                    s === 'active' ? t('routeForm.statusActiveSub') : t('routeForm.statusDraftSub');
+                    s === 'active' ? t('routeForm.statusActiveSub') : t('routeForm.statusArchivedSub');
                   return (
                     <Pressable
                       key={s}
@@ -244,9 +293,7 @@ export function RouteFormWidget({
                   return (
                     <Pressable
                       key={opt.value}
-                      onPress={() =>
-                        setValue('style', isSelected ? undefined : opt.value)
-                      }
+                      onPress={() => setValue('style', isSelected ? undefined : opt.value)}
                       style={{
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -281,7 +328,10 @@ export function RouteFormWidget({
             </View>
 
             {/* Grade */}
-            <View>
+            <View
+              onLayout={(e: LayoutChangeEvent) => {
+                validatedFieldY.current.grade = e.nativeEvent.layout.y;
+              }}>
               <SectionTitle>
                 {selectedGrade
                   ? t('routeForm.gradeWithValue', { grade: selectedGrade })
@@ -324,7 +374,10 @@ export function RouteFormWidget({
             </View>
 
             {/* Color */}
-            <View>
+            <View
+              onLayout={(e: LayoutChangeEvent) => {
+                validatedFieldY.current.color = e.nativeEvent.layout.y;
+              }}>
               <SectionTitle>{t('routeForm.holdColor')}</SectionTitle>
               {errors.color && (
                 <Text className="mb-2 text-xs text-destructive">{errors.color.message}</Text>
@@ -411,7 +464,10 @@ export function RouteFormWidget({
             </View>
 
             {/* Sector */}
-            <View>
+            <View
+              onLayout={(e: LayoutChangeEvent) => {
+                validatedFieldY.current.sectorId = e.nativeEvent.layout.y;
+              }}>
               <SectionTitle>{t('routeForm.sector')}</SectionTitle>
               {errors.sectorId && (
                 <Text className="mb-2 text-xs text-destructive">{errors.sectorId.message}</Text>
@@ -464,7 +520,10 @@ export function RouteFormWidget({
             </View>
 
             {/* Tags */}
-            <View>
+            <View
+              onLayout={(e: LayoutChangeEvent) => {
+                validatedFieldY.current.tags = e.nativeEvent.layout.y;
+              }}>
               <SectionTitle>{t('routeForm.tagsOptional')}</SectionTitle>
               <Controller
                 control={control}
@@ -479,11 +538,19 @@ export function RouteFormWidget({
                   />
                 )}
               />
-              <Text className="mt-1.5 text-[11px] text-muted-foreground">{t('common.tagsCommaHint')}</Text>
+              {errors.tags ? (
+                <Text className="mt-1 text-xs text-destructive">{errors.tags.message}</Text>
+              ) : null}
+              <Text className="mt-1.5 text-[11px] text-muted-foreground">
+                {t('common.tagsCommaHint')}
+              </Text>
             </View>
 
             {/* Height */}
-            <View>
+            <View
+              onLayout={(e: LayoutChangeEvent) => {
+                validatedFieldY.current.height = e.nativeEvent.layout.y;
+              }}>
               <SectionTitle>{t('routeForm.heightOptional')}</SectionTitle>
               <Controller
                 control={control}
@@ -503,10 +570,16 @@ export function RouteFormWidget({
                   </View>
                 )}
               />
+              {errors.height ? (
+                <Text className="mt-1 text-xs text-destructive">{errors.height.message}</Text>
+              ) : null}
             </View>
 
             {/* Description */}
-            <View>
+            <View
+              onLayout={(e: LayoutChangeEvent) => {
+                validatedFieldY.current.description = e.nativeEvent.layout.y;
+              }}>
               <SectionTitle>{t('routeForm.descriptionOptional')}</SectionTitle>
               <Controller
                 control={control}
@@ -522,6 +595,9 @@ export function RouteFormWidget({
                   />
                 )}
               />
+              {errors.description ? (
+                <Text className="mt-1 text-xs text-destructive">{errors.description.message}</Text>
+              ) : null}
             </View>
 
             {/* Photo */}
@@ -538,17 +614,15 @@ export function RouteFormWidget({
                 onOpenAnnotator={() => setAnnotatorVisible(true)}
               />
             </View>
+
+            <RouteFormSubmitBar
+              isSubmitting={isSubmitting}
+              uploading={uploading}
+              submitLabel={submitLabel}
+              onSubmit={submit}
+            />
           </View>
         </ScrollView>
-
-        <RouteFormSubmitBar
-          bgColor={bgColor}
-          borderTopColor={borderTopColor}
-          isSubmitting={isSubmitting}
-          uploading={uploading}
-          submitLabel={submitLabel}
-          onSubmit={submit}
-        />
       </KeyboardAvoidingView>
 
       {localPhotoUri && (
@@ -560,6 +634,41 @@ export function RouteFormWidget({
           onClose={() => setAnnotatorVisible(false)}
         />
       )}
+
+      <BottomSheet
+        visible={photoSourceVisible}
+        onClose={() => setPhotoSourceVisible(false)}
+        title={t('routeForm.photoSourceTitle')}>
+        <Text className="text-sm text-muted-foreground">{t('routeForm.photoSourceBody')}</Text>
+        <Pressable
+          onPress={() => void pickPhotoFromCamera()}
+          style={{
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.card,
+            paddingVertical: 12,
+            paddingHorizontal: 14,
+          }}>
+          <Text className="text-sm font-semibold text-foreground">
+            {t('routeForm.photoSourceCamera')}
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => void pickPhotoFromGallery()}
+          style={{
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.card,
+            paddingVertical: 12,
+            paddingHorizontal: 14,
+          }}>
+          <Text className="text-sm font-semibold text-foreground">
+            {t('routeForm.photoSourceGallery')}
+          </Text>
+        </Pressable>
+      </BottomSheet>
     </View>
   );
 }

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Modal, ScrollView, View, Switch, Pressable, Alert } from 'react-native';
+import { Modal, ScrollView, View, Switch, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   User,
@@ -23,6 +23,7 @@ import { useAuth } from '@/entities/auth/model/authHooks';
 import { EditProfileModal } from '@/features/edit-profile/ui/edit-profile-modal';
 import { ChangePasswordModal } from '@/features/change-password/ui/change-password-modal';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
+import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 
 export interface ProfileSettingsModalProps {
   visible: boolean;
@@ -43,6 +44,7 @@ export function ProfileSettingsModal({ visible, onClose }: ProfileSettingsModalP
 
   const [showEditProfile, setShowEditProfile] = React.useState(false);
   const [showChangePassword, setShowChangePassword] = React.useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
 
   const isDark = theme === 'dark';
 
@@ -55,16 +57,7 @@ export function ProfileSettingsModal({ visible, onClose }: ProfileSettingsModalP
   }
 
   function handleLogout() {
-    Alert.alert(t('profile.logoutConfirmTitle'), t('profile.logoutConfirmMessage'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('profile.logoutConfirmAction'),
-        style: 'destructive',
-        onPress: () => {
-          void doLogout();
-        },
-      },
-    ]);
+    setShowLogoutConfirm(true);
   }
 
   return (
@@ -73,6 +66,17 @@ export function ProfileSettingsModal({ visible, onClose }: ProfileSettingsModalP
       <ChangePasswordModal
         visible={showChangePassword}
         onClose={() => setShowChangePassword(false)}
+      />
+      <ConfirmDialog
+        visible={showLogoutConfirm}
+        title={t('profile.logoutConfirmTitle')}
+        message={t('profile.logoutConfirmMessage')}
+        confirmLabel={t('profile.logoutConfirmAction')}
+        cancelLabel={t('common.cancel')}
+        destructive
+        loading={logout.isPending}
+        onConfirm={() => void doLogout()}
+        onCancel={() => setShowLogoutConfirm(false)}
       />
 
       <Modal

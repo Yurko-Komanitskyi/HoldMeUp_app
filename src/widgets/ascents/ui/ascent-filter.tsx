@@ -19,13 +19,15 @@ import { ACCENT } from '@/shared/config/palette';
 import { useTranslation } from 'react-i18next';
 
 // ─── types ───────────────────────────────────────────────
-type PeriodKey = 'all' | 'week' | 'month';
+type PeriodKey = 'all' | 'day' | 'week' | 'month' | 'threeMonths';
 
 const CHIP_PILL_STYLE = {
   borderRadius: 99,
   paddingHorizontal: 13,
   paddingVertical: 6,
 } as const;
+
+const DAY_MS = 86_400_000;
 
 // ─── helpers ─────────────────────────────────────────────
 // Повертаємо ISO-рядок, бо бекенд-фільтри `dateFrom/dateTo` очікують саме строкове представлення дати.
@@ -35,20 +37,45 @@ function subDays(n: number): string {
   return d.toISOString();
 }
 
+function startOfLocalDayISO(): string {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
+function endOfLocalDayISO(): string {
+  const d = new Date();
+  d.setHours(23, 59, 59, 999);
+  return d.toISOString();
+}
+
+function isDayRangeFilter(filters: AscentFilters): boolean {
+  if (!filters.dateFrom || !filters.dateTo) return false;
+  const span = new Date(filters.dateTo).getTime() - new Date(filters.dateFrom).getTime();
+  return span <= 36 * 60 * 60 * 1000;
+}
+
 function getActivePeriod(filters: AscentFilters): PeriodKey {
   if (!filters.dateFrom) return 'all';
+  if (isDayRangeFilter(filters)) return 'day';
   const df = new Date(filters.dateFrom).getTime();
   const now = Date.now();
   const diff = now - df;
-  const DAY = 86_400_000;
-  if (diff < 8 * DAY) return 'week';
-  if (diff < 31 * DAY) return 'month';
+  if (diff < 8 * DAY_MS) return 'week';
+  if (diff < 31 * DAY_MS) return 'month';
+  if (diff < 95 * DAY_MS) return 'threeMonths';
   return 'all';
 }
 
 function countActive(filters: AscentFilters): number {
   let n = 0;
-  if (filters.dateFrom) n++;
+  if (filters.dateFrom || filters.dateTo) {
+    if (isDayRangeFilter(filters)) n += 1;
+    else {
+      if (filters.dateFrom) n += 1;
+      if (filters.dateTo) n += 1;
+    }
+  }
   if (filters.type) n++;
   if (filters.success !== undefined) n++;
   return n;
@@ -64,8 +91,14 @@ export function AscentFilterBar({ setFilters }: AscentFilterBarProps) {
   const PERIODS = React.useMemo(
     (): { key: PeriodKey; label: string; getDateFrom: () => string | undefined }[] => [
       { key: 'all', label: t('ascents.filterPeriod.all'), getDateFrom: () => undefined },
+      { key: 'day', label: t('ascents.filterPeriod.day'), getDateFrom: () => startOfLocalDayISO() },
       { key: 'week', label: t('ascents.filterPeriod.week'), getDateFrom: () => subDays(7) },
       { key: 'month', label: t('ascents.filterPeriod.month'), getDateFrom: () => subDays(30) },
+      {
+        key: 'threeMonths',
+        label: t('ascents.filterPeriod.threeMonths'),
+        getDateFrom: () => subDays(90),
+      },
     ],
     [t]
   );
@@ -110,8 +143,14 @@ export function AscentFilterBar({ setFilters }: AscentFilterBarProps) {
   // ── handlers ──────────────────────────────────────────
   const setPeriod = (key: PeriodKey) => {
     const p = PERIODS.find((x) => x.key === key)!;
-    setFilters({ ...localFilters, dateFrom: p.getDateFrom(), dateTo: undefined });
-    setLocalFilters({ ...localFilters, dateFrom: p.getDateFrom(), dateTo: undefined });
+    const next: AscentFilters =
+      key === 'all'
+        ? { ...localFilters, dateFrom: undefined, dateTo: undefined }
+        : key === 'day'
+          ? { ...localFilters, dateFrom: startOfLocalDayISO(), dateTo: endOfLocalDayISO() }
+          : { ...localFilters, dateFrom: p.getDateFrom(), dateTo: undefined };
+    setFilters(next);
+    setLocalFilters(next);
   };
 
   const toggleType = (type: AscentType) => {

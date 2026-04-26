@@ -7,20 +7,7 @@ import { SectionLabel } from '@/shared/ui/section-label';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import { useTranslation } from 'react-i18next';
 import { AscentType } from '@/entities/ascent/model/ascent';
-import { ASCENT_TYPE_META, normalizeAscentTypeMetaKey } from '@/entities/ascent/lib/constants';
-
-const ORDER: AscentType[] = [
-  AscentType.FLASH,
-  AscentType.ON_SIGHT,
-  AscentType.REDPOINT,
-  AscentType.TOP,
-  AscentType.PROJECT,
-];
-
-function labelKey(type: AscentType): 'FLASH' | 'ONSIGHT' | 'REDPOINT' | 'TOP' | 'PROJECT' {
-  if (type === AscentType.ON_SIGHT) return 'ONSIGHT';
-  return type as 'FLASH' | 'REDPOINT' | 'TOP' | 'PROJECT';
-}
+import { ASCENT_TYPES, normalizeAscentTypeMetaKey } from '@/entities/ascent/lib/constants';
 
 interface Props {
   value: AscentType;
@@ -44,30 +31,61 @@ export function EditAscentTypeSection({ value, cardBg, borderColor, onChange }: 
       }}>
       <SectionLabel>{t('logAscent.ascentType')}</SectionLabel>
       <View style={{ gap: 8 }}>
-        {ORDER.map((type) => {
-          const active = value === type;
-          const metaKey = normalizeAscentTypeMetaKey(type);
-          const meta = ASCENT_TYPE_META[metaKey];
-          const lk = labelKey(type);
+        {ASCENT_TYPES.map((type) => {
+          const isActive = value === type.value;
+          const labelKey = normalizeAscentTypeMetaKey(type.value);
+          const IconComp = type.icon;
           return (
             <TouchableOpacity
-              key={type}
-              onPress={() => onChange(type)}
+              key={type.value}
+              onPress={() => onChange(type.value as AscentType)}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                gap: 10,
-                paddingVertical: 10,
-                paddingHorizontal: 12,
+                gap: 14,
+                padding: 14,
                 borderRadius: 14,
-                borderWidth: 1,
-                borderColor: active ? meta.color : borderColor,
-                backgroundColor: active ? meta.bg : 'transparent',
+                borderWidth: isActive ? 2 : 1,
+                borderColor: isActive ? type.color : borderColor,
+                backgroundColor: isActive ? type.bg : 'transparent',
               }}>
-              <Text style={{ fontSize: 14, fontWeight: '600', color: meta.color, flex: 1 }}>
-                {t(`logAscent.ascentTypeLabel.${lk}`)}
-              </Text>
-              {active && <CheckCircle2 size={18} color={meta.color} />}
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  backgroundColor: isActive ? type.color + '22' : colors.muted,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                <IconComp size={20} color={isActive ? type.color : colors.mutedForeground} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    fontSize: 15,
+                    fontWeight: '700',
+                    color: isActive ? type.color : colors.foreground,
+                  }}>
+                  {t(`logAscent.ascentTypeLabel.${labelKey}`)}
+                </Text>
+                <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
+                  {t(`logAscent.ascentTypeSublabel.${labelKey}`)}
+                </Text>
+              </View>
+              {isActive && (
+                <View
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    backgroundColor: type.color,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                  <CheckCircle2 size={14} color={colors.destructiveForeground} />
+                </View>
+              )}
             </TouchableOpacity>
           );
         })}

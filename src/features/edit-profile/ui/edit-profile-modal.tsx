@@ -106,7 +106,12 @@ export function EditProfileModal({ visible, onClose }: { visible: boolean; onClo
   );
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} title={t('editProfile.title')}>
+    <BottomSheet
+      visible={visible}
+      onClose={onClose}
+      title={t('editProfile.title')}
+      keyboardShift
+    >
       {emailHint ? (
         <View style={{ gap: 12, paddingVertical: 8 }}>
           <Text className="text-center text-sm text-muted-foreground">

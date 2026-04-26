@@ -124,9 +124,25 @@ export function PublicUserProfile() {
 
   const isFollowedByMe = React.useMemo(() => {
     if (!user || isMe) return false;
-    if (user.userTag) return followByTag.data?.isFollowedByMe ?? false;
-    return localFollowed ?? false;
-  }, [user, isMe, followByTag.data?.isFollowedByMe, localFollowed]);
+    const isFollowingFromFollowersList = !!(
+      myId && followersQuery.items.some((f) => f.follower?.id === myId)
+    );
+    if (user.userTag) {
+      if (typeof followByTag.data?.isFollowedByMe === 'boolean') return followByTag.data.isFollowedByMe;
+      if (followByTag.isLoading) return isFollowingFromFollowersList;
+      return isFollowingFromFollowersList;
+    }
+    if (localFollowed != null) return localFollowed;
+    return isFollowingFromFollowersList;
+  }, [
+    user,
+    isMe,
+    myId,
+    followersQuery.items,
+    followByTag.data?.isFollowedByMe,
+    followByTag.isLoading,
+    localFollowed,
+  ]);
 
   const followBusy =
     followMutation.isPending && followMutation.variables?.followingId === userId;
@@ -176,7 +192,7 @@ export function PublicUserProfile() {
 
   const horizontalPad = 16;
   const gridWidth = windowWidth - horizontalPad * 2;
-  const tileSize = (gridWidth - GRID_GAP * 2) / 3;
+  const tileSize = Math.floor((gridWidth - GRID_GAP * 2) / 3);
   const tileHeight = tileSize * 0.7;
 
   const segments: { key: Segment; label: string }[] = [
@@ -591,7 +607,7 @@ export function PublicUserProfile() {
                     routeGrade={a.routeGrade ?? null}
                     routeColor={a.routeColor ?? null}
                     success={a.success}
-                    reactionCount={a.reactions?.length ?? 0}
+                    reactions={a.reactions ?? []}
                   />
                 ))}
               </View>

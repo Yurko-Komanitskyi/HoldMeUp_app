@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import Constants from 'expo-constants';
 
 import { useAuth } from './authHooks';
 
@@ -9,9 +9,15 @@ export function useGoogleAuth() {
   const [error, setError] = React.useState<string | null>(null);
 
   const signIn = React.useCallback(async () => {
+    if (Constants.appOwnership === 'expo') {
+      setError('Google Sign-In недоступний в Expo Go. Використай dev build.');
+      return null;
+    }
+
     setLoading(true);
     setError(null);
     try {
+      const { GoogleSignin, statusCodes } = require('@react-native-google-signin/google-signin');
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
       await GoogleSignin.signOut().catch(() => undefined);
       const result = await GoogleSignin.signIn();
@@ -26,11 +32,11 @@ export function useGoogleAuth() {
       return authResult.user;
     } catch (err) {
       const e = err as { code?: string; message?: string };
-      if (e.code === statusCodes.SIGN_IN_CANCELLED) {
+      if (e.code === 'SIGN_IN_CANCELLED') {
         setError('Скасовано користувачем');
-      } else if (e.code === statusCodes.IN_PROGRESS) {
+      } else if (e.code === 'IN_PROGRESS') {
         setError('Вхід вже виконується');
-      } else if (e.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+      } else if (e.code === 'PLAY_SERVICES_NOT_AVAILABLE') {
         setError('Google Play Services недоступний');
       } else {
         setError(e.message ?? 'Помилка входу через Google');
@@ -42,6 +48,8 @@ export function useGoogleAuth() {
   }, [googleLogin]);
 
   const signOut = React.useCallback(async () => {
+    if (Constants.appOwnership === 'expo') return;
+    const { GoogleSignin } = require('@react-native-google-signin/google-signin');
     await GoogleSignin.signOut();
   }, []);
 

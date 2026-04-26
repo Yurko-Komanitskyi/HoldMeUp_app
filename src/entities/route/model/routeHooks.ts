@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   fetchRouteById,
   fetchRoutesWithMeta,
+  fetchArchivedRoutesWithMeta,
   createRoute,
   updateRoute,
   deleteRoute,
@@ -34,6 +35,19 @@ export function useRoutesQuery(filters?: RouteListFilters) {
     },
     params: filters,
     pageSize: ROUTES_PAGE_SIZE,
+  });
+}
+
+export function useArchivedRoutesQuery(filters?: RouteListFilters, enabled = true) {
+  return useInfiniteListQuery<Route, RouteListFilters>({
+    queryKey: routeKeys.archivedList(filters),
+    fetchFn: async (params) => {
+      const result = await fetchArchivedRoutesWithMeta(params);
+      return { data: result.routes, hasNextPage: result.hasNextPage };
+    },
+    params: filters,
+    pageSize: ROUTES_PAGE_SIZE,
+    enabled,
   });
 }
 

@@ -2,7 +2,8 @@ import {
   Zap,
   Eye,
   Circle,
-  RefreshCw,
+  Target,
+  Flag,
   Frown,
   Meh,
   Smile,
@@ -19,7 +20,7 @@ export const ASCENT_TYPES = [
     bg: 'rgba(234,179,8,0.12)',
   },
   {
-    value: 'ONSIGHT',
+    value: 'ON_SIGHT',
     icon: Eye,
     color: ACCENT,
     bg: 'rgba(123,173,207,0.12)',
@@ -31,10 +32,16 @@ export const ASCENT_TYPES = [
     bg: 'rgba(239,68,68,0.12)',
   },
   {
-    value: 'REPEAT',
-    icon: RefreshCw,
-    color: '#6b7280',
-    bg: 'rgba(107,114,128,0.12)',
+    value: 'TOP',
+    icon: Target,
+    color: '#a855f7',
+    bg: 'rgba(168,85,247,0.12)',
+  },
+  {
+    value: 'PROJECT',
+    icon: Flag,
+    color: '#6366f1',
+    bg: 'rgba(99,102,241,0.12)',
   },
 ] as const;
 
@@ -52,7 +59,7 @@ export interface AscentTypeMeta {
 }
 
 /** Ключі для logAscent.ascentTypeLabel.* та ASCENT_TYPE_META. */
-export type AscentTypeMetaKey = 'FLASH' | 'ONSIGHT' | 'REDPOINT' | 'REPEAT';
+export type AscentTypeMetaKey = 'FLASH' | 'ONSIGHT' | 'REDPOINT' | 'TOP' | 'PROJECT';
 
 /** Зводить тип з API до ключа метаданих (ONSIGHT / ON_SIGHT → ONSIGHT). */
 export function normalizeAscentTypeMetaKey(type: string | undefined | null): AscentTypeMetaKey {
@@ -60,15 +67,17 @@ export function normalizeAscentTypeMetaKey(type: string | undefined | null): Asc
   if (u === 'ON_SIGHT' || u === 'ONSIGHT') return 'ONSIGHT';
   if (u === 'FLASH') return 'FLASH';
   if (u === 'REDPOINT') return 'REDPOINT';
-  if (u === 'REPEAT') return 'REPEAT';
-  return 'REPEAT';
+  if (u === 'TOP') return 'TOP';
+  if (u === 'PROJECT') return 'PROJECT';
+  return 'REDPOINT';
 }
 
 export const ASCENT_TYPE_META: Record<AscentTypeMetaKey, AscentTypeMeta> = {
   FLASH: { color: '#eab308', bg: 'rgba(234,179,8,0.12)' },
   ONSIGHT: { color: '#7badcf', bg: 'rgba(123,173,207,0.12)' },
   REDPOINT: { color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
-  REPEAT: { color: '#6b7280', bg: 'rgba(107,114,128,0.1)' },
+  TOP: { color: '#a855f7', bg: 'rgba(168,85,247,0.12)' },
+  PROJECT: { color: '#6366f1', bg: 'rgba(99,102,241,0.12)' },
 };
 
 export interface FeelingMeta {

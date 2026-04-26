@@ -8,6 +8,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   useFollowMutations,
   useFollowSearchQuery,
+  useFollowSuggestionsQuery,
   useFollowersByFollowerIdQuery,
   useFollowingByFollowingIdQuery,
 } from '@/entities/follow/model/followHooks';
@@ -17,6 +18,7 @@ import type { User } from '@/shared/model/types';
 import { useUserStore } from '@/entities/user/model/userStore';
 import { ACCENT } from '@/shared/config/palette';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
+import { useScrollToTopOnFocus } from '@/shared/hooks/use-scroll-to-top-on-focus';
 import { Input } from '@/shared/ui/input';
 import { Text } from '@/shared/ui/text';
 import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
@@ -81,6 +83,8 @@ export default function CommunityScreen() {
   );
 
   const [segment, setSegment] = React.useState<Segment>('search');
+  // Один ref на три сегменти з різними item-типами — потрібен «широкий» FlatList.
+  const communityListRef = useScrollToTopOnFocus<FlatList<any>>();
   const [searchText, setSearchText] = React.useState('');
   const [debouncedSearch, setDebouncedSearch] = React.useState('');
 
@@ -90,6 +94,7 @@ export default function CommunityScreen() {
   }, [searchText]);
 
   const searchQuery = useFollowSearchQuery(debouncedSearch);
+  const suggestionsQuery = useFollowSuggestionsQuery(segment === 'search' && debouncedSearch.length === 0);
   const followingQuery = useFollowersByFollowerIdQuery(myId);
   const followersQuery = useFollowingByFollowingIdQuery(myId);
 
@@ -104,7 +109,10 @@ export default function CommunityScreen() {
     void (async () => {
       await queryClient.invalidateQueries({ queryKey: followKeys.all });
       await queryClient.refetchQueries({ queryKey: followKeys.all, type: 'active' });
-      if (segment === 'search') await searchQuery.refetch();
+      if (segment === 'search') {
+        if (debouncedSearch.length > 0) await searchQuery.refetch();
+        else await suggestionsQuery.refetch();
+      }
       else if (activeFollowing) await followingQuery.refetch();
       else if (activeFollowers) await followersQuery.refetch();
     })();
@@ -113,7 +121,9 @@ export default function CommunityScreen() {
     segment,
     activeFollowing,
     activeFollowers,
+    debouncedSearch.length,
     searchQuery,
+    suggestionsQuery,
     followingQuery,
     followersQuery,
   ]);
@@ -298,21 +308,28 @@ export default function CommunityScreen() {
   ];
 
   const searchItems = searchQuery.items.filter((u) => u.id !== myId);
+  const suggestionItems = suggestionsQuery.items.filter((u) => u.id !== myId);
   const followingItems = followingQuery.items.filter((f) => f.following.id !== myId);
   const followersItems = followersQuery.items.filter((f) => f.follower.id !== myId);
 
-  const showSearchEmpty =
-    segment === 'search' && debouncedSearch.length === 0 && !searchQuery.isFetching;
   const showSearchNoResults =
     segment === 'search' &&
     debouncedSearch.length > 0 &&
     searchQuery.isSuccess &&
     searchItems.length === 0 &&
     !searchQuery.isFetching;
+  const showSuggestionsEmpty =
+    segment === 'search' &&
+    debouncedSearch.length === 0 &&
+    suggestionsQuery.isSuccess &&
+    suggestionItems.length === 0 &&
+    !suggestionsQuery.isFetching;
 
-  const listError = segment === 'search' ? searchQuery.error : (listQuery?.error ?? null);
+  const searchListQuery = debouncedSearch.length > 0 ? searchQuery : suggestionsQuery;
+  const searchListItems = debouncedSearch.length > 0 ? searchItems : suggestionItems;
+  const listError = segment === 'search' ? searchListQuery.error : (listQuery?.error ?? null);
   const listRefetching =
-    segment === 'search' ? searchQuery.isRefetching : (listQuery?.isRefetching ?? false);
+    segment === 'search' ? searchListQuery.isRefetching : (listQuery?.isRefetching ?? false);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: 16 }}>
@@ -374,10 +391,10 @@ export default function CommunityScreen() {
       {listError ? (
         <QueryErrorPanel error={listError} onRetry={onRefresh} />
       ) : segment === 'search' ? (
-        showSearchEmpty ? (
+        showSuggestionsEmpty ? (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
             <Text style={{ fontSize: 15, color: colors.mutedForeground, textAlign: 'center' }}>
-              {t('community.searchHint')}
+              {t('community.noSuggestions')}
             </Text>
           </View>
         ) : showSearchNoResults ? (
@@ -388,11 +405,12 @@ export default function CommunityScreen() {
           </View>
         ) : (
           <FlatList
-            data={searchItems}
+            ref={communityListRef}
+            data={searchListItems}
             keyExtractor={(u) => u.id}
             renderItem={renderSearchItem}
             contentContainerStyle={{ paddingBottom: 100 }}
-            onEndReached={() => searchQuery.loadMore()}
+            onEndReached={() => searchListQuery.loadMore()}
             onEndReachedThreshold={0.4}
             refreshControl={
               <RefreshControl
@@ -402,14 +420,14 @@ export default function CommunityScreen() {
               />
             }
             ListFooterComponent={
-              searchQuery.isFetchingNextPage ? (
+              searchListQuery.isFetchingNextPage ? (
                 <View style={{ paddingVertical: 16 }}>
                   <ActivityIndicator color={ACCENT} />
                 </View>
               ) : null
             }
             ListHeaderComponent={
-              debouncedSearch.length > 0 && searchQuery.isFetching && searchItems.length === 0 ? (
+              searchListQuery.isFetching && searchListItems.length === 0 ? (
                 <View style={{ paddingVertical: 24 }}>
                   <ActivityIndicator color={ACCENT} />
                 </View>
@@ -430,6 +448,7 @@ export default function CommunityScreen() {
           </View>
         ) : (
           <FlatList
+            ref={communityListRef}
             data={followingItems}
             keyExtractor={(f) => f.id}
             renderItem={renderFollowRow}
@@ -467,6 +486,7 @@ export default function CommunityScreen() {
           </View>
         ) : (
           <FlatList
+            ref={communityListRef}
             data={followersItems}
             keyExtractor={(f) => f.id}
             renderItem={renderFollowRow}

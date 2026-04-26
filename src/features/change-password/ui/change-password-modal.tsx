@@ -47,7 +47,12 @@ export function ChangePasswordModal({
   }
 
   return (
-    <BottomSheet visible={visible} onClose={handleClose} title={t('changePassword.title')}>
+    <BottomSheet
+      visible={visible}
+      onClose={handleClose}
+      title={t('changePassword.title')}
+      keyboardShift
+    >
       {sent ? (
         <View style={{ alignItems: 'center', gap: 12, paddingVertical: 12 }}>
           <View

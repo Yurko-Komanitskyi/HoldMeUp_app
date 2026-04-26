@@ -1,4 +1,5 @@
-import { FlatList, StyleProp, ViewStyle } from 'react-native';
+import * as React from 'react';
+import { FlatList, RefreshControl, StyleProp, ViewStyle } from 'react-native';
 import { LoadingSpinner } from './loading-spinner';
 
 interface InfiniteListProps<T> {
@@ -14,6 +15,10 @@ interface InfiniteListProps<T> {
   ListEmptyComponent?: React.ReactElement;
   estimatedItemSize?: number;
   showsVerticalScrollIndicator?: boolean;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
+  refreshTintColor?: string;
+  listRef?: React.Ref<FlatList<T>>;
 }
 
 export function InfiniteList<T>({
@@ -28,9 +33,14 @@ export function InfiniteList<T>({
   ListEmptyComponent,
   showsVerticalScrollIndicator = false,
   contentContainerStyle,
+  onRefresh,
+  isRefreshing = false,
+  refreshTintColor,
+  listRef,
 }: InfiniteListProps<T>) {
   return (
     <FlatList
+      ref={listRef}
       data={items}
       contentContainerStyle={contentContainerStyle}
       renderItem={({ item }) => renderItem(item)}
@@ -41,6 +51,15 @@ export function InfiniteList<T>({
       onEndReachedThreshold={0.3}
       ListEmptyComponent={ListEmptyComponent}
       ListFooterComponent={isFetchingNextPage ? <LoadingSpinner /> : null}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            tintColor={refreshTintColor}
+          />
+        ) : undefined
+      }
     />
   );
 }

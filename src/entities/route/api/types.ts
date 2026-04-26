@@ -11,6 +11,7 @@ export interface CreateRouteInput {
   photoUrl?: string | null;
   holdTypes?: string[];
   tags?: string[];
+  annotation?: string | null;
   annotationData?: string | null;
 }
 
@@ -28,6 +29,7 @@ export interface UpdateRouteInput {
   photoUrl?: string | null;
   holdTypes?: string[];
   tags?: string[];
+  annotation?: string | null;
   annotationData?: string | null;
 }
 

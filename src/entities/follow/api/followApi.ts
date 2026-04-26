@@ -5,6 +5,7 @@ import type {
   CreateFollowInput,
   Follow,
   FollowSearchParams,
+  FollowSuggestionsParams,
   FollowerListParams,
   FollowingListParams,
   UnfollowInput,
@@ -16,6 +17,7 @@ const FOLLOWS_BASE = '/api/v1/follows';
 export const followKeys = {
   all: ['follows'] as const,
   search: (q: string) => [...followKeys.all, 'search', q] as const,
+  suggestions: () => [...followKeys.all, 'suggestions'] as const,
   byTag: (userTag: string) => [...followKeys.all, 'by-tag', userTag] as const,
   followers: (followerId: string) => [...followKeys.all, 'follower', followerId] as const,
   following: (followingId: string) => [...followKeys.all, 'following', followingId] as const,
@@ -43,6 +45,16 @@ export async function searchFollowUsers(
 export async function fetchUserByTag(userTag: string): Promise<UserWithFollowStatus> {
   const { data } = await apiClient.get<UserWithFollowStatus>(
     `${FOLLOWS_BASE}/by-tag/${encodeURIComponent(userTag)}`
+  );
+  return data;
+}
+
+export async function fetchFollowSuggestions(
+  params: FollowSuggestionsParams
+): Promise<PaginatedListResponse<UserWithFollowStatus>> {
+  const { data } = await apiClient.get<PaginatedListResponse<UserWithFollowStatus>>(
+    `${FOLLOWS_BASE}/suggestions`,
+    { params }
   );
   return data;
 }

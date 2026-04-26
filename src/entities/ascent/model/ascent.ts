@@ -55,4 +55,7 @@ export interface AscentFeedItem {
   reactions: AscentReaction[];
   createdAt: string;
   updatedAt: string;
+  userFirstName?: string | null;
+  userLastName?: string | null;
+  userTag?: string | null;
 }

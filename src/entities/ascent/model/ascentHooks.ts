@@ -32,7 +32,7 @@ export function useAscentsQuery(
   options?: { enabled?: boolean }
 ) {
   return useInfiniteListQuery({
-    queryKey: ascentKeys.list(),
+    queryKey: [...ascentKeys.list(), filters ?? {}],
     fetchFn: fetchAscents,
     params: filters,
     pageSize: ASCENTS_PAGE_SIZE,

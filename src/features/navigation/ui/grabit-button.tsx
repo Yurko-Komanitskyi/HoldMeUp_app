@@ -2,7 +2,6 @@ import { ACCENT } from '@/shared/config/palette';
 import { Plus } from 'lucide-react-native';
 import { Pressable, View, Platform, StyleSheet, Animated } from 'react-native';
 import { useRef } from 'react';
-import { Text } from '@/shared/ui/text';
 
 interface FABProps {
   onPress: () => void;
@@ -28,8 +27,6 @@ export function GrabitButton({ onPress, tabBarBg }: FABProps) {
       speed: 22,
       bounciness: 12,
     }).start();
-
-  const isDark = tabBarBg !== '#ffffff';
 
   return (
     <Animated.View style={[styles.shadowContainer, { transform: [{ scale: scaleAnim }] }]}>
@@ -81,10 +78,5 @@ const styles = StyleSheet.create({
     height: '50%',
     borderRadius: 29,
     backgroundColor: 'rgba(255,255,255,0.15)',
-  },
-  label: {
-    fontSize: 10,
-    fontWeight: '500',
-    letterSpacing: 0.3,
   },
 });

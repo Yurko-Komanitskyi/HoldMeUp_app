@@ -1,6 +1,6 @@
 import { apiClient } from '@/shared/api/axios';
 
-import type { Ascent, AscentFeedItem } from '../model/ascent';
+import type { Ascent, AscentFeedItem, AscentType } from '../model/ascent';
 import type {
   AddAscentReactionInput,
   AscentFeedParams,
@@ -26,6 +26,11 @@ export type AscentListParams = {
   page?: number;
   limit?: number;
   userId?: string;
+  routeId?: string;
+  type?: AscentType;
+  success?: boolean;
+  dateFrom?: string;
+  dateTo?: string;
 };
 
 export async function fetchAscents(

@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { View, ActivityIndicator, Pressable, Alert } from 'react-native';
+import { View, ActivityIndicator, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, ShieldOff } from 'lucide-react-native';
 
 import { Text } from '@/shared/ui/text';
 import { useRouteDetailsQuery, useRouteMutations } from '@/entities/route/model/routeHooks';
@@ -14,6 +14,10 @@ import { parseApiError } from '@/shared/lib/api-error';
 import type { AnnotationData } from '@/features/route-annotation';
 import { useTranslation } from 'react-i18next';
 import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
+import { routeStyleFormToApi } from '@/entities/route/lib/route-style-api';
+import { normalizeAnnotationData } from '@/features/route-annotation/lib/normalize-annotation';
+import { useCanManageRoute } from '@/entities/route/lib/can-manage-route';
+import { useToastStore } from '@/shared/ui/app-toast';
 
 export function EditRouteWidget() {
   const { t } = useTranslation();
@@ -31,6 +35,8 @@ export function EditRouteWidget() {
     useRouteDetailsQuery(id ?? '');
   const { updateRouteMutation } = useRouteMutations();
   const { mutateAsync, isPending } = updateRouteMutation;
+  const canManageRoute = useCanManageRoute(route);
+  const toast = useToastStore();
 
   if (!id) {
     return (
@@ -110,18 +116,72 @@ export function EditRouteWidget() {
     );
   }
 
-  let parsedAnnotation: AnnotationData | null = null;
-  if (route?.annotationData) {
-    if (typeof route.annotationData === 'string') {
-      try {
-        parsedAnnotation = JSON.parse(route.annotationData) as AnnotationData;
-      } catch {
-        /* ignore */
-      }
-    } else {
-      parsedAnnotation = route.annotationData as AnnotationData;
-    }
+  if (!canManageRoute) {
+    return (
+      <View style={{ flex: 1, backgroundColor: bgColor }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingTop: insets.top + 8,
+            paddingBottom: 12,
+            paddingHorizontal: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+            gap: 12,
+          }}>
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={8}
+            style={{
+              padding: 6,
+              borderRadius: 12,
+              backgroundColor: colors.secondary,
+            }}>
+            <ChevronLeft size={20} color={textColor} />
+          </Pressable>
+          <Text style={{ fontSize: 17, fontWeight: '700', color: textColor }}>
+            {t('routeForm.editTitle')}
+          </Text>
+        </View>
+        <View
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingHorizontal: 32,
+            gap: 16,
+          }}>
+          <ShieldOff size={48} color={mutedColor} />
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: '600',
+              color: textColor,
+              textAlign: 'center',
+            }}>
+            {t('errors.forbidden')}
+          </Text>
+          <Pressable
+            onPress={() => router.back()}
+            style={{
+              marginTop: 8,
+              borderRadius: 14,
+              borderWidth: 1,
+              paddingHorizontal: 24,
+              paddingVertical: 10,
+              borderColor: mutedColor,
+            }}>
+            <Text style={{ color: textColor, fontSize: 14 }}>{t('common.back')}</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
   }
+
+  const parsedAnnotation: AnnotationData | null = normalizeAnnotationData(
+    route?.annotation ?? route?.annotationData
+  );
 
   const initialValues = {
     name: route.name,
@@ -134,7 +194,7 @@ export function EditRouteWidget() {
     height: route.height?.toString() ?? '',
     holdTypes: (route.holdTypes as string[]) ?? [],
     tags: route.tags?.join(', ') ?? '',
-    status: (route.status?.toLowerCase() as 'active' | 'draft') ?? 'active',
+    status: (route.status?.toLowerCase() as 'active' | 'archived') ?? 'active',
     photoUrl: route.photoUrl ?? '',
     photoDisplayUri: route.photoUrl ?? undefined,
     annotationData: parsedAnnotation,
@@ -155,19 +215,19 @@ export function EditRouteWidget() {
         grade: data.grade,
         color: data.color,
         sectorId: data.sectorId,
-        style: data.style ?? null,
+        style: routeStyleFormToApi(data.style ?? undefined),
         description: data.description?.trim() || null,
         height: Number.isNaN(height as number) ? null : height,
         status: data.status,
         photoUrl: data.photoUrl?.trim() || null,
         holdTypes: data.holdTypes,
         tags,
-        annotationData: data.annotationData ? JSON.stringify(data.annotationData) : null,
+        annotation: data.annotationData ? JSON.stringify(data.annotationData) : null,
       });
       router.back();
     } catch (error) {
       const { message } = parseApiError(error);
-      Alert.alert(t('common.errorTitle'), message);
+      toast.show('error', message);
     }
   }
 

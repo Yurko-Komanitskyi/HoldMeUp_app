@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { View } from 'react-native';
+import { CheckCircle2 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Text } from '@/shared/ui/text';
 import { Badge } from '@/shared/ui/badge';
@@ -7,12 +8,12 @@ import { Separator } from '@/shared/ui/separator';
 import { Card, CardContent, CardHeader } from '@/shared/ui/card';
 import { cn } from '@/shared/lib/utils';
 import type { Ascent } from '@/entities/ascent/model/ascent';
-import {
-  AscentDetailFeelingStars,
-  AscentDetailInfoRow,
-  AscentDetailRouteStrip,
-} from '@/widgets/ascent/ui/ascent-detail-bits';
+import { ASCENT_TYPES, normalizeAscentTypeMetaKey } from '@/entities/ascent/lib/constants';
+import { AscentFeelingBlock } from '@/entities/ascent/ui/ascent-feeling-block';
+import { AscentDetailInfoRow, AscentDetailRouteStrip } from '@/widgets/ascent/ui/ascent-detail-bits';
 import { formatAscentDate, formatAscentDuration } from '@/widgets/ascent/lib/ascent-detail-format';
+import { useThemeColor } from '@/shared/hooks/use-theme-color';
+import { resolveRouteColor } from '@/shared/config/palette';
 
 export function AscentDetailRouteHero({
   ascent,
@@ -22,8 +23,12 @@ export function AscentDetailRouteHero({
   dateLabel: string;
 }) {
   const { t } = useTranslation();
-  const typeLabel = t(`ascentDetail.type.${ascent.type}`);
-  const band = ascent.routeColor ?? '#888';
+  const colors = useThemeColor();
+  const band = resolveRouteColor((ascent.routeColor ?? 'grey').trim());
+  const typeMeta =
+    ASCENT_TYPES.find((x) => x.value === ascent.type) ?? ASCENT_TYPES[2];
+  const labelKey = normalizeAscentTypeMetaKey(ascent.type);
+  const IconComp = typeMeta.icon;
 
   return (
     <Card className="gap-0 overflow-hidden py-0 shadow-md shadow-black/10">
@@ -43,21 +48,62 @@ export function AscentDetailRouteHero({
               )}
             </View>
             <Text className="text-sm capitalize leading-5 text-muted-foreground">{dateLabel}</Text>
-            <View className="flex-row flex-wrap items-center gap-2">
-              <Badge variant="secondary">
-                <Text className="text-xs font-semibold text-foreground">{typeLabel}</Text>
-              </Badge>
-              {ascent.success ? (
-                <Badge variant="outline" className="border-green-500/40">
-                  <Text className="text-xs text-green-600 dark:text-green-400">
-                    {t('ascentDetail.successBadge')}
+            <View style={{ gap: 8, marginTop: 2 }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 14,
+                  padding: 14,
+                  borderRadius: 14,
+                  borderWidth: 2,
+                  borderColor: typeMeta.color,
+                  backgroundColor: typeMeta.bg,
+                }}>
+                <View
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 12,
+                    backgroundColor: typeMeta.color + '22',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                  <IconComp size={20} color={typeMeta.color} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: '700', color: typeMeta.color }}>
+                    {t(`logAscent.ascentTypeLabel.${labelKey}`)}
                   </Text>
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="border-destructive/40">
-                  <Text className="text-xs text-destructive">{t('ascentDetail.failBadge')}</Text>
-                </Badge>
-              )}
+                  <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
+                    {t(`logAscent.ascentTypeSublabel.${labelKey}`)}
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    backgroundColor: typeMeta.color,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                  <CheckCircle2 size={14} color={colors.destructiveForeground} />
+                </View>
+              </View>
+              <View className="flex-row flex-wrap items-center gap-2">
+                {ascent.success ? (
+                  <Badge variant="outline" className="border-green-500/40">
+                    <Text className="text-xs text-green-600 dark:text-green-400">
+                      {t('ascentDetail.successBadge')}
+                    </Text>
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="border-destructive/40">
+                    <Text className="text-xs text-destructive">{t('ascentDetail.failBadge')}</Text>
+                  </Badge>
+                )}
+              </View>
             </View>
           </View>
         </View>
@@ -146,14 +192,6 @@ export function AscentDetailMetaCard({
             <Separator />
           </>
         )}
-        {ascent.feeling !== null && (
-          <>
-            <AscentDetailInfoRow label={t('ascentDetail.feeling')}>
-              <AscentDetailFeelingStars value={ascent.feeling} />
-            </AscentDetailInfoRow>
-            <Separator />
-          </>
-        )}
         <AscentDetailInfoRow label={t('ascentDetail.created')}>
           <Text className="text-sm text-muted-foreground">{formatDate(ascent.createdAt)}</Text>
         </AscentDetailInfoRow>
@@ -167,6 +205,19 @@ export function AscentDetailMetaCard({
         )}
       </CardContent>
     </Card>
+  );
+}
+
+export function AscentDetailFeelingCard({ ascent }: { ascent: Ascent }) {
+  const colors = useThemeColor();
+  if (ascent.feeling === null) return null;
+  return (
+    <AscentFeelingBlock
+      mode="display"
+      feeling={ascent.feeling}
+      cardBg={colors.card}
+      borderColor={colors.border}
+    />
   );
 }
 

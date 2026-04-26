@@ -1,13 +1,10 @@
 import React from 'react';
-import { View, Image } from 'react-native';
+import { View, Image, Modal, Pressable, StatusBar, useWindowDimensions } from 'react-native';
 import Svg, { Circle as SvgCircle, Path as SvgPath } from 'react-native-svg';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  clamp,
-} from 'react-native-reanimated';
+import { X } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
+import { ResumableZoom } from 'react-native-zoom-toolkit';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import type { AnnotationData } from '../model/types';
 
 interface Props {
@@ -17,119 +14,144 @@ interface Props {
 }
 
 export function AnnotatedPhoto({ photoUrl, annotationData, displayWidth }: Props) {
+  const { t } = useTranslation();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const [open, setOpen] = React.useState(false);
   const { canvasWidth, canvasHeight, shapes } = annotationData;
 
   const baseScale = canvasWidth ? displayWidth / canvasWidth : 1;
   const displayHeight = canvasHeight ? canvasHeight * baseScale : displayWidth;
 
-  const scale = useSharedValue(1);
-  const savedScale = useSharedValue(1);
-  const tx = useSharedValue(0);
-  const ty = useSharedValue(0);
-  const savedTx = useSharedValue(0);
-  const savedTy = useSharedValue(0);
+  const maxModalHeight = Math.max(220, screenHeight - 140);
+  const screenFitScale = canvasWidth ? screenWidth / canvasWidth : 1;
+  const rawModalHeight = canvasHeight * screenFitScale;
+  const modalScale =
+    rawModalHeight > maxModalHeight ? maxModalHeight / canvasHeight : screenFitScale;
+  const modalWidth = Math.min(screenWidth, canvasWidth * modalScale);
+  const modalHeight = canvasHeight * modalScale;
 
-  function reset() {
-    scale.value = withSpring(1, { damping: 20 });
-    tx.value = withSpring(0, { damping: 20 });
-    ty.value = withSpring(0, { damping: 20 });
-    savedScale.value = 1;
-    savedTx.value = 0;
-    savedTy.value = 0;
-  }
-
-  const pinch = Gesture.Pinch()
-    .onUpdate((e) => {
-      scale.value = clamp(savedScale.value * e.scale, 0.8, 6);
-    })
-    .onEnd(() => {
-      if (scale.value < 1) {
-        reset();
-      } else {
-        savedScale.value = scale.value;
-      }
-    });
-
-  const pan = Gesture.Pan()
-    .averageTouches(true)
-    .onUpdate((e) => {
-      tx.value = savedTx.value + e.translationX;
-      ty.value = savedTy.value + e.translationY;
-    })
-    .onEnd(() => {
-      savedTx.value = tx.value;
-      savedTy.value = ty.value;
-    });
-
-  const doubleTap = Gesture.Tap()
-    .numberOfTaps(2)
-    .maxDelay(200)
-    .onEnd(() => {
-      if (scale.value > 1) {
-        reset();
-      } else {
-        scale.value = withSpring(2.5);
-        savedScale.value = 2.5;
-      }
-    });
-
-  const gesture = Gesture.Exclusive(doubleTap, Gesture.Simultaneous(pinch, pan));
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }, { translateX: tx.value }, { translateY: ty.value }],
-  }));
-
-  return (
+  const preview = (
     <View style={{ width: displayWidth, height: displayHeight, overflow: 'hidden' }}>
-      <GestureDetector gesture={gesture}>
-        <Animated.View
-          style={[
-            {
-              width: '100%',
-              height: '100%',
-            },
-            animatedStyle,
-          ]}>
-          <Image
-            source={{ uri: photoUrl }}
-            style={{ width: '100%', height: '100%', position: 'absolute' }}
-            resizeMode="contain"
-          />
-          <Svg style={{ width: '100%', height: '100%', position: 'absolute' }}>
-            {shapes.map((shape) => {
-              if (shape.type === 'circle') {
-                return (
-                  <SvgCircle
-                    key={shape.id}
-                    cx={shape.cx * baseScale}
-                    cy={shape.cy * baseScale}
-                    r={shape.r * baseScale}
-                    stroke={shape.color}
-                    strokeWidth={3 * baseScale}
-                    fill={shape.color + '40'}
-                  />
-                );
-              }
-              if (shape.type === 'path') {
-                return (
-                  <SvgPath
-                    key={shape.id}
-                    d={shape.d}
-                    stroke={shape.color}
-                    strokeWidth={shape.strokeWidth}
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    transform={`scale(${baseScale})`}
-                  />
-                );
-              }
-              return null;
-            })}
-          </Svg>
-        </Animated.View>
-      </GestureDetector>
+      <View pointerEvents="none" style={{ position: 'absolute', width: '100%', height: '100%' }}>
+        <Image
+          source={{ uri: photoUrl }}
+          style={{ width: '100%', height: '100%', position: 'absolute' }}
+          resizeMode="contain"
+        />
+      </View>
+      <Svg style={{ width: '100%', height: '100%', position: 'absolute' }} pointerEvents="none">
+        {shapes.map((shape) => {
+          if (shape.type === 'circle') {
+            return (
+              <SvgCircle
+                key={shape.id}
+                cx={shape.cx * baseScale}
+                cy={shape.cy * baseScale}
+                r={shape.r * baseScale}
+                stroke={shape.color}
+                strokeWidth={3 * baseScale}
+                fill={shape.color + '40'}
+              />
+            );
+          }
+          if (shape.type === 'path') {
+            return (
+              <SvgPath
+                key={shape.id}
+                d={shape.d}
+                stroke={shape.color}
+                strokeWidth={shape.strokeWidth}
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                transform={`scale(${baseScale})`}
+              />
+            );
+          }
+          return null;
+        })}
+      </Svg>
     </View>
   );
-}
 
+  return (
+    <>
+      <Pressable onPress={() => setOpen(true)}>{preview}</Pressable>
+      <Modal visible={open} transparent animationType="fade" statusBarTranslucent>
+        <StatusBar hidden />
+        <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#000' }}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('common.close')}
+            onPress={() => {
+              setOpen(false);
+            }}
+            style={{
+              position: 'absolute',
+              top: 52,
+              right: 16,
+              zIndex: 20,
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: 'rgba(255,255,255,0.18)',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <X size={22} color="#fff" />
+          </Pressable>
+
+          <ResumableZoom
+            style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+            maxScale={6}>
+            <View style={{ width: modalWidth, height: modalHeight }}>
+              <View
+                pointerEvents="none"
+                style={{ position: 'absolute', width: '100%', height: '100%' }}>
+                <Image
+                  source={{ uri: photoUrl }}
+                  style={{ width: '100%', height: '100%', position: 'absolute' }}
+                  resizeMode="contain"
+                />
+              </View>
+              <Svg
+                style={{ width: '100%', height: '100%', position: 'absolute' }}
+                pointerEvents="none">
+                {shapes.map((shape) => {
+                  if (shape.type === 'circle') {
+                    return (
+                      <SvgCircle
+                        key={shape.id}
+                        cx={shape.cx * modalScale}
+                        cy={shape.cy * modalScale}
+                        r={shape.r * modalScale}
+                        stroke={shape.color}
+                        strokeWidth={3 * modalScale}
+                        fill={shape.color + '40'}
+                      />
+                    );
+                  }
+                  if (shape.type === 'path') {
+                    return (
+                      <SvgPath
+                        key={shape.id}
+                        d={shape.d}
+                        stroke={shape.color}
+                        strokeWidth={shape.strokeWidth}
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        transform={`scale(${modalScale})`}
+                      />
+                    );
+                  }
+                  return null;
+                })}
+              </Svg>
+            </View>
+          </ResumableZoom>
+        </GestureHandlerRootView>
+      </Modal>
+    </>
+  );
+}

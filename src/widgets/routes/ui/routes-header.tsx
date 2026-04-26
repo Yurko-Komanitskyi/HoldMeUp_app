@@ -1,5 +1,5 @@
 import { Text } from '@/shared/ui/text';
-import { View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { RouteFilterBar } from './route-filter-bar';
 import { RouteGrade, RouteStatus, RouteStyle } from '@/entities/route/model/route';
 import { RouteFilters } from '@/entities/route/model/routeHooks';
@@ -17,6 +17,9 @@ export function RoutesHeader({
   onStatusChange,
   onColorChange,
   onClearFilters,
+  canToggleArchived,
+  showArchived,
+  onToggleArchived,
 }: {
   totalCount: number;
   isLoading: boolean;
@@ -28,6 +31,9 @@ export function RoutesHeader({
   onStatusChange: (v: RouteStatus | undefined) => void;
   onColorChange: (v: string | undefined) => void;
   onClearFilters: () => void;
+  canToggleArchived?: boolean;
+  showArchived?: boolean;
+  onToggleArchived?: () => void;
 }) {
   const { t } = useTranslation();
   const colors = useThemeColor();
@@ -44,6 +50,7 @@ export function RoutesHeader({
         <Text
           style={{
             fontSize: 30,
+            lineHeight: 38,
             fontWeight: '800',
             letterSpacing: -0.8,
             color: colors.foreground,
@@ -82,6 +89,32 @@ export function RoutesHeader({
         onColorChange={onColorChange}
         onClearFilters={onClearFilters}
       />
+
+      {canToggleArchived && onToggleArchived ? (
+        <View style={{ paddingHorizontal: 16 }}>
+          <TouchableOpacity
+            onPress={onToggleArchived}
+            activeOpacity={0.8}
+            style={{
+              alignSelf: 'flex-start',
+              borderWidth: 1,
+              borderColor: showArchived ? colors.primary : colors.border,
+              backgroundColor: showArchived ? colors.primary + '22' : 'transparent',
+              borderRadius: 999,
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+            }}>
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: '700',
+                color: showArchived ? colors.primary : colors.mutedForeground,
+              }}>
+              {showArchived ? t('routes.hideArchived') : t('routes.loadArchived')}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       {/* Bottom divider */}
       <View

@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "expo start -c",
+    "dev:go": "expo start --go -c",
     "dev:client": "expo start --dev-client -c",
     "android": "expo start -c --android",
     "ios": "expo start -c --ios",
@@ -60,6 +61,7 @@
     "react-native-svg": "15.12.1",
     "react-native-web": "^0.21.0",
     "react-native-worklets": "0.5.1",
+    "react-native-zoom-toolkit": "^5.0.1",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^3.4.14",
     "tailwindcss-animate": "^1.0.7",

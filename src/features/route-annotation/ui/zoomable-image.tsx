@@ -1,12 +1,8 @@
 import { useState } from 'react';
-import { Image, Modal, Pressable, StyleSheet, View, StatusBar } from 'react-native';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  clamp,
-} from 'react-native-reanimated';
+import { Image, Modal, Pressable, StyleSheet, StatusBar } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { ResumableZoom } from 'react-native-zoom-toolkit';
+import type { SwipeDirection } from 'react-native-zoom-toolkit';
 import { X } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -20,73 +16,13 @@ type Props = {
 export function ZoomableImage({ uri, width, height, borderRadius = 0 }: Props) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
 
-  const scale = useSharedValue(1);
-  const savedScale = useSharedValue(1);
-  const tx = useSharedValue(0);
-  const ty = useSharedValue(0);
-  const savedTx = useSharedValue(0);
-  const savedTy = useSharedValue(0);
-
-  function reset() {
-    scale.value = withSpring(1, { damping: 20 });
-    tx.value = withSpring(0, { damping: 20 });
-    ty.value = withSpring(0, { damping: 20 });
-    savedScale.value = 1;
-    savedTx.value = 0;
-    savedTy.value = 0;
+  function handleSwipe(direction: SwipeDirection) {
+    if (direction === 'right' || direction === 'down') {
+      close();
+    }
   }
-
-  const pinch = Gesture.Pinch()
-    .onUpdate((e) => {
-      scale.value = clamp(savedScale.value * e.scale, 0.8, 6);
-    })
-    .onEnd(() => {
-      if (scale.value < 1) {
-        scale.value = withSpring(1);
-        tx.value = withSpring(0);
-        ty.value = withSpring(0);
-        savedScale.value = 1;
-        savedTx.value = 0;
-        savedTy.value = 0;
-      } else {
-        savedScale.value = scale.value;
-      }
-    });
-
-  const pan = Gesture.Pan()
-    .averageTouches(true)
-    .onUpdate((e) => {
-      tx.value = savedTx.value + e.translationX;
-      ty.value = savedTy.value + e.translationY;
-    })
-    .onEnd(() => {
-      savedTx.value = tx.value;
-      savedTy.value = ty.value;
-    });
-
-  const doubleTap = Gesture.Tap()
-    .numberOfTaps(2)
-    .maxDelay(200)
-    .onEnd(() => {
-      if (scale.value > 1) {
-        scale.value = withSpring(1);
-        tx.value = withSpring(0);
-        ty.value = withSpring(0);
-        savedScale.value = 1;
-        savedTx.value = 0;
-        savedTy.value = 0;
-      } else {
-        scale.value = withSpring(2.5);
-        savedScale.value = 2.5;
-      }
-    });
-
-  const gesture = Gesture.Exclusive(doubleTap, Gesture.Simultaneous(pinch, pan));
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }, { translateX: tx.value }, { translateY: ty.value }],
-  }));
 
   return (
     <>
@@ -96,16 +32,18 @@ export function ZoomableImage({ uri, width, height, borderRadius = 0 }: Props) {
         <Image source={{ uri }} style={{ width, height }} resizeMode="cover" />
       </Pressable>
 
-      <Modal visible={open} transparent animationType="fade" statusBarTranslucent>
+      <Modal
+        visible={open}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={close}>
         <StatusBar hidden />
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: '#000' }]}>
+        <GestureHandlerRootView style={[StyleSheet.absoluteFill, { backgroundColor: '#000' }]}>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t('common.close')}
-            onPress={() => {
-              reset();
-              setOpen(false);
-            }}
+            onPress={close}
             style={{
               position: 'absolute',
               top: 52,
@@ -121,24 +59,18 @@ export function ZoomableImage({ uri, width, height, borderRadius = 0 }: Props) {
             <X size={22} color="#fff" />
           </Pressable>
 
-          <GestureDetector gesture={gesture}>
-            <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-              <Animated.View
-                style={[
-                  { flex: 1, alignItems: 'center', justifyContent: 'center' },
-                  animatedStyle,
-                ]}>
-                <Image
-                  source={{ uri }}
-                  style={{ width: '100%', aspectRatio: 1 }}
-                  resizeMode="contain"
-                />
-              </Animated.View>
-            </View>
-          </GestureDetector>
-        </View>
+          <ResumableZoom
+            maxScale={6}
+            style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+            onSwipe={handleSwipe}>
+            <Image
+              source={{ uri }}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="contain"
+            />
+          </ResumableZoom>
+        </GestureHandlerRootView>
       </Modal>
     </>
   );
 }
-

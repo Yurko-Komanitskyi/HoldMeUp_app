@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Alert, Pressable, RefreshControl, ScrollView, View } from 'react-native';
+import { RefreshControl, ScrollView, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -17,7 +17,9 @@ import { AscentDetailError } from '@/widgets/ascent/ui/ascent-detail-error';
 import { AscentDetailHeader } from '@/widgets/ascent/ui/ascent-detail-header';
 import { AscentDetailLoading } from '@/widgets/ascent/ui/ascent-detail-loading';
 import { EditAscentModal } from '@/widgets/ascent/ui/edit-ascent-modal';
+import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import {
+  AscentDetailFeelingCard,
   AscentDetailFooterTip,
   AscentDetailMetaCard,
   AscentDetailNotesCard,
@@ -35,6 +37,7 @@ export function AscentDetailWidget() {
   const toast = useToastStore();
   const myId = useUserStore((s) => s.currentUser?.id);
   const [editOpen, setEditOpen] = React.useState(false);
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
 
   const {
     data: ascent,
@@ -56,27 +59,18 @@ export function AscentDetailWidget() {
     [i18n.language]
   );
 
-  const confirmDelete = React.useCallback(() => {
+  async function handleDeleteConfirm() {
     if (!ascent) return;
-    Alert.alert(t('ascentDetail.deleteTitle'), t('ascentDetail.deleteMessage'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('ascentDetail.delete'),
-        style: 'destructive',
-        onPress: () => {
-          void (async () => {
-            try {
-              await deleteAscentMutation.mutateAsync(ascent.id);
-              toast.show('success', t('ascentDetail.deleteSuccess'));
-              router.back();
-            } catch {
-              toast.show('error', t('ascentDetail.deleteError'));
-            }
-          })();
-        },
-      },
-    ]);
-  }, [ascent, deleteAscentMutation, router, t, toast]);
+    try {
+      await deleteAscentMutation.mutateAsync(ascent.id);
+      setDeleteOpen(false);
+      toast.show('success', t('ascentDetail.deleteSuccess'));
+      router.back();
+    } catch {
+      setDeleteOpen(false);
+      toast.show('error', t('ascentDetail.deleteError'));
+    }
+  }
 
   if (!id) {
     return (
@@ -104,11 +98,23 @@ export function AscentDetailWidget() {
 
   return (
     <View style={{ flex: 1, paddingBottom: insets.bottom }} className="bg-background">
+      <ConfirmDialog
+        visible={deleteOpen}
+        title={t('ascentDetail.deleteTitle')}
+        message={t('ascentDetail.deleteMessage')}
+        confirmLabel={t('ascentDetail.delete')}
+        cancelLabel={t('common.cancel')}
+        destructive
+        loading={deleteAscentMutation.isPending}
+        onConfirm={() => void handleDeleteConfirm()}
+        onCancel={() => setDeleteOpen(false)}
+      />
+
       <AscentDetailHeader
         onBack={() => router.back()}
         onViewRoute={() => router.push(`/route/${ascent.routeId}` as never)}
         onEdit={() => setEditOpen(true)}
-        onDelete={confirmDelete}
+        onDelete={() => setDeleteOpen(true)}
       />
 
       <ScrollView
@@ -133,47 +139,17 @@ export function AscentDetailWidget() {
         }>
         <AscentDetailRouteHero ascent={ascent} dateLabel={formatDateWithWeekday(ascent.date)} />
         <AscentDetailQuickStats ascent={ascent} formatDate={formatDate} />
+        <AscentDetailFeelingCard ascent={ascent} />
         <AscentDetailMetaCard ascent={ascent} formatDate={formatDate} />
         <AscentDetailNotesCard notes={ascent.notes} />
         {ascent.videoUrl ? <AscentDetailVideoCard url={ascent.videoUrl} /> : null}
 
-        <View className="gap-2">
-          <Text className="text-sm font-semibold text-foreground">
-            {t('ascentDetail.reactionsSection')}
-          </Text>
-          {(ascent.reactions?.length ?? 0) === 0 ? (
-            <Text className="text-sm text-muted-foreground">{t('ascentDetail.reactionsEmpty')}</Text>
-          ) : (
-            <View style={{ gap: 10 }}>
-              {(ascent.reactions ?? []).map((r) => (
-                <View
-                  key={r.id}
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  <Text style={{ fontSize: 20 }}>{r.emoji}</Text>
-                  <Pressable
-                    onPress={() => {
-                      if (myId && r.userId === myId) {
-                        router.push('/(tabs)/profile' as never);
-                        return;
-                      }
-                      router.push(`/user/${r.userId}` as never);
-                    }}
-                    hitSlop={6}>
-                    <Text style={{ fontSize: 14, fontWeight: '600', color: ACCENT }}>
-                      {t('ascentDetail.reactionUserProfile')}
-                    </Text>
-                  </Pressable>
-                </View>
-              ))}
-            </View>
-          )}
-          <AscentReactionsBar
-            ascentId={ascent.id}
-            reactions={ascent.reactions ?? []}
-            ascentOwnerId={ascent.userId}
-            currentUserId={myId}
-          />
-        </View>
+        <AscentReactionsBar
+          ascentId={ascent.id}
+          reactions={ascent.reactions ?? []}
+          ascentOwnerId={ascent.userId}
+          currentUserId={myId}
+        />
 
         <AscentDetailFooterTip />
       </ScrollView>

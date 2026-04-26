@@ -9,6 +9,9 @@ export const routeKeys = {
   all: ['routes'] as const,
   lists: (filters?: RouteListFilters) => [...routeKeys.all, 'list', filters ?? {}] as const,
   list: (filters?: RouteListFilters) => [...routeKeys.lists(filters)] as const,
+  archivedLists: (filters?: RouteListFilters) =>
+    [...routeKeys.all, 'archived-list', filters ?? {}] as const,
+  archivedList: (filters?: RouteListFilters) => [...routeKeys.archivedLists(filters)] as const,
   details: () => [...routeKeys.all, 'detail'] as const,
   detail: (id: string) => [...routeKeys.details(), id] as const,
 };
@@ -41,6 +44,21 @@ function buildParams(filters?: RouteListFilters): Record<string, unknown> {
 
 export async function fetchRoutesWithMeta(filters?: RouteListFilters): Promise<RouteListResult> {
   const { data } = await apiClient.get<Route[] | RouteListResponse>(ROUTES_BASE, {
+    params: buildParams(filters),
+  });
+  if (Array.isArray(data)) return { routes: data, hasNextPage: false };
+  if (data && Array.isArray((data as RouteListResponse).data))
+    return {
+      routes: (data as RouteListResponse).data,
+      hasNextPage: (data as RouteListResponse).hasNextPage ?? false,
+    };
+  return { routes: [], hasNextPage: false };
+}
+
+export async function fetchArchivedRoutesWithMeta(
+  filters?: RouteListFilters
+): Promise<RouteListResult> {
+  const { data } = await apiClient.get<Route[] | RouteListResponse>(`${ROUTES_BASE}/archived`, {
     params: buildParams(filters),
   });
   if (Array.isArray(data)) return { routes: data, hasNextPage: false };

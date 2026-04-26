@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { View, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
@@ -13,6 +13,8 @@ import { MembershipCard } from '@/features/gym-memberships/ui/membership-card';
 import { JoinableGymCard } from '@/features/gym-join/ui/joinable-gym-card';
 import { useTranslation } from 'react-i18next';
 import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
+import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
+import { useToastStore } from '@/shared/ui/app-toast';
 
 function SectionTitle({ title }: { title: string }) {
   const { mutedForeground } = useThemeColor();
@@ -37,6 +39,9 @@ export function GymManageWidget() {
   const insets      = useSafeAreaInsets();
   const colors = useThemeColor();
   const isDark = colors.isDark;
+  const toast = useToastStore();
+
+  const [leaveTarget, setLeaveTarget] = React.useState<{ id: string; name: string } | null>(null);
 
   const memberships    = useGymMemberStore((s) => s.memberships);
   const {
@@ -56,28 +61,22 @@ export function GymManageWidget() {
   } = useGymManage();
 
   function handleLeave(gymId: string, gymName: string) {
-    Alert.alert(
-      t('gym.leaveTitle'),
-      t('gym.leaveMessage', { name: gymName }),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('gym.leaveGym'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const remainingCount = await leaveGym(gymId);
-              if (remainingCount === 0) {
-                router.replace('/gym/join' as never);
-              }
-            } catch (e) {
-              const message = e instanceof Error ? e.message : t('gym.leaveGymFailed');
-              Alert.alert(t('common.errorTitle'), message);
-            }
-          },
-        },
-      ]
-    );
+    setLeaveTarget({ id: gymId, name: gymName });
+  }
+
+  async function handleLeaveConfirm() {
+    if (!leaveTarget) return;
+    try {
+      const remainingCount = await leaveGym(leaveTarget.id);
+      setLeaveTarget(null);
+      if (remainingCount === 0) {
+        router.replace('/gym/join' as never);
+      }
+    } catch (e) {
+      setLeaveTarget(null);
+      const message = e instanceof Error ? e.message : t('gym.leaveGymFailed');
+      toast.show('error', message);
+    }
   }
 
   async function handleJoin(gymId: string) {
@@ -85,7 +84,7 @@ export function GymManageWidget() {
       await joinGym(gymId);
     } catch (e) {
       const message = e instanceof Error ? e.message : t('gym.joinGymFailed');
-      Alert.alert(t('common.errorTitle'), message);
+      toast.show('error', message);
     }
   }
 
@@ -94,6 +93,17 @@ export function GymManageWidget() {
 
   return (
     <View style={{ flex: 1, backgroundColor: bgColor }}>
+      <ConfirmDialog
+        visible={!!leaveTarget}
+        title={t('gym.leaveTitle')}
+        message={leaveTarget ? t('gym.leaveMessage', { name: leaveTarget.name }) : undefined}
+        confirmLabel={t('gym.leaveGym')}
+        cancelLabel={t('common.cancel')}
+        destructive
+        loading={!!leavingId}
+        onConfirm={() => void handleLeaveConfirm()}
+        onCancel={() => setLeaveTarget(null)}
+      />
       <View style={{
         paddingTop: insets.top + 8, paddingHorizontal: 16, paddingBottom: 14,
         flexDirection: 'row', alignItems: 'center', gap: 10,
