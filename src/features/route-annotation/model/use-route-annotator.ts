@@ -48,10 +48,20 @@ export function useRouteAnnotator(initialShapes: AnnotationShape[] = []) {
   const panResponder = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponder: () => stateRefs.current.tool === 'path',
+        onStartShouldSetPanResponder: (evt, gestureState) =>
+          evt.nativeEvent.touches.length === 1 && gestureState.numberActiveTouches <= 1,
+        onMoveShouldSetPanResponder: (evt, gestureState) =>
+          stateRefs.current.tool === 'path' &&
+          evt.nativeEvent.touches.length === 1 &&
+          gestureState.numberActiveTouches <= 1,
+        onStartShouldSetPanResponderCapture: (evt) => evt.nativeEvent.touches.length === 1,
+        onMoveShouldSetPanResponderCapture: (evt) =>
+          stateRefs.current.tool === 'path' && evt.nativeEvent.touches.length === 1,
+        onPanResponderTerminationRequest: () => true,
+        onShouldBlockNativeResponder: () => false,
 
         onPanResponderGrant: (evt) => {
+          if (evt.nativeEvent.touches.length > 1) return;
           const { locationX, locationY } = evt.nativeEvent;
           const current = stateRefs.current;
 
@@ -103,6 +113,7 @@ export function useRouteAnnotator(initialShapes: AnnotationShape[] = []) {
         },
 
         onPanResponderMove: (evt) => {
+          if (evt.nativeEvent.touches.length > 1) return;
           if (stateRefs.current.tool !== 'path' || !isDrawing.current) return;
           const { locationX, locationY } = evt.nativeEvent;
           livePoints.current = [...livePoints.current, { x: locationX, y: locationY }];
@@ -124,6 +135,11 @@ export function useRouteAnnotator(initialShapes: AnnotationShape[] = []) {
             strokeWidth: PATH_STROKE_WIDTH,
           };
           setShapes((prev) => [...prev, pathShape]);
+        },
+        onPanResponderTerminate: () => {
+          isDrawing.current = false;
+          livePoints.current = [];
+          setLivePathD(null);
         },
       }),
     []

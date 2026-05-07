@@ -35,9 +35,7 @@ export function AscentCard({ ascent, variant = 'detailed' }: AscentCardProps) {
       ? `${Math.floor(ascent.timeSeconds / 60)}:${String(ascent.timeSeconds % 60).padStart(2, '0')}`
       : null;
 
-  const title = compact
-    ? `#${ascent.routeId.slice(-6)}`
-    : (ascent.routeName?.trim() || `#${ascent.routeId.slice(-6)}`);
+  const title = ascent.routeName?.trim() || t('logAscent.missingRoute');
 
   const onPress = () => router.push(`/ascent-detail/${ascent.id}` as never);
 

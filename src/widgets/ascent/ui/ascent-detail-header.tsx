@@ -12,6 +12,7 @@ interface AscentDetailHeaderProps {
   onViewRoute: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  canManage?: boolean;
 }
 
 export function AscentDetailHeader({
@@ -19,6 +20,7 @@ export function AscentDetailHeader({
   onViewRoute,
   onEdit,
   onDelete,
+  canManage = false,
 }: AscentDetailHeaderProps) {
   const { t } = useTranslation();
   const colors = useThemeColor();
@@ -91,17 +93,21 @@ export function AscentDetailHeader({
             onViewRoute,
             t('ascentDetail.viewRoute')
           )}
-          {iconBtn(
-            <Pencil size={17} color={colors.foreground} />,
-            onEdit,
-            t('ascentDetail.edit')
-          )}
-          {iconBtn(
-            <Trash2 size={17} color={colors.destructive} />,
-            onDelete,
-            t('ascentDetail.delete'),
-            true
-          )}
+          {canManage
+            ? iconBtn(
+                <Pencil size={17} color={colors.foreground} />,
+                onEdit,
+                t('ascentDetail.edit')
+              )
+            : null}
+          {canManage
+            ? iconBtn(
+                <Trash2 size={17} color={colors.destructive} />,
+                onDelete,
+                t('ascentDetail.delete'),
+                true
+              )
+            : null}
         </View>
       </View>
     </View>

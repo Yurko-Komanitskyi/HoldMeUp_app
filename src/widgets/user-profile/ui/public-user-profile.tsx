@@ -202,11 +202,7 @@ export function PublicUserProfile() {
   ];
 
   const renderFollowListRow = React.useCallback(
-    (other: User, variant: 'followers' | 'following') => {
-      const busyUn =
-        unfollowMutation.isPending && unfollowMutation.variables?.followingId === other.id;
-      const busyF = followMutation.isPending && followMutation.variables?.followingId === other.id;
-
+    (other: User) => {
       return (
         <View
           style={{
@@ -235,44 +231,6 @@ export function PublicUserProfile() {
               ) : null}
             </View>
           </Pressable>
-          {variant === 'following' ? (
-            <Pressable
-              disabled={busyUn}
-              onPress={() => unfollowMutation.mutate({ followingId: other.id })}
-              style={{
-                paddingHorizontal: 14,
-                paddingVertical: 8,
-                borderRadius: 999,
-                borderWidth: 1,
-                borderColor: colors.border,
-              }}>
-              {busyUn ? (
-                <ActivityIndicator size="small" color={colors.foreground} />
-              ) : (
-                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
-                  {t('community.unfollow')}
-                </Text>
-              )}
-            </Pressable>
-          ) : (
-            <Pressable
-              disabled={busyF}
-              onPress={() => followMutation.mutate({ followingId: other.id })}
-              style={{
-                paddingHorizontal: 14,
-                paddingVertical: 8,
-                borderRadius: 999,
-                backgroundColor: ACCENT,
-              }}>
-              {busyF ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#fff' }}>
-                  {t('community.follow')}
-                </Text>
-              )}
-            </Pressable>
-          )}
         </View>
       );
     },
@@ -280,8 +238,6 @@ export function PublicUserProfile() {
       colors.border,
       colors.foreground,
       colors.mutedForeground,
-      followMutation,
-      unfollowMutation,
       goProfile,
       t,
     ]
@@ -644,7 +600,7 @@ export function PublicUserProfile() {
           <FlatList
             data={followersItems}
             keyExtractor={(f: Follow) => f.id}
-            renderItem={({ item }) => renderFollowListRow(item.follower, 'followers')}
+            renderItem={({ item }) => renderFollowListRow(item.follower)}
             contentContainerStyle={{ paddingBottom: 100 }}
             onEndReached={() => followersQuery.loadMore()}
             onEndReachedThreshold={0.4}
@@ -683,7 +639,7 @@ export function PublicUserProfile() {
           <FlatList
             data={followingItems}
             keyExtractor={(f: Follow) => f.id}
-            renderItem={({ item }) => renderFollowListRow(item.following, 'following')}
+            renderItem={({ item }) => renderFollowListRow(item.following)}
             contentContainerStyle={{ paddingBottom: 100 }}
             onEndReached={() => followingQuery.loadMore()}
             onEndReachedThreshold={0.4}

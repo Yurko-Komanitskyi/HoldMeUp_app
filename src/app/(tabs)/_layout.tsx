@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Tabs, useRouter } from 'expo-router';
-import { Home, Plus, Route, User, Users } from 'lucide-react-native';
+import { Home, Route, User, Users } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View } from 'react-native';
 
@@ -121,9 +121,7 @@ export default function TabsLayout() {
           <Tabs.Screen
             name="add-route"
             options={{
-              title: t('tabs.addRoute'),
-              href: user && (isSetter || isManager) ? '/add-route' : null,
-              tabBarIcon: ({ color, size }) => <Plus size={size} color={color} />,
+              href: null,
             }}
           />
 
@@ -143,7 +141,6 @@ export default function TabsLayout() {
             display: user ? 'flex' : 'none',
             position: 'absolute',
             alignSelf: 'center',
-            left: isManager || isSetter ? 138 : 'auto',
             bottom: 40 + bottomInset - 26,
             zIndex: 10,
           }}

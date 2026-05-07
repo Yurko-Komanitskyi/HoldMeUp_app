@@ -1,5 +1,6 @@
 import { Text } from '@/shared/ui/text';
 import { TouchableOpacity, View } from 'react-native';
+import { Plus } from 'lucide-react-native';
 import { RouteFilterBar } from './route-filter-bar';
 import { RouteGrade, RouteStatus, RouteStyle } from '@/entities/route/model/route';
 import { RouteFilters } from '@/entities/route/model/routeHooks';
@@ -20,6 +21,8 @@ export function RoutesHeader({
   canToggleArchived,
   showArchived,
   onToggleArchived,
+  canAddRoute,
+  onAddRoute,
 }: {
   totalCount: number;
   isLoading: boolean;
@@ -34,6 +37,8 @@ export function RoutesHeader({
   canToggleArchived?: boolean;
   showArchived?: boolean;
   onToggleArchived?: () => void;
+  canAddRoute?: boolean;
+  onAddRoute?: () => void;
 }) {
   const { t } = useTranslation();
   const colors = useThemeColor();
@@ -58,24 +63,48 @@ export function RoutesHeader({
           {t('routes.title')}
         </Text>
 
-        {!isLoading && totalCount > 0 && (
-          <View
-            style={{
-              paddingHorizontal: 10,
-              paddingVertical: 4,
-              borderRadius: 20,
-              backgroundColor: colors.secondary,
-            }}>
-            <Text
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {canAddRoute && onAddRoute ? (
+            <TouchableOpacity
+              onPress={onAddRoute}
+              activeOpacity={0.8}
               style={{
-                fontSize: 13,
-                fontWeight: '600',
-                color: colors.mutedForeground,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+                borderRadius: 20,
+                backgroundColor: colors.primary + '1f',
+                borderWidth: 1,
+                borderColor: colors.primary + '66',
               }}>
-              {totalCount}
-            </Text>
-          </View>
-        )}
+              <Plus size={13} color={colors.primary} />
+              <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>
+                {t('tabs.addRoute')}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+
+          {!isLoading && totalCount > 0 && (
+            <View
+              style={{
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                borderRadius: 20,
+                backgroundColor: colors.secondary,
+              }}>
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: '600',
+                  color: colors.mutedForeground,
+                }}>
+                {totalCount}
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
 
       {/* Filters */}

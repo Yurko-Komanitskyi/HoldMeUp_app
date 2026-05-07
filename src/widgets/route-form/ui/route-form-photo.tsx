@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { View, Pressable, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
-import Svg, { Circle as SvgCircle } from 'react-native-svg';
+import Svg, { Circle as SvgCircle, Path as SvgPath } from 'react-native-svg';
 import { ImagePlus, Upload, ScanLine, Pencil, X } from 'lucide-react-native';
 
 import { Text } from '@/shared/ui/text';
@@ -77,28 +77,33 @@ export function RouteFormPhoto({
             <Svg
               style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
               width="100%"
-              height="100%">
+              height="100%"
+              viewBox={`0 0 ${annotationData.canvasWidth} ${annotationData.canvasHeight}`}>
               {annotationData.shapes.map((shape, idx) => {
                 if (shape.type === 'circle') {
-                  const cx = (shape.cx / annotationData.canvasWidth) * 100;
-                  const cy = (shape.cy / annotationData.canvasHeight) * 100;
-                  const r =
-                    (shape.r /
-                      Math.max(annotationData.canvasWidth, annotationData.canvasHeight)) *
-                    100;
                   return (
                     <SvgCircle
                       key={shape.id ?? `c-${idx}`}
-                      cx={`${cx}%`}
-                      cy={`${cy}%`}
-                      r={`${r}%`}
+                      cx={shape.cx}
+                      cy={shape.cy}
+                      r={shape.r}
                       stroke={shape.color}
                       strokeWidth={2}
                       fill={shape.color + '40'}
                     />
                   );
                 }
-                return null;
+                return (
+                  <SvgPath
+                    key={shape.id ?? `p-${idx}`}
+                    d={shape.d}
+                    stroke={shape.color}
+                    strokeWidth={shape.strokeWidth}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                );
               })}
             </Svg>
           </View>

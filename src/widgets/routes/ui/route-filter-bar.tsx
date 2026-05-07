@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { Text } from '@/shared/ui/text';
 import { ACCENT } from '@/shared/config/palette';
 import { GRADES, ROUTE_COLORS } from '@/entities/route/lib/constants';
+import { gradeColorForRouteGrade } from '@/entities/route/lib/route-grade';
 import type { RouteFilters } from '@/entities/route/model/routeHooks';
 import { RouteGrade, RouteStyle, RouteStatus } from '@/entities/route/model/route';
 
@@ -451,6 +452,7 @@ export function RouteFilterBar({
               contentContainerStyle={{ paddingHorizontal: 16, gap: 6 }}>
               {GRADES.map((g) => {
                 const isActive = filters.grade?.includes(g as RouteGrade);
+                const gradeColor = gradeColorForRouteGrade(g);
                 return (
                   <TouchableOpacity
                     key={g}
@@ -473,21 +475,17 @@ export function RouteFilterBar({
                       borderRadius: 10,
                       borderWidth: 1,
                       borderColor: isActive
-                        ? ACCENT
+                        ? gradeColor
                         : isDark
-                          ? 'rgba(255,255,255,0.12)'
-                          : 'rgba(0,0,0,0.1)',
-                      backgroundColor: isActive ? ACCENT + '1a' : 'transparent',
+                          ? `${gradeColor}66`
+                          : `${gradeColor}55`,
+                      backgroundColor: isActive ? `${gradeColor}1f` : `${gradeColor}12`,
                     }}>
                     <Text
                       style={{
                         fontSize: 13,
                         fontWeight: isActive ? '700' : '400',
-                        color: isActive
-                          ? ACCENT
-                          : isDark
-                            ? 'rgba(255,255,255,0.55)'
-                            : 'rgba(0,0,0,0.55)',
+                        color: isActive ? gradeColor : isDark ? `${gradeColor}cc` : `${gradeColor}d9`,
                       }}>
                       {g}
                     </Text>

@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react-native';
-import { Lock, Mountain, Route as RouteGlyph, Zap } from 'lucide-react-native';
+import { Route as RouteGlyph } from 'lucide-react-native';
 
 import i18n from '@/shared/lib/i18n';
 
@@ -27,12 +27,12 @@ export function getRouteStyleLabel(style: string | null | undefined): string | n
 }
 
 const STYLE_ICONS: Record<string, LucideIcon> = {
-  boulder: Mountain,
+  boulder: RouteGlyph,
   lead: RouteGlyph,
-  top_rope: Lock,
-  speed: Zap,
+  top_rope: RouteGlyph,
+  speed: RouteGlyph,
 };
 
 export function getRouteStyleIcon(normalizedKey: string): LucideIcon {
-  return STYLE_ICONS[normalizedKey] ?? Mountain;
+  return STYLE_ICONS[normalizedKey] ?? RouteGlyph;
 }

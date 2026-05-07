@@ -87,6 +87,9 @@ export default function CommunityScreen() {
   const communityListRef = useScrollToTopOnFocus<FlatList<any>>();
   const [searchText, setSearchText] = React.useState('');
   const [debouncedSearch, setDebouncedSearch] = React.useState('');
+  const [locallyFollowed, setLocallyFollowed] = React.useState<
+    Record<string, UserWithFollowStatus>
+  >({});
 
   React.useEffect(() => {
     const id = setTimeout(() => setDebouncedSearch(searchText.trim()), 400);
@@ -107,6 +110,7 @@ export default function CommunityScreen() {
 
   const onRefresh = React.useCallback(() => {
     void (async () => {
+      setLocallyFollowed({});
       await queryClient.invalidateQueries({ queryKey: followKeys.all });
       await queryClient.refetchQueries({ queryKey: followKeys.all, type: 'active' });
       if (segment === 'search') {
@@ -166,8 +170,30 @@ export default function CommunityScreen() {
             disabled={busy || busyUn}
             onPress={() =>
               item.isFollowedByMe
-                ? unfollowMutation.mutate({ followingId: item.id })
-                : followMutation.mutate({ followingId: item.id })
+                ? unfollowMutation.mutate(
+                    { followingId: item.id },
+                    {
+                      onSuccess: () => {
+                        setLocallyFollowed((prev) => {
+                          if (!(item.id in prev)) return prev;
+                          const next = { ...prev };
+                          delete next[item.id];
+                          return next;
+                        });
+                      },
+                    }
+                  )
+                : followMutation.mutate(
+                    { followingId: item.id },
+                    {
+                      onSuccess: () => {
+                        setLocallyFollowed((prev) => ({
+                          ...prev,
+                          [item.id]: { ...item, isFollowedByMe: true },
+                        }));
+                      },
+                    }
+                  )
             }
             style={{
               paddingHorizontal: 14,
@@ -307,8 +333,16 @@ export default function CommunityScreen() {
     { key: 'followers', label: t('community.tabFollowers') },
   ];
 
-  const searchItems = searchQuery.items.filter((u) => u.id !== myId);
-  const suggestionItems = suggestionsQuery.items.filter((u) => u.id !== myId);
+  const searchItems = searchQuery.items
+    .filter((u) => u.id !== myId)
+    .map((u) => ({ ...u, isFollowedByMe: locallyFollowed[u.id]?.isFollowedByMe ?? u.isFollowedByMe }));
+  const suggestionItemsBase = suggestionsQuery.items
+    .filter((u) => u.id !== myId)
+    .map((u) => ({ ...u, isFollowedByMe: locallyFollowed[u.id]?.isFollowedByMe ?? u.isFollowedByMe }));
+  const pinnedSuggestionItems = Object.values(locallyFollowed).filter(
+    (u) => u.id !== myId && !suggestionItemsBase.some((x) => x.id === u.id)
+  );
+  const suggestionItems = [...suggestionItemsBase, ...pinnedSuggestionItems];
   const followingItems = followingQuery.items.filter((f) => f.following.id !== myId);
   const followersItems = followersQuery.items.filter((f) => f.follower.id !== myId);
 

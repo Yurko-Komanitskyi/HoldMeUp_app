@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { View, type FlatList } from 'react-native';
 import { useColorScheme } from 'nativewind';
+import { useRouter } from 'expo-router';
 import { ACCENT } from '@/shared/config/palette';
 
 import { InfiniteList } from '@/shared/ui/Infinite-list';
@@ -18,6 +19,7 @@ import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
 import { useScrollToTopOnFocus } from '@/shared/hooks/use-scroll-to-top-on-focus';
 
 export function RoutesWidget() {
+  const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -32,6 +34,7 @@ export function RoutesWidget() {
     currentMembershipRole === GymMemberRole.OWNER ||
     currentMembershipRole === GymMemberRole.MANAGER ||
     currentMembershipRole === GymMemberRole.SETTER;
+  const canAddRoute = currentMembershipRole === GymMemberRole.SETTER;
 
   const {
     filters,
@@ -115,6 +118,8 @@ export function RoutesWidget() {
             canToggleArchived={canLoadArchived}
             showArchived={showArchived}
             onToggleArchived={() => setShowArchived((prev) => !prev)}
+            canAddRoute={canAddRoute}
+            onAddRoute={() => router.push('/add-route' as never)}
           />
         }
         ListEmptyComponent={

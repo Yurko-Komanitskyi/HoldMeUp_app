@@ -55,6 +55,12 @@
         "projectId": "02bb8f4b-eb60-471e-900d-9b28dfe02d96"
       }
     },
-    "owner": "leptick"
+    "owner": "leptick",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/02bb8f4b-eb60-471e-900d-9b28dfe02d96"
+    }
   }
 }

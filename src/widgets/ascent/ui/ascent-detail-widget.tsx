@@ -96,6 +96,8 @@ export function AscentDetailWidget() {
     );
   }
 
+  const canManageAscent = Boolean(myId && ascent.userId && myId === ascent.userId);
+
   return (
     <View style={{ flex: 1, paddingBottom: insets.bottom }} className="bg-background">
       <ConfirmDialog
@@ -115,6 +117,7 @@ export function AscentDetailWidget() {
         onViewRoute={() => router.push(`/route/${ascent.routeId}` as never)}
         onEdit={() => setEditOpen(true)}
         onDelete={() => setDeleteOpen(true)}
+        canManage={canManageAscent}
       />
 
       <ScrollView
