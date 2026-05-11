@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -22,8 +21,9 @@ import { useScrollToTopOnFocus } from '@/shared/hooks/use-scroll-to-top-on-focus
 import { Input } from '@/shared/ui/input';
 import { Text } from '@/shared/ui/text';
 import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
+import { LeaderboardWidget } from '@/widgets/leaderboard/LeaderboardWidget';
 
-type Segment = 'search' | 'following' | 'followers';
+type Segment = 'search' | 'following' | 'followers' | 'leaderboard';
 
 function userDisplayName(user: User, t: (k: string) => string): string {
   const name = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
@@ -96,8 +96,9 @@ export default function CommunityScreen() {
     return () => clearTimeout(id);
   }, [searchText]);
 
+  const socialEnabled = segment !== 'leaderboard';
   const searchQuery = useFollowSearchQuery(debouncedSearch);
-  const suggestionsQuery = useFollowSuggestionsQuery(segment === 'search' && debouncedSearch.length === 0);
+  const suggestionsQuery = useFollowSuggestionsQuery(socialEnabled && segment === 'search' && debouncedSearch.length === 0);
   const followingQuery = useFollowersByFollowerIdQuery(myId);
   const followersQuery = useFollowingByFollowingIdQuery(myId);
 
@@ -105,6 +106,7 @@ export default function CommunityScreen() {
 
   const activeFollowing = segment === 'following';
   const activeFollowers = segment === 'followers';
+  const activeLeaderboard = segment === 'leaderboard';
 
   const listQuery = activeFollowing ? followingQuery : activeFollowers ? followersQuery : null;
 
@@ -331,6 +333,7 @@ export default function CommunityScreen() {
     { key: 'search', label: t('community.tabSearch') },
     { key: 'following', label: t('community.tabFollowing') },
     { key: 'followers', label: t('community.tabFollowers') },
+    { key: 'leaderboard', label: '🏆' },
   ];
 
   const searchItems = searchQuery.items
@@ -370,7 +373,7 @@ export default function CommunityScreen() {
       <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
         <Text
           style={{ fontSize: 22, fontWeight: '800', color: colors.foreground, marginBottom: 14 }}>
-          {t('community.title')}
+          {activeLeaderboard ? '🏆 Рейтинг' : t('community.title')}
         </Text>
 
         <View
@@ -422,9 +425,11 @@ export default function CommunityScreen() {
         ) : null}
       </View>
 
-      {listError ? (
+      {activeLeaderboard ? <LeaderboardWidget /> : null}
+
+      {!activeLeaderboard && listError ? (
         <QueryErrorPanel error={listError} onRetry={onRefresh} />
-      ) : segment === 'search' ? (
+      ) : !activeLeaderboard && segment === 'search' ? (
         showSuggestionsEmpty ? (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
             <Text style={{ fontSize: 15, color: colors.mutedForeground, textAlign: 'center' }}>
@@ -549,3 +554,4 @@ export default function CommunityScreen() {
     </View>
   );
 }
+
