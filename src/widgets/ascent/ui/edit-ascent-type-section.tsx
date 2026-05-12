@@ -7,10 +7,10 @@ import { SectionLabel } from '@/shared/ui/section-label';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import { useTranslation } from 'react-i18next';
 import { AscentType } from '@/entities/ascent/model/ascent';
-import { ASCENT_TYPES, normalizeAscentTypeMetaKey } from '@/entities/ascent/lib/constants';
+import { LOG_ASCENT_TYPES, normalizeAscentTypeMetaKey } from '@/entities/ascent/lib/constants';
 
 interface Props {
-  value: AscentType;
+  value: AscentType | undefined;
   cardBg: string;
   borderColor: string;
   onChange: (value: AscentType) => void;
@@ -31,7 +31,7 @@ export function EditAscentTypeSection({ value, cardBg, borderColor, onChange }: 
       }}>
       <SectionLabel>{t('logAscent.ascentType')}</SectionLabel>
       <View style={{ gap: 8 }}>
-        {ASCENT_TYPES.map((type) => {
+        {LOG_ASCENT_TYPES.map((type) => {
           const isActive = value === type.value;
           const labelKey = normalizeAscentTypeMetaKey(type.value);
           const IconComp = type.icon;

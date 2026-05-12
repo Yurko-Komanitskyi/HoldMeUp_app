@@ -26,6 +26,7 @@ import { FeelingSection } from '@/widgets/log-ascent/ui/sections/FeelingSection'
 import { GradePerceptionSection } from '@/widgets/log-ascent/ui/sections/GradePerceptionSection';
 import { NotesSection } from '@/widgets/log-ascent/ui/sections/NotesSection';
 import { VideoSection } from '@/widgets/log-ascent/ui/sections/VideoSection';
+import { IsPublicSection } from '@/widgets/log-ascent/ui/sections/IsPublicSection';
 
 interface EditAscentModalProps {
   visible: boolean;
@@ -119,12 +120,14 @@ export function EditAscentModal({ visible, ascent, onClose, onSaved }: EditAscen
             showsVerticalScrollIndicator={false}>
             {errorBanner ? <ServerErrorBanner message={errorBanner} /> : null}
 
-            <EditAscentTypeSection
-              value={state.ascentType}
-              cardBg={cardBg}
-              borderColor={borderColor}
-              onChange={actions.setAscentType}
-            />
+            {state.success && (
+              <EditAscentTypeSection
+                value={state.ascentType ?? undefined}
+                cardBg={cardBg}
+                borderColor={borderColor}
+                onChange={actions.setAscentType}
+              />
+            )}
 
             <ResultAttemptsSection
               success={state.success}
@@ -132,7 +135,6 @@ export function EditAscentModal({ visible, ascent, onClose, onSaved }: EditAscen
               cardBg={cardBg}
               borderColor={borderColor}
               onChangeSuccess={actions.setSuccess}
-              onChangeAttempt={actions.setAttemptNumber}
             />
 
             <EditAscentTimeSection
@@ -177,6 +179,13 @@ export function EditAscentModal({ visible, ascent, onClose, onSaved }: EditAscen
               inputBg={inputBg}
               inputColor={inputColor}
               placeholderColor={placeholderColor}
+            />
+
+            <IsPublicSection
+              isPublic={state.isPublic}
+              cardBg={cardBg}
+              borderColor={borderColor}
+              onChange={actions.setIsPublic}
             />
 
             <TouchableOpacity

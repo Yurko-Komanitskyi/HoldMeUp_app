@@ -45,6 +45,11 @@ export const ASCENT_TYPES = [
   },
 ] as const;
 
+/** Types available when logging a new ascent (ON_SIGHT excluded). */
+export const LOG_ASCENT_TYPES = ASCENT_TYPES.filter(
+  (t) => t.value !== 'ON_SIGHT'
+);
+
 export const FEELINGS = [
   { value: 1, icon: Frown, color: '#ef4444' },
   { value: 2, icon: Frown, color: '#f97316' },

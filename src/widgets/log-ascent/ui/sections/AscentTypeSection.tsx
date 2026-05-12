@@ -4,7 +4,7 @@ import { CheckCircle2 } from 'lucide-react-native';
 
 import { Text } from '@/shared/ui/text';
 import { SectionLabel } from '@/shared/ui/section-label';
-import { ASCENT_TYPES, normalizeAscentTypeMetaKey } from '@/entities/ascent/lib/constants';
+import { LOG_ASCENT_TYPES, normalizeAscentTypeMetaKey } from '@/entities/ascent/lib/constants';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import { useTranslation } from 'react-i18next';
 
@@ -38,7 +38,7 @@ export function AscentTypeSection({
       }}>
       <SectionLabel>{t('logAscent.ascentType')}</SectionLabel>
       <View style={{ gap: 8 }}>
-        {ASCENT_TYPES.map((type) => {
+        {LOG_ASCENT_TYPES.map((type) => {
           const isActive = ascentType === type.value;
           const labelKey = normalizeAscentTypeMetaKey(type.value);
           const IconComp = type.icon;

@@ -22,7 +22,7 @@ export interface Ascent {
   routeName?: string;
   routeGrade?: string;
   routeColor?: string;
-  type: AscentType;
+  type: AscentType | null;
   date: string;
   timeSeconds: number | null;
   attemptNumber: number | null;
@@ -31,6 +31,7 @@ export interface Ascent {
   feeling: number | null;
   notes: string | null;
   videoUrl: string | null;
+  isPublic?: boolean;
   reactions?: AscentReaction[];
   createdAt: string;
   updatedAt: string;

@@ -24,13 +24,14 @@ export type LogAscentSubmitOutcome =
   | { outcome: 'skipped' };
 
 interface LogAscentState {
-  ascentType: string;
+  ascentType: string | null;
   success: boolean;
   attemptNumber: number;
   feeling: Feeling;
   gradePerception: string | null;
   notes: string;
   videoUrl: string;
+  isPublic: boolean;
   serverError: string | null;
 }
 
@@ -60,6 +61,7 @@ interface UseLogAscentFormResult {
     setGradePerception: (v: string | null) => void;
     setNotes: (v: string) => void;
     setVideoUrl: (v: string) => void;
+    setIsPublic: (v: boolean) => void;
     clearServerError: () => void;
   };
   submit: () => Promise<LogAscentSubmitOutcome>;
@@ -81,6 +83,7 @@ export function useLogAscentForm(
     gradePerception: null,
     notes: '',
     videoUrl: '',
+    isPublic: true,
     serverError: null,
   }).current;
 
@@ -105,6 +108,9 @@ export function useLogAscentForm(
     if (!userId || !routeId) return;
     const nextAttempt = Math.max(1, previousAttempts + 1);
     setState((prev) => {
+      if (!prev.success) {
+        return prev.attemptNumber === nextAttempt ? prev : { ...prev, attemptNumber: nextAttempt };
+      }
       const nextType = previousAttempts > 0 && prev.ascentType === 'FLASH' ? 'REDPOINT' : prev.ascentType;
       if (prev.attemptNumber === nextAttempt && prev.ascentType === nextType) return prev;
       return { ...prev, attemptNumber: nextAttempt, ascentType: nextType };
@@ -130,7 +136,9 @@ export function useLogAscentForm(
     if (!userId || !routeId) return { outcome: 'skipped' };
     setField('serverError', null);
     const nextErrors: LogAscentValidationErrors = {};
-    if (!state.ascentType?.trim()) {
+
+    // Type only required when the ascent was successful
+    if (state.success && !state.ascentType?.trim()) {
       nextErrors.ascentType = 'logAscent.validationTypeRequired';
     }
     if (!Number.isFinite(state.attemptNumber) || state.attemptNumber < 1) {
@@ -138,8 +146,7 @@ export function useLogAscentForm(
     } else if (state.attemptNumber > ATTEMPT_MAX) {
       nextErrors.attemptNumber = 'logAscent.validationAttemptMax';
     }
-    const notesLen = state.notes.length;
-    if (notesLen > NOTES_MAX_LEN) {
+    if (state.notes.length > NOTES_MAX_LEN) {
       nextErrors.notes = 'logAscent.validationNotesMax';
     }
     const video = state.videoUrl.trim();
@@ -154,10 +161,14 @@ export function useLogAscentForm(
     }
 
     try {
+      const resolvedType = state.success
+        ? (previousAttempts > 0 && state.ascentType === 'FLASH' ? 'REDPOINT' : state.ascentType)
+        : null;
+
       const payload: CreateAscentInput = {
         routeId,
         userId,
-        type: previousAttempts > 0 && state.ascentType === 'FLASH' ? 'REDPOINT' : state.ascentType,
+        type: resolvedType,
         date: new Date().toISOString(),
         success: state.success,
         attemptNumber: state.attemptNumber,
@@ -166,6 +177,7 @@ export function useLogAscentForm(
         gradePerception: state.gradePerception ?? null,
         notes: state.notes.trim() || null,
         videoUrl: state.videoUrl.trim() || null,
+        isPublic: state.isPublic,
       };
 
       await mutation.mutateAsync(payload);
@@ -188,7 +200,17 @@ export function useLogAscentForm(
     validationErrors,
     actions: {
       setAscentType: (v) => setField('ascentType', v),
-      setSuccess: (v) => setField('success', v),
+      setSuccess: (v) => {
+        setState((prev) => ({
+          ...prev,
+          success: v,
+          // Clear type on failure; restore default on success
+          ascentType: v
+            ? (prev.ascentType ?? (previousAttempts > 0 ? 'REDPOINT' : 'FLASH'))
+            : null,
+        }));
+        setValidationErrors((prev) => ({ ...prev, ascentType: undefined }));
+      },
       setAttemptNumber: (updater) => {
         setState((prev) => ({ ...prev, attemptNumber: updater(prev.attemptNumber) }));
         setValidationErrors((prev) => ({ ...prev, attemptNumber: undefined }));
@@ -197,6 +219,7 @@ export function useLogAscentForm(
       setGradePerception: (v) => setField('gradePerception', v),
       setNotes: (v) => setField('notes', v),
       setVideoUrl: (v) => setField('videoUrl', v),
+      setIsPublic: (v) => setField('isPublic', v),
       clearServerError: () => setField('serverError', null),
     },
     submit,
@@ -204,4 +227,3 @@ export function useLogAscentForm(
     reset: resetForm,
   };
 }
-

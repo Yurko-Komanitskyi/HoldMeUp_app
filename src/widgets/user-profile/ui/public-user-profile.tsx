@@ -8,6 +8,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { useColorScheme } from 'nativewind';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
@@ -33,6 +34,125 @@ import { ACCENT } from '@/shared/config/palette';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import { Text } from '@/shared/ui/text';
 import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
+import { calculateScore } from '@/entities/leaderboard/lib/scoring';
+import type { RawAscent } from '@/entities/leaderboard/lib/scoring';
+import type { Ascent } from '@/entities/ascent/model/ascent';
+
+/* ─── climbing stats card ───────────────────────────────────────── */
+
+const TYPE_META: { key: string; label: string; color: string }[] = [
+  { key: 'ON_SIGHT',  label: 'On-sight',  color: '#a855f7' },
+  { key: 'FLASH',     label: 'Flash',     color: ACCENT },
+  { key: 'REDPOINT',  label: 'Redpoint',  color: '#22c55e' },
+  { key: 'TOP',       label: 'Top',       color: '#f97316' },
+];
+
+export function ClimbingStatsCard({ ascents }: { ascents: Ascent[] }) {
+  const colors = useThemeColor();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
+  const score = React.useMemo(() => {
+    const raw: RawAscent[] = ascents
+      .filter((a) => a.type != null)
+      .map((a) => ({
+        routeId: a.routeId,
+        grade:   a.routeGrade ?? '',
+        type:    a.type!,
+        success: a.success,
+        date:    a.date,
+      }));
+    return calculateScore(raw);
+  }, [ascents]);
+
+  const typeCounts = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const a of ascents) {
+      if (a.success && a.type != null) {
+        counts[a.type] = (counts[a.type] ?? 0) + 1;
+      }
+    }
+    return counts;
+  }, [ascents]);
+
+  const maxTypeCount = Math.max(...Object.values(typeCounts), 1);
+
+  if (ascents.length === 0) return null;
+
+  const border = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+  const muted  = isDark ? 'rgba(255,255,255,0.4)'  : 'rgba(0,0,0,0.4)';
+  const cardBg = isDark ? 'rgba(255,255,255,0.04)' : '#ffffff';
+
+  return (
+    <View
+      style={{
+        borderRadius: 18,
+        borderWidth: 1,
+        borderColor: border,
+        backgroundColor: cardBg,
+        overflow: 'hidden',
+        marginBottom: 20,
+      }}>
+      {/* Summary row */}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingHorizontal: 14,
+          paddingVertical: 12,
+          borderBottomWidth: 1,
+          borderBottomColor: border,
+          gap: 8,
+        }}>
+        <Text style={{ fontSize: 11, fontWeight: '800', color: muted, flex: 1, letterSpacing: 0.8 }}>
+          СТАТИСТИКА
+        </Text>
+        <View style={{ alignItems: 'flex-end' }}>
+          <Text style={{ fontSize: 18, fontWeight: '900', color: ACCENT }}>
+            {score.totalPoints.toLocaleString()} pts
+          </Text>
+          <Text style={{ fontSize: 11, color: muted }}>
+            {score.uniqueRoutes} маршр. · max {score.maxGrade ?? '—'}
+          </Text>
+        </View>
+      </View>
+
+      {/* Type breakdown */}
+      <View style={{ paddingHorizontal: 14, paddingVertical: 12, gap: 8 }}>
+        {TYPE_META.map(({ key, label, color }) => {
+          const count = typeCounts[key] ?? 0;
+          if (count === 0) return null;
+          const ratio = count / maxTypeCount;
+          return (
+            <View key={key} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Text style={{ fontSize: 12, color: muted, width: 64 }}>{label}</Text>
+              <View
+                style={{
+                  flex: 1,
+                  height: 6,
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+                  borderRadius: 3,
+                  overflow: 'hidden',
+                }}>
+                <View
+                  style={{
+                    height: 6,
+                    width: `${ratio * 100}%`,
+                    backgroundColor: color,
+                    borderRadius: 3,
+                  }}
+                />
+              </View>
+              <Text style={{ fontSize: 12, fontWeight: '700', color, width: 24, textAlign: 'right' }}>
+                {count}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
 
 type Segment = 'overview' | 'followers' | 'following';
 
@@ -520,7 +640,11 @@ export function PublicUserProfile() {
             </Pressable>
           </View>
 
-          <View style={{ marginTop: 28, marginBottom: 10 }}>
+          <View style={{ marginTop: 24 }}>
+            <ClimbingStatsCard ascents={ascentsQuery.items as Ascent[]} />
+          </View>
+
+          <View style={{ marginBottom: 10 }}>
             <Text className="text-base font-bold text-foreground">{t('profile.ascentsSection')}</Text>
           </View>
 

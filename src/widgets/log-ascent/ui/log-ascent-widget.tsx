@@ -30,6 +30,7 @@ import { FeelingSection } from '@/widgets/log-ascent/ui/sections/FeelingSection'
 import { GradePerceptionSection } from '@/widgets/log-ascent/ui/sections/GradePerceptionSection';
 import { NotesSection } from '@/widgets/log-ascent/ui/sections/NotesSection';
 import { VideoSection } from '@/widgets/log-ascent/ui/sections/VideoSection';
+import { IsPublicSection } from '@/widgets/log-ascent/ui/sections/IsPublicSection';
 import { useStopwatch } from '@/features/stopwatch/model/useStopwatch';
 import { useToastStore } from '@/shared/ui/app-toast';
 import { useTranslation } from 'react-i18next';
@@ -92,6 +93,7 @@ export function LogAscentWidget() {
     gradePerception,
     notes,
     videoUrl,
+    isPublic,
     serverError,
   } = state;
   const {
@@ -101,6 +103,7 @@ export function LogAscentWidget() {
     setGradePerception,
     setNotes,
     setVideoUrl,
+    setIsPublic,
   } = actions;
 
   const cardBg = colors.card;
@@ -263,18 +266,20 @@ export function LogAscentWidget() {
           {/* Stopwatch */}
           <StopwatchCard {...stopwatch} />
 
-          <View onLayout={captureSectionY('ascentType')}>
-            <AscentTypeSection
-              ascentType={ascentType}
-              disableFlash={previousAttempts > 0}
-              errorText={
-                validationErrors.ascentType ? t(validationErrors.ascentType) : undefined
-              }
-              cardBg={cardBg}
-              borderColor={borderColor}
-              onChange={setAscentType}
-            />
-          </View>
+          {success && (
+            <View onLayout={captureSectionY('ascentType')}>
+              <AscentTypeSection
+                ascentType={ascentType ?? ''}
+                disableFlash={previousAttempts > 0}
+                errorText={
+                  validationErrors.ascentType ? t(validationErrors.ascentType) : undefined
+                }
+                cardBg={cardBg}
+                borderColor={borderColor}
+                onChange={setAscentType}
+              />
+            </View>
+          )}
 
           <View onLayout={captureSectionY('attemptNumber')}>
             <ResultAttemptsSection
@@ -328,6 +333,13 @@ export function LogAscentWidget() {
               placeholderColor={placeholderColor}
             />
           </View>
+
+          <IsPublicSection
+            isPublic={isPublic}
+            cardBg={cardBg}
+            borderColor={borderColor}
+            onChange={setIsPublic}
+          />
         </ScrollView>
       </KeyboardAvoidingView>
 

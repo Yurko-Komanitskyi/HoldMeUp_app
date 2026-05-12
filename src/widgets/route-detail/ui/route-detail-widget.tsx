@@ -20,6 +20,7 @@ import { RouteDetailTags } from './route-detail-tags';
 import { RouteDetailDescription } from './route-detail-description';
 import { RouteDetailTip } from './route-detail-tip';
 import { RouteDetailCta } from './route-detail-cta';
+import { RouteDetailScoreCard } from './route-detail-score-card';
 import { useTranslation } from 'react-i18next';
 
 export function RouteDetailWidget() {
@@ -115,6 +116,8 @@ export function RouteDetailWidget() {
           rating={rating}
           isDark={isDark}
         />
+
+        <RouteDetailScoreCard grade={route.grade} />
 
         <RouteDetailInfoCard
           sectorName={route.sector?.name}

@@ -16,7 +16,7 @@ export interface AddAscentReactionInput {
 export interface CreateAscentInput {
   userId: string;
   routeId: string;
-  type: string;
+  type: string | null;
   date: string;
   timeSeconds?: number | null;
   attemptNumber?: number | null;
@@ -25,13 +25,14 @@ export interface CreateAscentInput {
   feeling?: number | null;
   notes?: string | null;
   videoUrl?: string | null;
+  isPublic?: boolean;
 }
 
 export interface UpdateAscentInput {
   id: string;
   userId?: string;
   routeId?: string;
-  type?: string;
+  type?: string | null;
   date?: string;
   timeSeconds?: number | null;
   attemptNumber?: number | null;
@@ -40,5 +41,6 @@ export interface UpdateAscentInput {
   feeling?: number | null;
   notes?: string | null;
   videoUrl?: string | null;
+  isPublic?: boolean;
 }
 

@@ -182,6 +182,10 @@ export default function RootLayout() {
                 headerShown: false,
               }}
             />
+            <Stack.Screen
+              name="leaderboard"
+              options={{ headerShown: false }}
+            />
           </Stack>
         </AppBootstrap>
         <PortalHost />

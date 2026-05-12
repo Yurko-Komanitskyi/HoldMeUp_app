@@ -8,7 +8,7 @@ import { statsKeys } from '@/entities/stats/api/statsApi';
 import { AscentType, type Ascent } from '@/entities/ascent/model/ascent';
 
 export interface EditAscentFormState {
-  ascentType: AscentType;
+  ascentType: AscentType | null;
   success: boolean;
   attemptNumber: number;
   feeling: string | null;
@@ -16,12 +16,13 @@ export interface EditAscentFormState {
   notes: string;
   videoUrl: string;
   timeInput: string;
+  isPublic: boolean;
   serverError: string | null;
 }
 
 function ascentToState(ascent: Ascent): EditAscentFormState {
   return {
-    ascentType: ascent.type,
+    ascentType: ascent.success ? (ascent.type ?? null) : null,
     success: ascent.success,
     attemptNumber: ascent.attemptNumber ?? 1,
     feeling: ascent.feeling != null ? String(ascent.feeling) : null,
@@ -29,6 +30,7 @@ function ascentToState(ascent: Ascent): EditAscentFormState {
     notes: ascent.notes ?? '',
     videoUrl: ascent.videoUrl ?? '',
     timeInput: ascent.timeSeconds != null ? String(ascent.timeSeconds) : '',
+    isPublic: ascent.isPublic ?? true,
     serverError: null,
   };
 }
@@ -62,7 +64,16 @@ export function useEditAscentForm(ascent: Ascent | undefined, visible: boolean) 
 
   const actions = {
     setAscentType: (v: AscentType) => setField('ascentType', v),
-    setSuccess: (v: boolean) => setField('success', v),
+    setSuccess: (v: boolean) => {
+      setState((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          success: v,
+          ascentType: v ? (prev.ascentType ?? AscentType.REDPOINT) : null,
+        };
+      });
+    },
     setAttemptNumber: (updater: (n: number) => number) =>
       setState((prev) => (prev ? { ...prev, attemptNumber: updater(prev.attemptNumber) } : prev)),
     setFeeling: (v: string | null) => setField('feeling', v),
@@ -70,6 +81,7 @@ export function useEditAscentForm(ascent: Ascent | undefined, visible: boolean) 
     setNotes: (v: string) => setField('notes', v),
     setVideoUrl: (v: string) => setField('videoUrl', v),
     setTimeInput: (v: string) => setField('timeInput', v),
+    setIsPublic: (v: boolean) => setField('isPublic', v),
     clearServerError: () => setField('serverError', null),
     resetFromAscent: () => {
       if (ascent) setState(ascentToState(ascent));
@@ -94,7 +106,7 @@ export function useEditAscentForm(ascent: Ascent | undefined, visible: boolean) 
 
     const payload: UpdateAscentInput = {
       id: ascent.id,
-      type: state.ascentType,
+      type: state.success ? state.ascentType : null,
       success: state.success,
       attemptNumber: state.attemptNumber,
       timeSeconds,
@@ -102,6 +114,7 @@ export function useEditAscentForm(ascent: Ascent | undefined, visible: boolean) 
       gradePerception: state.gradePerception,
       notes: state.notes.trim() || null,
       videoUrl: state.videoUrl.trim() || null,
+      isPublic: state.isPublic,
     };
 
     try {

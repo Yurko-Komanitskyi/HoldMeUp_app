@@ -29,6 +29,7 @@ import { useGymMemberStore } from '@/entities/gym-member/model/gymMemberStore';
 import { useMyStatsQuery } from '@/entities/stats/model/statsHooks';
 import { QueryErrorPanel } from '@/shared/ui/query-error-panel';
 import { ProfileSettingsModal } from '@/widgets/profile/ui/profile-settings-modal';
+import { ClimbingStatsCard } from '@/widgets/user-profile/ui/public-user-profile';
 import { useAscentsQuery } from '@/entities/ascent/model/ascentHooks';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import { useScrollToTopOnFocus } from '@/shared/hooks/use-scroll-to-top-on-focus';
@@ -365,6 +366,10 @@ export function ProfileWidget() {
           backgroundColor: colors.border,
         }}
       />
+
+      <View style={{ marginTop: 20, paddingHorizontal: horizontalPad }}>
+        <ClimbingStatsCard ascents={ascentItems as Ascent[]} />
+      </View>
 
       <View className="mt-5 px-4">
         <View className="mb-3 flex-row items-center justify-between">

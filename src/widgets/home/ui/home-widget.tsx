@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { View, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
-import { Dumbbell, ChevronRight } from 'lucide-react-native';
+import { Pressable, View, ScrollView, RefreshControl } from 'react-native';
+import { Dumbbell, ChevronRight, Trophy } from 'lucide-react-native';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import { useScrollToTopOnFocus } from '@/shared/hooks/use-scroll-to-top-on-focus';
 import { useRouter } from 'expo-router';
@@ -123,6 +123,167 @@ export function HomeWidget() {
                   flash={weekStatsLoading ? '…' : weekStats.flash}
                 />
               )}
+              {/* Leaderboard — картка в стилі додатку */}
+              <Pressable
+                onPress={() => router.push('/leaderboard' as never)}
+                style={({ pressed }) => ({
+                  marginHorizontal: 20,
+                  borderRadius: 22,
+                  backgroundColor: colors.card,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  overflow: 'hidden',
+                  opacity: pressed ? 0.92 : 1,
+                  minHeight: 128,
+                  shadowColor: '#261d17',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: colors.isDark ? 0.35 : 0.06,
+                  shadowRadius: 12,
+                  elevation: 3,
+                })}
+              >
+                <View
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: 4,
+                    backgroundColor: ACCENT,
+                    opacity: 0.85,
+                  }}
+                />
+                <View style={{ flexDirection: 'row', alignItems: 'stretch', flex: 1 }}>
+                  <View
+                    style={{
+                      flex: 1,
+                      paddingLeft: 26,
+                      paddingVertical: 20,
+                      paddingRight: 12,
+                      gap: 8,
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <View
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 18,
+                          backgroundColor: colors.secondary,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                        }}
+                      >
+                        <Trophy size={18} color={colors.primary} strokeWidth={2.2} />
+                      </View>
+                      <Text
+                        style={{
+                          fontSize: 10,
+                          fontWeight: '800',
+                          color: colors.mutedForeground,
+                          letterSpacing: 1.3,
+                        }}
+                      >
+                        РЕЙТИНГ ЗАЛУ
+                      </Text>
+                    </View>
+                    <Text
+                      style={{
+                        fontSize: 20,
+                        fontWeight: '900',
+                        color: colors.foreground,
+                        lineHeight: 25,
+                      }}
+                    >
+                      Хто лідирує{'\n'}цього місяця?
+                    </Text>
+                    <View
+                      style={{
+                        marginTop: 2,
+                        alignSelf: 'flex-start',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 4,
+                      }}
+                    >
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: ACCENT }}>Переглянути</Text>
+                      <ChevronRight size={15} color={ACCENT} strokeWidth={2.5} />
+                    </View>
+                  </View>
+
+                  <View
+                    style={{
+                      width: 108,
+                      alignItems: 'center',
+                      justifyContent: 'flex-end',
+                      paddingRight: 16,
+                      paddingBottom: 14,
+                      backgroundColor: colors.secondary,
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 5 }}>
+                      <View style={{ alignItems: 'center', gap: 4 }}>
+                        <View
+                          style={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: 12,
+                            backgroundColor: ACCENT + '35',
+                          }}
+                        />
+                        <View
+                          style={{
+                            width: 26,
+                            height: 40,
+                            borderRadius: 6,
+                            backgroundColor: ACCENT + '28',
+                          }}
+                        />
+                      </View>
+                      <View style={{ alignItems: 'center', gap: 4 }}>
+                        <View
+                          style={{
+                            width: 30,
+                            height: 30,
+                            borderRadius: 15,
+                            backgroundColor: ACCENT + '55',
+                          }}
+                        />
+                        <View
+                          style={{
+                            width: 28,
+                            height: 56,
+                            borderRadius: 6,
+                            backgroundColor: ACCENT + '40',
+                          }}
+                        />
+                      </View>
+                      <View style={{ alignItems: 'center', gap: 4 }}>
+                        <View
+                          style={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: 12,
+                            backgroundColor: ACCENT + '30',
+                          }}
+                        />
+                        <View
+                          style={{
+                            width: 26,
+                            height: 28,
+                            borderRadius: 6,
+                            backgroundColor: ACCENT + '22',
+                          }}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </Pressable>
+
               {routesError && !routesLoading ? (
                 <View style={{ paddingHorizontal: 16 }}>
                   <View
