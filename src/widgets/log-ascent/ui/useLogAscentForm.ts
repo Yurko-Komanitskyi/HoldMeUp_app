@@ -5,6 +5,8 @@ import { parseApiError } from '@/shared/lib/api-error';
 import { createAscent, ascentKeys, fetchAscents } from '@/entities/ascent/api/ascentApi';
 import type { CreateAscentInput } from '@/entities/ascent/api/types';
 import { statsKeys } from '@/entities/stats/api/statsApi';
+import { recalculateMyAchievements } from '@/entities/achievement/api/achievementApi';
+import { useAchievementToastStore } from '@/shared/ui/achievement-unlock-toast';
 
 type Feeling = string | null;
 
@@ -75,6 +77,7 @@ export function useLogAscentForm(
   timeSeconds: number | null
 ): UseLogAscentFormResult {
   const queryClient = useQueryClient();
+  const enqueueAchievement = useAchievementToastStore((s) => s.enqueue);
   const initialState = React.useRef<LogAscentState>({
     ascentType: 'FLASH',
     success: true,
@@ -129,6 +132,9 @@ export function useLogAscentForm(
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ascentKeys.all });
       queryClient.invalidateQueries({ queryKey: statsKeys.all });
+      recalculateMyAchievements().then((newlyEarned) => {
+        if (newlyEarned.length > 0) enqueueAchievement(newlyEarned);
+      }).catch(() => {});
     },
   });
 

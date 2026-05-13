@@ -16,6 +16,7 @@ import { useAppInterceptors } from '@/shared/hooks/useAppInterceptors';
 import { AppHeader } from '@/features/header/ui/header';
 import { AppLoadingScreen } from '@/shared/ui/app-loading-screen';
 import { AppToastOverlay } from '@/shared/ui/app-toast';
+import { AchievementUnlockOverlay } from '@/shared/ui/achievement-unlock-toast';
 import { queryClient } from '@/shared/lib/queryClient';
 import { NAV_THEME } from '@/shared/lib/theme';
 import i18n from '@/shared/lib/i18n';
@@ -186,10 +187,15 @@ export default function RootLayout() {
               name="leaderboard"
               options={{ headerShown: false }}
             />
+            <Stack.Screen
+              name="achievements"
+              options={{ headerShown: false }}
+            />
           </Stack>
         </AppBootstrap>
         <PortalHost />
         <AppToastOverlay />
+        <AchievementUnlockOverlay isDark={theme === 'dark'} />
       </ThemeProvider>
     </QueryClientProvider>
   );

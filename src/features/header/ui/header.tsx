@@ -2,7 +2,7 @@ import * as React from 'react';
 import { View, Pressable, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, useRouter } from 'expo-router';
-import { Bell, ChevronDown, Building2, Settings2 } from 'lucide-react-native';
+import { Trophy, ChevronDown, Building2, Settings2 } from 'lucide-react-native';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
 
 import { Button } from '@/shared/ui/button';
@@ -128,12 +128,11 @@ function AppHeader() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-9 w-9 rounded-xl bg-card/60">
-                <Icon as={Bell} size={16} color={foregroundColor} />
-              </Button>
+              <Pressable
+                onPress={() => router.push('/achievements' as never)}
+                className="h-9 w-9 rounded-xl bg-card/60 items-center justify-center">
+                <Icon as={Trophy} size={16} color={foregroundColor} />
+              </Pressable>
             </View>
           </View>
         ) : (
