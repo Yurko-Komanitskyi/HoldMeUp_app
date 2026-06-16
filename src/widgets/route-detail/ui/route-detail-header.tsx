@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react-native';
 import type { ColorValue } from 'react-native';
+import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 
 import { Text } from '@/shared/ui/text';
 import { useTranslation } from 'react-i18next';
@@ -138,7 +139,9 @@ export function RouteDetailHeader({
 
         {/* Grade + badges + name */}
         <View style={{ paddingHorizontal: 20, paddingBottom: 28, gap: 10 }}>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+          <Animated.View
+            entering={FadeIn.delay(60).duration(320)}
+            style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
             {/* Grade */}
             <View
               style={{
@@ -184,8 +187,9 @@ export function RouteDetailHeader({
                 <Text style={{ fontSize: 11, fontWeight: '700', color: '#fff' }}>{status.label}</Text>
               </View>
             )}
-          </View>
-          <Text
+          </Animated.View>
+          <Animated.Text
+            entering={FadeInDown.delay(100).duration(360).springify().damping(18)}
             style={{
               fontSize: 32,
               fontWeight: '900',
@@ -194,7 +198,7 @@ export function RouteDetailHeader({
               lineHeight: 36,
             }}>
             {routeName}
-          </Text>
+          </Animated.Text>
         </View>
       </SafeAreaView>
     </LinearGradient>

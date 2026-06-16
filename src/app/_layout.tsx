@@ -104,13 +104,19 @@ export default function RootLayout() {
       <ThemeProvider value={NAV_THEME[theme]}>
         <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
         <AppBootstrap>
-          <Stack screenOptions={{ header: () => <AppHeader /> }}>
-            <Stack.Screen name="(tabs)" options={{ title: t('tabs.home') }} />
+          <Stack
+            screenOptions={{
+              header: () => <AppHeader />,
+              animation: 'fade_from_bottom',
+              animationDuration: 260,
+            }}>
+            <Stack.Screen name="(tabs)" options={{ title: t('tabs.home'), animation: 'none' }} />
             <Stack.Screen
               name="auth/login"
               options={{
                 title: t('common.login'),
                 headerShown: false,
+                animation: 'fade',
               }}
             />
             <Stack.Screen
@@ -118,6 +124,7 @@ export default function RootLayout() {
               options={{
                 title: t('common.register'),
                 headerShown: false,
+                animation: 'slide_from_right',
               }}
             />
             <Stack.Screen

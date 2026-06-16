@@ -1,6 +1,14 @@
 import * as React from 'react';
-import { Pressable, View, ScrollView, RefreshControl } from 'react-native';
+import { Pressable, View, RefreshControl } from 'react-native';
 import { Dumbbell, ChevronRight, Trophy } from 'lucide-react-native';
+import Animated, {
+  FadeInDown,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  interpolate,
+  Extrapolation,
+} from 'react-native-reanimated';
 import { useThemeColor } from '@/shared/hooks/use-theme-color';
 import { useScrollToTopOnFocus } from '@/shared/hooks/use-scroll-to-top-on-focus';
 import { useRouter } from 'expo-router';
@@ -28,7 +36,17 @@ export function HomeWidget() {
   const user = useUserStore((s) => s.currentUser);
 
   const [pickerVisible, setPickerVisible] = React.useState(false);
-  const homeScrollRef = useScrollToTopOnFocus<ScrollView>();
+  const homeScrollRef = useScrollToTopOnFocus<Animated.ScrollView>();
+  const scrollY = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler((e) => {
+    scrollY.value = e.contentOffset.y;
+  });
+
+  // Leaderboard card: subtle parallax scale on scroll
+  const leaderboardStyle = useAnimatedStyle(() => {
+    const scale = interpolate(scrollY.value, [0, 200], [1, 0.97], Extrapolation.CLAMP);
+    return { transform: [{ scale }] };
+  });
   const {
     hasGym,
     ascents,
@@ -77,11 +95,13 @@ export function HomeWidget() {
         onSelect={handleRouteSelect}
       />
 
-      <ScrollView
+      <Animated.ScrollView
         ref={homeScrollRef}
         style={{ flex: 1, backgroundColor: colors.background }}
         contentContainerStyle={{ paddingBottom: 110 }}
         showsVerticalScrollIndicator={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={ACCENT} />
         }>
@@ -97,7 +117,9 @@ export function HomeWidget() {
           ) : null}
           {hasGym ? (
             <>
-              <AscentFeedSection />
+              <Animated.View entering={FadeInDown.delay(0).duration(380).springify().damping(18)}>
+                <AscentFeedSection />
+              </Animated.View>
               {weekStatsError && !weekStatsLoading ? (
                 <View style={{ paddingHorizontal: 16 }}>
                   <Text
@@ -124,6 +146,7 @@ export function HomeWidget() {
                 />
               )}
               {/* Leaderboard — картка в стилі додатку */}
+              <Animated.View entering={FadeInDown.delay(140).duration(380).springify().damping(18)} style={leaderboardStyle}>
               <Pressable
                 onPress={() => router.push('/leaderboard' as never)}
                 style={({ pressed }) => ({
@@ -283,7 +306,9 @@ export function HomeWidget() {
                   </View>
                 </View>
               </Pressable>
+              </Animated.View>
 
+              <Animated.View entering={FadeInDown.delay(260).duration(380).springify().damping(18)}>
               {routesError && !routesLoading ? (
                 <View style={{ paddingHorizontal: 16 }}>
                   <View
@@ -312,6 +337,9 @@ export function HomeWidget() {
               ) : (
                 <FeaturedRoutes routes={routes.slice(0, 3)} isLoading={routesLoading} />
               )}
+              </Animated.View>
+
+              <Animated.View entering={FadeInDown.delay(360).duration(380).springify().damping(18)}>
               {ascentsError && !ascentsLoading ? (
                 <View style={{ paddingHorizontal: 16 }}>
                   <View
@@ -344,6 +372,7 @@ export function HomeWidget() {
                   onAddPress={() => setPickerVisible(true)}
                 />
               )}
+              </Animated.View>
             </>
           ) : (
             <View
@@ -398,7 +427,7 @@ export function HomeWidget() {
             </View>
           )}
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
     </>
   );
 }

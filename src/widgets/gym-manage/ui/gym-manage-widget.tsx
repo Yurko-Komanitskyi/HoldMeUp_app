@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { View, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
@@ -129,7 +130,9 @@ export function GymManageWidget() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={ACCENT} />}>
 
         {memberships.length > 0 && (
-          <View style={{ gap: 10 }}>
+          <Animated.View
+            entering={FadeInDown.delay(0).duration(380).springify().damping(18)}
+            style={{ gap: 10 }}>
             <SectionTitle title={t('gym.manageSection')} />
             {memberships.map((m) => (
               <MembershipCard
@@ -140,10 +143,12 @@ export function GymManageWidget() {
                 onLeavePress={handleLeave}
               />
             ))}
-          </View>
+          </Animated.View>
         )}
 
-        <View style={{ gap: 10 }}>
+        <Animated.View
+          entering={FadeInDown.delay(80).duration(380).springify().damping(18)}
+          style={{ gap: 10 }}>
           <SectionTitle title={t('gym.availableSection')} />
           {gymsQueryError && !isLoading ? (
             <QueryErrorPanel
@@ -166,34 +171,39 @@ export function GymManageWidget() {
               </Text>
             </View>
           ) : (
-            availableGyms.map((gym) => (
-              <JoinableGymCard
+            availableGyms.map((gym, index) => (
+              <Animated.View
                 key={gym.id}
-                gymId={gym.id}
-                name={gym.name}
-                address={gym.address}
-                description={gym.description}
-                isDark={isDark}
-                onJoin={handleJoin}
-                joining={joiningId === gym.id}
-                joined={joinedIds.has(gym.id)}
-                error={joinErrors[gym.id]}
-              />
+                entering={FadeInDown.delay(80 + index * 65).duration(360).springify().damping(18)}>
+                <JoinableGymCard
+                  gymId={gym.id}
+                  name={gym.name}
+                  address={gym.address}
+                  description={gym.description}
+                  isDark={isDark}
+                  onJoin={handleJoin}
+                  joining={joiningId === gym.id}
+                  joined={joinedIds.has(gym.id)}
+                  error={joinErrors[gym.id]}
+                />
+              </Animated.View>
             ))
           )}
-        </View>
+        </Animated.View>
 
-        <View style={{
-          padding: 16, borderRadius: 16,
-          backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-          borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-          flexDirection: 'row', alignItems: 'flex-start', gap: 12,
-        }}>
+        <Animated.View
+          entering={FadeInDown.delay(160).duration(380).springify().damping(18)}
+          style={{
+            padding: 16, borderRadius: 16,
+            backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+            borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+            flexDirection: 'row', alignItems: 'flex-start', gap: 12,
+          }}>
           <Users size={18} color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'} style={{ marginTop: 1 }} />
           <Text style={{ flex: 1, fontSize: 13, lineHeight: 20, color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}>
             {t('gym.footerHint')}
           </Text>
-        </View>
+        </Animated.View>
       </ScrollView>
     </View>
   );

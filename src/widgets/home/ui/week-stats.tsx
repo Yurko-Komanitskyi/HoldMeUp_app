@@ -2,6 +2,7 @@ import * as React from 'react';
 import { View } from 'react-native';
 import { TrendingUp, Zap, Target } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { Text } from '@/shared/ui/text';
 import { Icon } from '@/shared/ui/icon';
@@ -29,7 +30,8 @@ export function WeekStats({ total, success, flash }: WeekStatsProps) {
 
   return (
     <View style={{ paddingHorizontal: 16 }}>
-      <Text
+      <Animated.Text
+        entering={FadeInDown.delay(0).duration(350).springify().damping(18)}
         style={{
           fontSize: 13,
           fontWeight: '700',
@@ -38,11 +40,12 @@ export function WeekStats({ total, success, flash }: WeekStatsProps) {
           marginBottom: 12,
         }}>
         {t('home.weekStats').toUpperCase()}
-      </Text>
+      </Animated.Text>
       <View style={{ flexDirection: 'row', gap: 10 }}>
-        {cards.map((s) => (
-          <View
+        {cards.map((s, i) => (
+          <Animated.View
             key={s.label}
+            entering={FadeInDown.delay(60 + i * 80).duration(400).springify().damping(16).stiffness(120)}
             style={{
               flex: 1,
               backgroundColor: cardBg,
@@ -65,7 +68,7 @@ export function WeekStats({ total, success, flash }: WeekStatsProps) {
             <Text style={{ fontSize: 11, color: colors.mutedForeground, fontWeight: '600' }}>
               {s.label}
             </Text>
-          </View>
+          </Animated.View>
         ))}
       </View>
     </View>

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { ScrollView, View, RefreshControl } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Users, Route as RouteIcon, TrendingUp, BarChart2, Map } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { useTranslation } from 'react-i18next';
@@ -116,12 +117,14 @@ export function GymStatsWidget() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
       <View className="gap-6 pt-6">
         {/* Header */}
-        <View className="px-4">
+        <Animated.View
+          entering={FadeInDown.delay(0).duration(380).springify().damping(18)}
+          className="px-4">
           <Text variant="h3" className="text-foreground">
             {t('gymStats.title')}
           </Text>
           <Text className="mt-0.5 text-sm text-muted-foreground">{currentGym.name}</Text>
-        </View>
+        </Animated.View>
 
         {membersError ? (
           <View className="px-4">
@@ -134,7 +137,9 @@ export function GymStatsWidget() {
         ) : null}
 
         {/* Main Metrics */}
-        <View className="gap-3 px-4">
+        <Animated.View
+          entering={FadeInDown.delay(70).duration(380).springify().damping(18)}
+          className="gap-3 px-4">
           <View className="flex-row gap-3">
             <MetricCard
               icon={RouteIcon}
@@ -142,23 +147,27 @@ export function GymStatsWidget() {
               label={t('gymStats.activeRoutes')}
               sub={t('gymStats.totalRoutes', { total: totalRoutes })}
               accent
+              delay={0}
             />
             <MetricCard
               icon={Users}
               value={customerCount}
               label={t('gymStats.clients')}
               sub={t('gymStats.staffCount', { count: staffCount })}
+              delay={60}
             />
           </View>
           <View className="flex-row gap-3">
-            <MetricCard icon={Map} value={bySector.length} label={t('gymStats.sectors')} />
-            <MetricCard icon={TrendingUp} value={archivedRoutes} label={t('gymStats.archived')} />
+            <MetricCard icon={Map} value={bySector.length} label={t('gymStats.sectors')} delay={120} />
+            <MetricCard icon={TrendingUp} value={archivedRoutes} label={t('gymStats.archived')} delay={180} />
           </View>
-        </View>
+        </Animated.View>
 
         {/* Routes by sector breakdown */}
         {bySector.length > 0 && (
-          <View className="px-4">
+          <Animated.View
+            entering={FadeInDown.delay(200).duration(380).springify().damping(18)}
+            className="px-4">
             <Text className="mb-3 text-xs font-medium uppercase tracking-widest text-muted-foreground">
               {t('gymStats.routesBySector')}
             </Text>
@@ -190,12 +199,14 @@ export function GymStatsWidget() {
                 );
               })}
             </View>
-          </View>
+          </Animated.View>
         )}
 
         {/* Staff */}
         {staffMembers.length > 0 && (
-          <View className="px-4">
+          <Animated.View
+            entering={FadeInDown.delay(300).duration(380).springify().damping(18)}
+            className="px-4">
             <Text className="mb-3 text-xs font-medium uppercase tracking-widest text-muted-foreground">
               {t('gymStats.staffSection', { count: staffMembers.length })}
             </Text>
@@ -204,7 +215,7 @@ export function GymStatsWidget() {
                 <MemberRow key={m.id} member={m} />
               ))}
             </View>
-          </View>
+          </Animated.View>
         )}
       </View>
     </ScrollView>

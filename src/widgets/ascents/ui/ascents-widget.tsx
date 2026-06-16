@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { ActivityIndicator, View, type FlatList } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { useTranslation } from 'react-i18next';
 import { InfiniteList } from '@/shared/ui/Infinite-list';
@@ -60,7 +61,12 @@ export function AscentsWidget() {
         listRef={ascentsListRef}
         items={items}
         ListHeaderComponent={ascentHeader}
-        renderItem={(ascent) => <AscentCard ascent={ascent} />}
+        renderItem={(ascent, index) => (
+          <Animated.View
+            entering={FadeInDown.delay(Math.min(index, 8) * 55).duration(360).springify().damping(18)}>
+            <AscentCard ascent={ascent} />
+          </Animated.View>
+        )}
         keyExtractor={(a) => a.id}
         isLoading={isLoading}
         isFetchingNextPage={isFetchingNextPage}

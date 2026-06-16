@@ -8,6 +8,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useColorScheme } from 'nativewind';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -47,7 +48,13 @@ const TYPE_META: { key: string; label: string; color: string }[] = [
   { key: 'TOP',       label: 'Top',       color: '#f97316' },
 ];
 
-export function ClimbingStatsCard({ ascents }: { ascents: Ascent[] }) {
+export function ClimbingStatsCard({
+  ascents,
+  showWhenEmpty = false,
+}: {
+  ascents: Ascent[];
+  showWhenEmpty?: boolean;
+}) {
   const colors = useThemeColor();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -77,7 +84,7 @@ export function ClimbingStatsCard({ ascents }: { ascents: Ascent[] }) {
 
   const maxTypeCount = Math.max(...Object.values(typeCounts), 1);
 
-  if (ascents.length === 0) return null;
+  if (ascents.length === 0 && !showWhenEmpty) return null;
 
   const border = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
   const muted  = isDark ? 'rgba(255,255,255,0.4)'  : 'rgba(0,0,0,0.4)';
@@ -511,7 +518,9 @@ export function PublicUserProfile() {
               tintColor={ACCENT}
             />
           }>
-          <View className="items-center gap-3 pt-1">
+          <Animated.View
+            entering={FadeInDown.delay(0).duration(420).springify().damping(18)}
+            className="items-center gap-3 pt-1">
             <View
               style={{
                 width: 96,
@@ -535,9 +544,11 @@ export function PublicUserProfile() {
                 <Text className="text-sm font-medium text-muted-foreground">@{user.userTag}</Text>
               ) : null}
             </View>
-          </View>
+          </Animated.View>
 
-          <View style={{ marginTop: 20, alignItems: 'center' }}>
+          <Animated.View
+            entering={FadeInDown.delay(100).duration(400).springify().damping(18)}
+            style={{ marginTop: 20, alignItems: 'center' }}>
             <Pressable
               disabled={
                 followBusy ||
@@ -588,7 +599,7 @@ export function PublicUserProfile() {
                 </Text>
               )}
             </Pressable>
-          </View>
+          </Animated.View>
 
           <Text
             style={{

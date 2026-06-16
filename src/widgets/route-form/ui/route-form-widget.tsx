@@ -7,6 +7,7 @@ import {
   Platform,
   LayoutChangeEvent,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -196,7 +197,9 @@ export function RouteFormWidget({
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingBottom: scrollBottomPadding }}>
-          <View style={{ gap: 28, paddingHorizontal: 20, paddingTop: 24 }}>
+          <Animated.View
+            entering={FadeInDown.delay(0).duration(400).springify().damping(18)}
+            style={{ gap: 28, paddingHorizontal: 20, paddingTop: 24 }}>
             {sectorsError && !sectorsLoading ? (
               <QueryErrorPanel
                 error={sectorsQueryError ?? new Error('')}
@@ -621,7 +624,7 @@ export function RouteFormWidget({
               submitLabel={submitLabel}
               onSubmit={submit}
             />
-          </View>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
 

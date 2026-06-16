@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { View, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { Dumbbell, ChevronLeft, Users } from 'lucide-react-native';
@@ -105,7 +106,9 @@ export function GymJoinWidget() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={ACCENT} />
         }>
-        <View style={{ gap: 6, marginBottom: 8 }}>
+        <Animated.View
+          entering={FadeInDown.delay(0).duration(380).springify().damping(18)}
+          style={{ gap: 6, marginBottom: 8 }}>
           <Text style={{ fontSize: 24, fontWeight: '800', color: colors.foreground }}>
             {t('gym.pickYourGym')}
           </Text>
@@ -117,16 +120,22 @@ export function GymJoinWidget() {
             }}>
             {t('gym.joinSubtitle')}
           </Text>
-        </View>
+        </Animated.View>
 
         {isLoading ? (
-          <View style={{ alignItems: 'center', paddingVertical: 48 }}>
+          <Animated.View
+            entering={FadeIn.delay(80).duration(300)}
+            style={{ alignItems: 'center', paddingVertical: 48 }}>
             <ActivityIndicator size="large" color={ACCENT} />
-          </View>
+          </Animated.View>
         ) : isError ? (
-          <QueryErrorPanel error={gymsQueryError ?? new Error('')} onRetry={() => void refetch()} />
+          <Animated.View entering={FadeInDown.delay(80).duration(360).springify().damping(18)}>
+            <QueryErrorPanel error={gymsQueryError ?? new Error('')} onRetry={() => void refetch()} />
+          </Animated.View>
         ) : gyms.length === 0 ? (
-          <View style={{ alignItems: 'center', gap: 12, paddingVertical: 48 }}>
+          <Animated.View
+            entering={FadeInDown.delay(80).duration(380).springify().damping(18)}
+            style={{ alignItems: 'center', gap: 12, paddingVertical: 48 }}>
             <View
               style={{
                 width: 64,
@@ -141,21 +150,25 @@ export function GymJoinWidget() {
             <Text style={{ fontSize: 16, fontWeight: '600', color: colors.foreground }}>
               {t('gym.noGyms')}
             </Text>
-          </View>
+          </Animated.View>
         ) : (
-          gyms.map((gym) => (
-            <GymCard
+          gyms.map((gym, index) => (
+            <Animated.View
               key={gym.id}
-              gym={gym}
-              onJoin={handleJoin}
-              joining={joiningId === gym.id}
-              joined={joinedIds.has(gym.id)}
-              error={joinErrors[gym.id]}
-            />
+              entering={FadeInDown.delay(80 + index * 70).duration(380).springify().damping(18)}>
+              <GymCard
+                gym={gym}
+                onJoin={handleJoin}
+                joining={joiningId === gym.id}
+                joined={joinedIds.has(gym.id)}
+                error={joinErrors[gym.id]}
+              />
+            </Animated.View>
           ))
         )}
 
-        <View
+        <Animated.View
+          entering={FadeInDown.delay(200).duration(380).springify().damping(18)}
           style={{
             marginTop: 8,
             padding: 16,
@@ -181,7 +194,7 @@ export function GymJoinWidget() {
             }}>
             {t('gym.footerHint')}
           </Text>
-        </View>
+        </Animated.View>
       </ScrollView>
     </View>
   );

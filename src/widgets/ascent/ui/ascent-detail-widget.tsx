@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { RefreshControl, ScrollView, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -140,21 +141,31 @@ export function AscentDetailWidget() {
             tintColor={ACCENT}
           />
         }>
-        <AscentDetailRouteHero ascent={ascent} dateLabel={formatDateWithWeekday(ascent.date)} />
-        <AscentDetailQuickStats ascent={ascent} formatDate={formatDate} />
-        <AscentDetailFeelingCard ascent={ascent} />
-        <AscentDetailMetaCard ascent={ascent} formatDate={formatDate} />
-        <AscentDetailNotesCard notes={ascent.notes} />
-        {ascent.videoUrl ? <AscentDetailVideoCard url={ascent.videoUrl} /> : null}
-
-        <AscentReactionsBar
-          ascentId={ascent.id}
-          reactions={ascent.reactions ?? []}
-          ascentOwnerId={ascent.userId}
-          currentUserId={myId}
-        />
-
-        <AscentDetailFooterTip />
+        <Animated.View entering={FadeInDown.delay(0).duration(380).springify().damping(18)}>
+          <AscentDetailRouteHero ascent={ascent} dateLabel={formatDateWithWeekday(ascent.date)} />
+        </Animated.View>
+        <Animated.View entering={FadeInDown.delay(70).duration(380).springify().damping(18)}>
+          <AscentDetailQuickStats ascent={ascent} formatDate={formatDate} />
+        </Animated.View>
+        <Animated.View entering={FadeInDown.delay(130).duration(380).springify().damping(18)}>
+          <AscentDetailFeelingCard ascent={ascent} />
+        </Animated.View>
+        <Animated.View entering={FadeInDown.delay(180).duration(380).springify().damping(18)}>
+          <AscentDetailMetaCard ascent={ascent} formatDate={formatDate} />
+        </Animated.View>
+        <Animated.View entering={FadeInDown.delay(230).duration(380).springify().damping(18)}>
+          <AscentDetailNotesCard notes={ascent.notes} />
+          {ascent.videoUrl ? <AscentDetailVideoCard url={ascent.videoUrl} /> : null}
+        </Animated.View>
+        <Animated.View entering={FadeInDown.delay(280).duration(380).springify().damping(18)}>
+          <AscentReactionsBar
+            ascentId={ascent.id}
+            reactions={ascent.reactions ?? []}
+            ascentOwnerId={ascent.userId}
+            currentUserId={myId}
+          />
+          <AscentDetailFooterTip />
+        </Animated.View>
       </ScrollView>
 
       <EditAscentModal

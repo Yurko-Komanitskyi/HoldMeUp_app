@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { View, ScrollView, useWindowDimensions } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { resolveRouteColor } from '@/shared/config/palette';
@@ -109,37 +110,47 @@ export function RouteDetailWidget() {
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 120 }}>
-        <RouteDetailStats
-          ascentCount={route.ascentCount ?? 0}
-          flashRate={flashRate}
-          flashCount={route.flashCount ?? 0}
-          rating={rating}
-          isDark={isDark}
-        />
+        <Animated.View entering={FadeInDown.delay(0).duration(380).springify().damping(18)}>
+          <RouteDetailStats
+            ascentCount={route.ascentCount ?? 0}
+            flashRate={flashRate}
+            flashCount={route.flashCount ?? 0}
+            rating={rating}
+            isDark={isDark}
+          />
+        </Animated.View>
 
-        <RouteDetailScoreCard grade={route.grade} />
+        <Animated.View entering={FadeInDown.delay(70).duration(380).springify().damping(18)}>
+          <RouteDetailScoreCard grade={route.grade} />
+        </Animated.View>
 
-        <RouteDetailInfoCard
-          sectorName={route.sector?.name}
-          styleLabel={styleLabel}
-          height={route.height}
-          setterName={setterName}
-          addedDate={addedDate}
-        />
+        <Animated.View entering={FadeInDown.delay(130).duration(380).springify().damping(18)}>
+          <RouteDetailInfoCard
+            sectorName={route.sector?.name}
+            styleLabel={styleLabel}
+            height={route.height}
+            setterName={setterName}
+            addedDate={addedDate}
+          />
+        </Animated.View>
 
-        <RouteDetailHoldTypes holdTypes={route.holdTypes ?? []} />
+        <Animated.View entering={FadeInDown.delay(190).duration(380).springify().damping(18)}>
+          <RouteDetailHoldTypes holdTypes={route.holdTypes ?? []} />
+        </Animated.View>
 
-        <RouteDetailPhoto
-          photoUrl={route.photoUrl}
-          parsedAnnotation={parsedAnnotation}
-          displayWidth={screenWidth - 32}
-        />
+        <Animated.View entering={FadeInDown.delay(240).duration(380).springify().damping(18)}>
+          <RouteDetailPhoto
+            photoUrl={route.photoUrl}
+            parsedAnnotation={parsedAnnotation}
+            displayWidth={screenWidth - 32}
+          />
+        </Animated.View>
 
-        <RouteDetailTags tags={route.tags ?? []} />
-
-        {route.description && <RouteDetailDescription description={route.description} />}
-
-        <RouteDetailTip />
+        <Animated.View entering={FadeInDown.delay(290).duration(380).springify().damping(18)}>
+          <RouteDetailTags tags={route.tags ?? []} />
+          {route.description && <RouteDetailDescription description={route.description} />}
+          <RouteDetailTip />
+        </Animated.View>
       </ScrollView>
 
       <RouteDetailCta routeId={route.id} backgroundColor={ctaBg} textColor={ctaText} />

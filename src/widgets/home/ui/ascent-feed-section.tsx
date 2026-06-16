@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
 import { Text } from '@/shared/ui/text';
@@ -73,8 +74,12 @@ export function AscentFeedSection() {
         </View>
       ) : (
         <>
-          {items.map((item) => (
-            <AscentFeedCard key={item.id} item={item} />
+          {items.map((item, index) => (
+            <Animated.View
+              key={item.id}
+              entering={FadeInDown.delay(Math.min(index, 6) * 60).duration(360).springify().damping(18)}>
+              <AscentFeedCard item={item} />
+            </Animated.View>
           ))}
           {hasNextPage ? (
             <Pressable

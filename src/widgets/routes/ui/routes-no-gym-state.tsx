@@ -1,6 +1,7 @@
 // routes-no-gym-state.tsx
 import * as React from 'react';
 import { View, TouchableOpacity } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Mountain } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Text } from '@/shared/ui/text';
@@ -16,7 +17,8 @@ export function RoutesNoGymState() {
     <View
       style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40, gap: 20 }}
       className="bg-background">
-      <View
+      <Animated.View
+        entering={FadeInDown.delay(0).duration(420).springify().damping(18)}
         style={{
           width: 76,
           height: 76,
@@ -28,9 +30,11 @@ export function RoutesNoGymState() {
           justifyContent: 'center',
         }}>
         <Mountain size={34} color={colors.mutedForeground} />
-      </View>
+      </Animated.View>
 
-      <View style={{ alignItems: 'center', gap: 8 }}>
+      <Animated.View
+        entering={FadeInDown.delay(80).duration(380).springify().damping(18)}
+        style={{ alignItems: 'center', gap: 8 }}>
         <Text
           style={{
             fontSize: 20,
@@ -51,21 +55,23 @@ export function RoutesNoGymState() {
           }}>
           {t('routes.noGymBody')}
         </Text>
-      </View>
+      </Animated.View>
 
-      <TouchableOpacity
-        onPress={() => router.push('/gym/join' as never)}
-        activeOpacity={0.8}
-        style={{
-          paddingHorizontal: 28,
-          paddingVertical: 13,
-          borderRadius: 15,
-          backgroundColor: ACCENT,
-        }}>
-        <Text style={{ fontSize: 15, fontWeight: '700', color: colors.destructiveForeground, letterSpacing: -0.2 }}>
-          {t('routes.findGym')}
-        </Text>
-      </TouchableOpacity>
+      <Animated.View entering={FadeInDown.delay(160).duration(360).springify().damping(18)}>
+        <TouchableOpacity
+          onPress={() => router.push('/gym/join' as never)}
+          activeOpacity={0.8}
+          style={{
+            paddingHorizontal: 28,
+            paddingVertical: 13,
+            borderRadius: 15,
+            backgroundColor: ACCENT,
+          }}>
+          <Text style={{ fontSize: 15, fontWeight: '700', color: colors.destructiveForeground, letterSpacing: -0.2 }}>
+            {t('routes.findGym')}
+          </Text>
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   );
 }

@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   LayoutChangeEvent,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { useScrollToTopOnFocus } from '@/shared/hooks/use-scroll-to-top-on-focus';
@@ -259,12 +260,16 @@ export function LogAscentWidget() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingBottom: 120, gap: 12, paddingHorizontal: 16 }}>
-          <RouteHeaderCard route={route} />
+          <Animated.View entering={FadeInDown.delay(0).duration(360).springify().damping(18)}>
+            <RouteHeaderCard route={route} />
+          </Animated.View>
 
           <ServerErrorBanner message={serverError} />
 
           {/* Stopwatch */}
-          <StopwatchCard {...stopwatch} />
+          <Animated.View entering={FadeInDown.delay(60).duration(360).springify().damping(18)}>
+            <StopwatchCard {...stopwatch} />
+          </Animated.View>
 
           {success && (
             <View onLayout={captureSectionY('ascentType')}>
@@ -281,7 +286,9 @@ export function LogAscentWidget() {
             </View>
           )}
 
-          <View onLayout={captureSectionY('attemptNumber')}>
+          <Animated.View
+            entering={FadeInDown.delay(120).duration(360).springify().damping(18)}
+            onLayout={captureSectionY('attemptNumber')}>
             <ResultAttemptsSection
               success={success}
               attemptNumber={attemptNumber}
@@ -292,23 +299,29 @@ export function LogAscentWidget() {
               borderColor={borderColor}
               onChangeSuccess={setSuccess}
             />
-          </View>
+          </Animated.View>
 
-          <FeelingSection
-            feeling={feeling}
-            cardBg={cardBg}
-            borderColor={borderColor}
-            onChange={setFeeling}
-          />
+          <Animated.View entering={FadeInDown.delay(180).duration(360).springify().damping(18)}>
+            <FeelingSection
+              feeling={feeling}
+              cardBg={cardBg}
+              borderColor={borderColor}
+              onChange={setFeeling}
+            />
+          </Animated.View>
 
-          <GradePerceptionSection
-            gradePerception={gradePerception}
-            cardBg={cardBg}
-            borderColor={borderColor}
-            onChange={setGradePerception}
-          />
+          <Animated.View entering={FadeInDown.delay(230).duration(360).springify().damping(18)}>
+            <GradePerceptionSection
+              gradePerception={gradePerception}
+              cardBg={cardBg}
+              borderColor={borderColor}
+              onChange={setGradePerception}
+            />
+          </Animated.View>
 
-          <View onLayout={captureSectionY('notes')}>
+          <Animated.View
+            entering={FadeInDown.delay(280).duration(360).springify().damping(18)}
+            onLayout={captureSectionY('notes')}>
             <NotesSection
               value={notes}
               onChange={setNotes}
@@ -319,9 +332,11 @@ export function LogAscentWidget() {
               inputColor={inputColor}
               placeholderColor={placeholderColor}
             />
-          </View>
+          </Animated.View>
 
-          <View onLayout={captureSectionY('videoUrl')}>
+          <Animated.View
+            entering={FadeInDown.delay(330).duration(360).springify().damping(18)}
+            onLayout={captureSectionY('videoUrl')}>
             <VideoSection
               value={videoUrl}
               onChange={setVideoUrl}
@@ -332,14 +347,16 @@ export function LogAscentWidget() {
               inputColor={inputColor}
               placeholderColor={placeholderColor}
             />
-          </View>
+          </Animated.View>
 
-          <IsPublicSection
-            isPublic={isPublic}
-            cardBg={cardBg}
-            borderColor={borderColor}
-            onChange={setIsPublic}
-          />
+          <Animated.View entering={FadeInDown.delay(380).duration(360).springify().damping(18)}>
+            <IsPublicSection
+              isPublic={isPublic}
+              cardBg={cardBg}
+              borderColor={borderColor}
+              onChange={setIsPublic}
+            />
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
 

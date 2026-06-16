@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { View, ActivityIndicator, ScrollView } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useColorScheme } from 'nativewind';
 
 import { Text } from '@/shared/ui/text';
@@ -68,27 +69,32 @@ export function GymJoinBanner() {
 
   return (
     <View style={{ gap: 12 }}>
-      <View style={{ paddingHorizontal: 16, gap: 4 }}>
+      <Animated.View
+        entering={FadeInDown.delay(0).duration(380).springify().damping(18)}
+        style={{ paddingHorizontal: 16, gap: 4 }}>
         <Text style={{ fontSize: 20, fontWeight: '800', color: isDark ? '#fff' : '#000' }}>
           {t('home.gymBannerTitle')}
         </Text>
         <Text style={{ fontSize: 13, color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}>
           {t('home.gymBannerSubtitle')}
         </Text>
-      </View>
+      </Animated.View>
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}>
-        {gyms.map((gym) => (
-          <GymCompactCard
+        {gyms.map((gym, index) => (
+          <Animated.View
             key={gym.id}
-            gym={gym}
-            onJoin={handleJoin}
-            joining={joiningId === gym.id}
-            joined={joinedIds.has(gym.id)}
-          />
+            entering={FadeInDown.delay(60 + index * 60).duration(360).springify().damping(18)}>
+            <GymCompactCard
+              gym={gym}
+              onJoin={handleJoin}
+              joining={joiningId === gym.id}
+              joined={joinedIds.has(gym.id)}
+            />
+          </Animated.View>
         ))}
       </ScrollView>
     </View>

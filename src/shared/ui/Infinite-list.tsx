@@ -4,7 +4,7 @@ import { LoadingSpinner } from './loading-spinner';
 
 interface InfiniteListProps<T> {
   items: T[];
-  renderItem: (item: T) => React.ReactElement;
+  renderItem: (item: T, index: number) => React.ReactElement;
   keyExtractor: (item: T) => string;
   isLoading: boolean;
   isFetchingNextPage: boolean;
@@ -43,7 +43,7 @@ export function InfiniteList<T>({
       ref={listRef}
       data={items}
       contentContainerStyle={contentContainerStyle}
-      renderItem={({ item }) => renderItem(item)}
+      renderItem={({ item, index }) => renderItem(item, index)}
       showsVerticalScrollIndicator={showsVerticalScrollIndicator}
       keyExtractor={keyExtractor}
       ListHeaderComponent={ListHeaderComponent}

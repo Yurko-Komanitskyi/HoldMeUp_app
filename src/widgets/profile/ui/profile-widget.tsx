@@ -1,6 +1,5 @@
 import * as React from 'react';
 import {
-  ScrollView,
   View,
   TouchableOpacity,
   useWindowDimensions,
@@ -20,6 +19,14 @@ import {
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import Animated, {
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  interpolate,
+  Extrapolation,
+  FadeInDown,
+} from 'react-native-reanimated';
 
 import { Text } from '@/shared/ui/text';
 import { ACCENT, resolveRouteColor } from '@/shared/config/palette';
@@ -39,6 +46,7 @@ import type { Ascent, AscentReaction } from '@/entities/ascent/model/ascent';
 const GRID_PREVIEW_COUNT = 9;
 const GRID_GAP = 8;
 const REACTION_PREVIEW_LIMIT = 2;
+const PARALLAX_RANGE = 100;
 
 function aggregateReactions(reactions: AscentReaction[]): Array<{ emoji: string; count: number }> {
   const byEmoji = new Map<string, number>();
@@ -208,7 +216,35 @@ export function ProfileWidget() {
   const memberships = useGymMemberStore((s) => s.memberships);
 
   const [settingsOpen, setSettingsOpen] = React.useState(false);
-  const profileScrollRef = useScrollToTopOnFocus<ScrollView>();
+  const profileScrollRef = useScrollToTopOnFocus<Animated.ScrollView>();
+
+  const scrollY = useSharedValue(0);
+
+  const scrollHandler = useAnimatedScrollHandler((event) => {
+    scrollY.value = event.contentOffset.y;
+  });
+
+  // Avatar: scale down + translate up as you scroll
+  const avatarStyle = useAnimatedStyle(() => {
+    const scale = interpolate(scrollY.value, [0, PARALLAX_RANGE], [1, 0.65], Extrapolation.CLAMP);
+    const opacity = interpolate(scrollY.value, [0, PARALLAX_RANGE * 0.8], [1, 0], Extrapolation.CLAMP);
+    const translateY = interpolate(scrollY.value, [0, PARALLAX_RANGE], [0, -18], Extrapolation.CLAMP);
+    return { transform: [{ scale }, { translateY }], opacity };
+  });
+
+  // Name + tag: slide up + fade
+  const nameStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(scrollY.value, [20, PARALLAX_RANGE * 0.9], [1, 0], Extrapolation.CLAMP);
+    const translateY = interpolate(scrollY.value, [0, PARALLAX_RANGE], [0, -12], Extrapolation.CLAMP);
+    return { opacity, transform: [{ translateY }] };
+  });
+
+  // Stats row: fade in slightly later (reveal after avatar leaves)
+  const statsStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(scrollY.value, [60, PARALLAX_RANGE], [1, 0.3], Extrapolation.CLAMP);
+    const translateY = interpolate(scrollY.value, [0, PARALLAX_RANGE], [0, -8], Extrapolation.CLAMP);
+    return { opacity, transform: [{ translateY }] };
+  });
 
   const {
     data: profileStats,
@@ -248,15 +284,18 @@ export function ProfileWidget() {
   const gridWidth = windowWidth - horizontalPad * 2;
   const tileSize = Math.floor((gridWidth - GRID_GAP * 2) / 3);
   const tileHeight = tileSize * 0.9;
+
   return (
-    <ScrollView
+    <Animated.ScrollView
       ref={profileScrollRef}
       className="flex-1 bg-background"
       contentContainerStyle={{ paddingBottom: 100 }}
-      showsVerticalScrollIndicator={false}>
+      showsVerticalScrollIndicator={false}
+      onScroll={scrollHandler}
+      scrollEventThrottle={16}>
       <ProfileSettingsModal visible={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
-      <View className="absolute right-3 top-0">
+      <View className="absolute right-3 top-0" style={{ zIndex: 10 }}>
         <Pressable
           onPress={() => setSettingsOpen(true)}
           hitSlop={12}
@@ -267,23 +306,27 @@ export function ProfileWidget() {
         </Pressable>
       </View>
 
+      {/* Parallax header block */}
       <View className="items-center gap-3 px-4 pt-1">
-        <View
-          style={{
-            width: 96,
-            height: 96,
-            borderRadius: 48,
-            backgroundColor: ACCENT + '18',
-            borderWidth: 3,
-            borderColor: ACCENT + '55',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-          <Text style={{ fontSize: 34, fontWeight: '800', color: ACCENT, lineHeight: 40 }}>
-            {initials}
-          </Text>
-        </View>
-        <View className="items-center gap-1">
+        <Animated.View style={avatarStyle}>
+          <View
+            style={{
+              width: 96,
+              height: 96,
+              borderRadius: 48,
+              backgroundColor: ACCENT + '18',
+              borderWidth: 3,
+              borderColor: ACCENT + '55',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <Text style={{ fontSize: 34, fontWeight: '800', color: ACCENT, lineHeight: 40 }}>
+              {initials}
+            </Text>
+          </View>
+        </Animated.View>
+
+        <Animated.View className="items-center gap-1" style={nameStyle}>
           <Text className="text-center text-2xl font-bold text-foreground">
             {[user?.firstName, user?.lastName].filter(Boolean).join(' ') ||
               t('profile.defaultName')}
@@ -291,9 +334,10 @@ export function ProfileWidget() {
           {user?.userTag ? (
             <Text className="text-sm font-medium text-muted-foreground">@{user.userTag}</Text>
           ) : null}
-        </View>
+        </Animated.View>
       </View>
 
+      {/* Stats row with parallax */}
       {profileStatsError && !profileStatsLoading ? (
         <View className="mt-4 px-4">
           <QueryErrorPanel
@@ -303,15 +347,17 @@ export function ProfileWidget() {
           />
         </View>
       ) : (
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginTop: 24,
-            paddingHorizontal: 16,
-          }}>
-          {/* Total Ascents */}
+        <Animated.View
+          style={[
+            {
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: 24,
+              paddingHorizontal: 16,
+            },
+            statsStyle,
+          ]}>
           <View style={{ flex: 1, alignItems: 'center' }}>
             <Text style={{ fontSize: 24, fontWeight: '800', color: colors.foreground }}>
               {ascentsTotal}
@@ -324,10 +370,8 @@ export function ProfileWidget() {
             </View>
           </View>
 
-          {/* Divider */}
           <View style={{ width: 1, height: 32, backgroundColor: colors.border }} />
 
-          {/* Flashes */}
           <View style={{ flex: 1, alignItems: 'center' }}>
             <Text style={{ fontSize: 24, fontWeight: '800', color: colors.foreground }}>
               {flashCount}
@@ -340,10 +384,8 @@ export function ProfileWidget() {
             </View>
           </View>
 
-          {/* Divider */}
           <View style={{ width: 1, height: 32, backgroundColor: colors.border }} />
 
-          {/* Success */}
           <View style={{ flex: 1, alignItems: 'center' }}>
             <Text style={{ fontSize: 24, fontWeight: '800', color: colors.foreground }}>
               {successCount}
@@ -355,7 +397,7 @@ export function ProfileWidget() {
               </Text>
             </View>
           </View>
-        </View>
+        </Animated.View>
       )}
 
       <View
@@ -367,11 +409,16 @@ export function ProfileWidget() {
         }}
       />
 
-      <View style={{ marginTop: 20, paddingHorizontal: horizontalPad }}>
-        <ClimbingStatsCard ascents={ascentItems as Ascent[]} />
-      </View>
+      {/* Content sections — staggered entrance */}
+      <Animated.View
+        entering={FadeInDown.delay(80).duration(420).springify().damping(18)}
+        style={{ marginTop: 20, paddingHorizontal: horizontalPad }}>
+        <ClimbingStatsCard ascents={ascentItems as Ascent[]} showWhenEmpty />
+      </Animated.View>
 
-      <View className="mt-5 px-4">
+      <Animated.View
+        entering={FadeInDown.delay(180).duration(420).springify().damping(18)}
+        className="mt-5 px-4">
         <View className="mb-3 flex-row items-center justify-between">
           <Text className="text-base font-bold text-foreground">{t('profile.ascentsSection')}</Text>
           <Pressable
@@ -437,23 +484,26 @@ export function ProfileWidget() {
               gap: GRID_GAP,
               justifyContent: 'flex-start',
             }}>
-            {previewAscents.map((a) => (
-              <ProfileAscentTile
+            {previewAscents.map((a, i) => (
+              <Animated.View
                 key={a.id}
-                ascentId={a.id}
-                width={tileSize}
-                height={tileHeight}
-                routeName={a.routeName?.trim() ?? null}
-                routeGrade={a.routeGrade ?? null}
-                routeColor={a.routeColor ?? null}
-                success={a.success}
-                reactions={a.groupedReactions}
-                groupedCount={a.groupedCount}
-              />
+                entering={FadeInDown.delay(260 + i * 45).duration(350).springify().damping(16)}>
+                <ProfileAscentTile
+                  ascentId={a.id}
+                  width={tileSize}
+                  height={tileHeight}
+                  routeName={a.routeName?.trim() ?? null}
+                  routeGrade={a.routeGrade ?? null}
+                  routeColor={a.routeColor ?? null}
+                  success={a.success}
+                  reactions={a.groupedReactions}
+                  groupedCount={a.groupedCount}
+                />
+              </Animated.View>
             ))}
           </View>
         )}
-      </View>
-    </ScrollView>
+      </Animated.View>
+    </Animated.ScrollView>
   );
 }

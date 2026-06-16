@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { View, ScrollView, TouchableOpacity, Pressable } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Plus } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
@@ -24,7 +25,7 @@ export function FeaturedRoutes({ routes, isLoading }: FeaturedRoutesProps) {
   if (!isLoading && routes.length === 0) return null;
 
   return (
-    <View>
+    <Animated.View entering={FadeInDown.delay(0).duration(380).springify().damping(18)}>
       <View
         style={{
           flexDirection: 'row',
@@ -55,12 +56,15 @@ export function FeaturedRoutes({ routes, isLoading }: FeaturedRoutesProps) {
         contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}>
         {isLoading
           ? [1, 2, 3].map((i) => <Skeleton key={i} className="h-32 w-40 rounded-2xl" />)
-          : routes.map((route) => (
-              <FeaturedRouteCard
+          : routes.map((route, index) => (
+              <Animated.View
                 key={route.id}
-                route={route}
-                onPress={() => router.push(`/route/${route.id}` as never)}
-              />
+                entering={FadeInDown.delay(index * 60).duration(360).springify().damping(18)}>
+                <FeaturedRouteCard
+                  route={route}
+                  onPress={() => router.push(`/route/${route.id}` as never)}
+                />
+              </Animated.View>
             ))}
         {!isLoading && (
           <TouchableOpacity
@@ -84,6 +88,6 @@ export function FeaturedRoutes({ routes, isLoading }: FeaturedRoutesProps) {
           </TouchableOpacity>
         )}
       </ScrollView>
-    </View>
+    </Animated.View>
   );
 }

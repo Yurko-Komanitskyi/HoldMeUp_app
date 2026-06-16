@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { View, Pressable, ScrollView } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Mountain, TrendingUp, MapPin, Zap, ChevronRight, Star } from 'lucide-react-native';
@@ -67,7 +68,8 @@ export function HomeUnlogin() {
         {/* ── Hero ── */}
         <View style={{ alignItems: 'center', marginBottom: 36 }}>
           {/* Icon */}
-          <View
+          <Animated.View
+            entering={FadeInDown.delay(0).duration(420).springify().damping(18)}
             style={{
               width: 92,
               height: 92,
@@ -84,10 +86,11 @@ export function HomeUnlogin() {
               shadowOffset: { width: 0, height: 6 },
             }}>
             <Mountain size={46} color={ACCENT} />
-          </View>
+          </Animated.View>
 
           {/* Badge */}
-          <View
+          <Animated.View
+            entering={FadeInDown.delay(80).duration(380).springify().damping(18)}
             style={{
               flexDirection: 'row',
               alignItems: 'center',
@@ -102,54 +105,57 @@ export function HomeUnlogin() {
             <Text style={{ fontSize: 12, fontWeight: '600', color: ACCENT }}>
               {t('homeUnlogin.badge')}
             </Text>
-          </View>
+          </Animated.View>
 
           {/* Headline */}
-          <Text
-            style={{
-              fontSize: 32,
-              fontWeight: '900',
-              color: headingColor,
-              textAlign: 'center',
-              letterSpacing: -0.8,
-              lineHeight: 38,
-              marginBottom: 12,
-            }}>
-            {t('homeUnlogin.headline1')}
-            {'\n'}
+          <Animated.View entering={FadeInDown.delay(160).duration(380).springify().damping(18)}>
             <Text
               style={{
-                color: ACCENT,
                 fontSize: 32,
                 fontWeight: '900',
+                color: headingColor,
                 textAlign: 'center',
                 letterSpacing: -0.8,
                 lineHeight: 38,
                 marginBottom: 12,
               }}>
-              {t('homeUnlogin.headlineAccent')}
-            </Text>{' '}
-            {t('homeUnlogin.headline2')}
-          </Text>
+              {t('homeUnlogin.headline1')}
+              {'\n'}
+              <Text
+                style={{
+                  color: ACCENT,
+                  fontSize: 32,
+                  fontWeight: '900',
+                  textAlign: 'center',
+                  letterSpacing: -0.8,
+                  lineHeight: 38,
+                  marginBottom: 12,
+                }}>
+                {t('homeUnlogin.headlineAccent')}
+              </Text>{' '}
+              {t('homeUnlogin.headline2')}
+            </Text>
 
-          {/* Sub */}
-          <Text
-            style={{
-              fontSize: 15,
-              lineHeight: 22,
-              textAlign: 'center',
-              color: mutedColor,
-              maxWidth: 280,
-            }}>
-            {t('homeUnlogin.sub')}
-          </Text>
+            {/* Sub */}
+            <Text
+              style={{
+                fontSize: 15,
+                lineHeight: 22,
+                textAlign: 'center',
+                color: mutedColor,
+                maxWidth: 280,
+              }}>
+              {t('homeUnlogin.sub')}
+            </Text>
+          </Animated.View>
         </View>
 
         {/* ── Features ── */}
         <View style={{ gap: 10, marginBottom: 32 }}>
-          {FEATURES.map((f) => (
-            <View
+          {FEATURES.map((f, index) => (
+            <Animated.View
               key={f.title}
+              entering={FadeInDown.delay(240 + index * 60).duration(380).springify().damping(18)}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -185,7 +191,7 @@ export function HomeUnlogin() {
                 </Text>
                 <Text style={{ fontSize: 12, color: mutedColor, lineHeight: 17 }}>{f.desc}</Text>
               </View>
-            </View>
+            </Animated.View>
           ))}
         </View>
       </ScrollView>

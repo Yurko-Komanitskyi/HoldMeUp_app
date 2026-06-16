@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { View, type FlatList } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useColorScheme } from 'nativewind';
 import { useRouter } from 'expo-router';
 import { ACCENT } from '@/shared/config/palette';
@@ -145,10 +146,12 @@ export function RoutesWidget() {
             </View>
           )
         }
-        renderItem={(item) => (
-          <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
+        renderItem={(item, index) => (
+          <Animated.View
+            entering={FadeInDown.delay(Math.min(index, 8) * 55).duration(360).springify().damping(18)}
+            style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
             <RouteCard route={item as Route} />
-          </View>
+          </Animated.View>
         )}
       />
     </View>

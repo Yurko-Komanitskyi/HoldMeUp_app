@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Modal, ScrollView, View, Switch, Pressable } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   User,
@@ -122,7 +123,9 @@ export function ProfileSettingsModal({ visible, onClose }: ProfileSettingsModalP
             contentContainerStyle={{ paddingBottom: 40 }}
             showsVerticalScrollIndicator={false}>
             <View className="gap-6 pt-4">
-              <View className="gap-1">
+              <Animated.View
+                entering={FadeInDown.delay(0).duration(380).springify().damping(18)}
+                className="gap-1">
                 <Text className="mb-1 px-4 text-xs font-medium uppercase tracking-widest text-muted-foreground">
                   {t('profile.accountSection')}
                 </Text>
@@ -138,9 +141,11 @@ export function ProfileSettingsModal({ visible, onClose }: ProfileSettingsModalP
                     onPress={() => setShowChangePassword(true)}
                   />
                 </View>
-              </View>
+              </Animated.View>
 
-              <View className="gap-1">
+              <Animated.View
+                entering={FadeInDown.delay(70).duration(380).springify().damping(18)}
+                className="gap-1">
                 <Text className="mb-1 px-4 text-xs font-medium uppercase tracking-widest text-muted-foreground">
                   {t('profile.settingsSection')}
                 </Text>
@@ -172,13 +177,15 @@ export function ProfileSettingsModal({ visible, onClose }: ProfileSettingsModalP
                     }}
                   />
                 </View>
-              </View>
+              </Animated.View>
 
-              <View className="gap-1">
+              <Animated.View
+                entering={FadeInDown.delay(140).duration(360).springify().damping(18)}
+                className="gap-1">
                 <View className="mx-4 overflow-hidden rounded-2xl border border-destructive/30 bg-destructive/5">
                   <SettingRow icon={LogOut} label={t('profile.logout')} onPress={handleLogout} danger />
                 </View>
-              </View>
+              </Animated.View>
             </View>
           </ScrollView>
         </SafeAreaView>

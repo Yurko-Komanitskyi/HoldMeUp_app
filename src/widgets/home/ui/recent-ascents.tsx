@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { View, Pressable, TouchableOpacity } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Mountain, Plus, CheckCircle2, XCircle, Timer } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
@@ -89,8 +90,12 @@ export function RecentAscents({ ascents, isLoading, onAddPress }: RecentAscentsP
         </TouchableOpacity>
       ) : (
         <View style={{ gap: 8 }}>
-          {ascents.map((ascent) => (
-            <AscentCard key={ascent.id} ascent={ascent} variant="compact" />
+          {ascents.map((ascent, index) => (
+            <Animated.View
+              key={ascent.id}
+              entering={FadeInDown.delay(index * 55).duration(360).springify().damping(18)}>
+              <AscentCard ascent={ascent} variant="compact" />
+            </Animated.View>
           ))}
         </View>
       )}

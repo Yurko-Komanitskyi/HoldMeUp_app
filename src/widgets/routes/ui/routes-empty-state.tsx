@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { View, TouchableOpacity } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Mountain } from 'lucide-react-native';
 
 import { Text } from '@/shared/ui/text';
@@ -15,7 +16,8 @@ type Props = {
 export function RoutesEmptyState({ isDark, hasActiveFilters, onClearFilters }: Props) {
   const { t } = useTranslation();
   return (
-    <View
+    <Animated.View
+      entering={FadeInDown.delay(0).duration(400).springify().damping(18)}
       style={{
         alignItems: 'center',
         borderRadius: 20,
@@ -58,7 +60,7 @@ export function RoutesEmptyState({ isDark, hasActiveFilters, onClearFilters }: P
           <Text style={{ fontSize: 13, fontWeight: '700', color: '#fff' }}>{t('routes.clearFilters')}</Text>
         </TouchableOpacity>
       )}
-    </View>
+    </Animated.View>
   );
 }
 

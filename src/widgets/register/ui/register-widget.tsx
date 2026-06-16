@@ -19,6 +19,7 @@ import { Input } from '@/shared/ui/input';
 import { Button } from '@/shared/ui/button';
 import { PasswordInput } from '@/shared/ui/password-input';
 import { ServerErrorBanner } from '@/shared/ui/server-error-banner';
+import { AnimatedEntry } from '@/shared/ui/animated-entry';
 import { ACCENT } from '@/shared/config/palette';
 import { THEME } from '@/shared/config/tokens';
 import { parseApiError } from '@/shared/lib/api-error';
@@ -198,14 +199,15 @@ export function RegisterWidget() {
             paddingBottom: 40,
             paddingTop: 80,
           }}>
-          <View style={{ marginBottom: 40 }}>
+          <AnimatedEntry delay={0} duration={500} style={{ marginBottom: 40 }}>
             <Text className="mb-2 text-4xl font-bold tracking-tight">{t('auth.registerTitle')}</Text>
             <Text className="text-base text-muted-foreground">{t('auth.registerSubtitle')}</Text>
-          </View>
+          </AnimatedEntry>
 
           <View style={{ gap: 20 }}>
-            {TEXT_FIELDS.map(({ name, label, icon: FieldIcon, placeholder, autoCapitalize }) => (
-              <View key={name} style={{ gap: 8 }}>
+            {TEXT_FIELDS.map(({ name, label, icon: FieldIcon, placeholder, autoCapitalize }, index) => (
+              <AnimatedEntry key={name} delay={80 + index * 70}>
+              <View style={{ gap: 8 }}>
                 <Text className="text-sm font-medium text-foreground">{label}</Text>
                 <Controller
                   control={control}
@@ -244,138 +246,149 @@ export function RegisterWidget() {
                   <Text className="text-xs text-destructive">{errors[name]?.message}</Text>
                 )}
               </View>
+              </AnimatedEntry>
             ))}
 
-            <View style={{ gap: 8 }}>
-              <Text className="text-sm font-medium text-foreground">{t('auth.password')}</Text>
-              <Controller
-                control={control}
-                name="password"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <PasswordInput
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    placeholder={t('auth.placeholderPassword')}
-                    autoComplete="new-password"
-                  />
+            <AnimatedEntry delay={290}>
+              <View style={{ gap: 8 }}>
+                <Text className="text-sm font-medium text-foreground">{t('auth.password')}</Text>
+                <Controller
+                  control={control}
+                  name="password"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <PasswordInput
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      placeholder={t('auth.placeholderPassword')}
+                      autoComplete="new-password"
+                    />
+                  )}
+                />
+                {errors.password && (
+                  <Text className="text-xs text-destructive">{errors.password.message}</Text>
                 )}
-              />
-              {errors.password && (
-                <Text className="text-xs text-destructive">{errors.password.message}</Text>
-              )}
-            </View>
-
-            <View style={{ gap: 8 }}>
-              <Text className="text-sm font-medium text-foreground">{t('auth.confirmPasswordLabel')}</Text>
-              <Controller
-                control={control}
-                name="confirmPassword"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <PasswordInput
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    placeholder={t('auth.placeholderPassword')}
-                  />
-                )}
-              />
-              {errors.confirmPassword && (
-                <Text className="text-xs text-destructive">{errors.confirmPassword.message}</Text>
-              )}
-            </View>
-
-            <ServerErrorBanner message={serverError ?? googleError} />
-
-            <Button onPress={handleSubmit(onSubmit)} disabled={isSubmitting} className="mt-1 h-12">
-              {isSubmitting ? (
-                <ActivityIndicator
-                  color={isDark ? THEME.dark.background : THEME.light.destructiveForeground}
-                />
-              ) : (
-                <Text className="font-semibold">{t('auth.createAccount')}</Text>
-              )}
-            </Button>
-
-            <View style={{ marginTop: 4, gap: 12 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <View
-                  style={{
-                    flex: 1,
-                    height: 1,
-                    backgroundColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)',
-                  }}
-                />
-                <Text className="text-xs text-muted-foreground">{t('auth.orContinueWith')}</Text>
-                <View
-                  style={{
-                    flex: 1,
-                    height: 1,
-                    backgroundColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)',
-                  }}
-                />
               </View>
+            </AnimatedEntry>
 
-              <TouchableOpacity
-                onPress={() => void onGooglePress()}
-                disabled={isSubmitting || googleLoading}
-                activeOpacity={0.9}
-                style={{
-                  borderRadius: 14,
-                  overflow: 'hidden',
-                  opacity: isSubmitting || googleLoading ? 0.7 : 1,
-                }}>
-                <View
+            <AnimatedEntry delay={360}>
+              <View style={{ gap: 8 }}>
+                <Text className="text-sm font-medium text-foreground">{t('auth.confirmPasswordLabel')}</Text>
+                <Controller
+                  control={control}
+                  name="confirmPassword"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <PasswordInput
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      placeholder={t('auth.placeholderPassword')}
+                    />
+                  )}
+                />
+                {errors.confirmPassword && (
+                  <Text className="text-xs text-destructive">{errors.confirmPassword.message}</Text>
+                )}
+              </View>
+            </AnimatedEntry>
+
+            <AnimatedEntry delay={430}>
+              <ServerErrorBanner message={serverError ?? googleError} />
+
+              <Button onPress={handleSubmit(onSubmit)} disabled={isSubmitting} className="mt-1 h-12">
+                {isSubmitting ? (
+                  <ActivityIndicator
+                    color={isDark ? THEME.dark.background : THEME.light.destructiveForeground}
+                  />
+                ) : (
+                  <Text className="font-semibold">{t('auth.createAccount')}</Text>
+                )}
+              </Button>
+            </AnimatedEntry>
+
+            <AnimatedEntry delay={510}>
+              <View style={{ marginTop: 4, gap: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <View
+                    style={{
+                      flex: 1,
+                      height: 1,
+                      backgroundColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)',
+                    }}
+                  />
+                  <Text className="text-xs text-muted-foreground">{t('auth.orContinueWith')}</Text>
+                  <View
+                    style={{
+                      flex: 1,
+                      height: 1,
+                      backgroundColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)',
+                    }}
+                  />
+                </View>
+
+                <TouchableOpacity
+                  onPress={() => void onGooglePress()}
+                  disabled={isSubmitting || googleLoading}
+                  activeOpacity={0.9}
                   style={{
-                    minHeight: 50,
                     borderRadius: 14,
-                    paddingHorizontal: 14,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 10,
-                    backgroundColor: ACCENT + '16',
-                    borderWidth: 1,
-                    borderColor: ACCENT + '55',
+                    overflow: 'hidden',
+                    opacity: isSubmitting || googleLoading ? 0.7 : 1,
                   }}>
                   <View
                     style={{
-                      width: 26,
-                      height: 26,
-                      borderRadius: 13,
-                      backgroundColor: isDark ? ACCENT + '33' : '#fff',
+                      minHeight: 50,
+                      borderRadius: 14,
+                      paddingHorizontal: 14,
+                      flexDirection: 'row',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      gap: 10,
+                      backgroundColor: ACCENT + '16',
+                      borderWidth: 1,
+                      borderColor: ACCENT + '55',
                     }}>
-                    <Text style={{ color: ACCENT, fontSize: 14, fontWeight: '800' }}>G</Text>
+                    <View
+                      style={{
+                        width: 26,
+                        height: 26,
+                        borderRadius: 13,
+                        backgroundColor: isDark ? ACCENT + '33' : '#fff',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                      <Text style={{ color: ACCENT, fontSize: 14, fontWeight: '800' }}>G</Text>
+                    </View>
+                    {googleLoading ? (
+                      <ActivityIndicator color={ACCENT} />
+                    ) : (
+                      <Text style={{ color: isDark ? '#fff' : '#111', fontWeight: '700', fontSize: 15 }}>
+                        {t('auth.googleContinue')}
+                      </Text>
+                    )}
                   </View>
-                  {googleLoading ? (
-                    <ActivityIndicator color={ACCENT} />
-                  ) : (
-                    <Text style={{ color: isDark ? '#fff' : '#111', fontWeight: '700', fontSize: 15 }}>
-                      {t('auth.googleContinue')}
-                    </Text>
-                  )}
-                </View>
-              </TouchableOpacity>
-            </View>
+                </TouchableOpacity>
+              </View>
+            </AnimatedEntry>
           </View>
 
-          <View
-            style={{
-              marginTop: 32,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 4,
-            }}>
-            <Text className="text-sm text-muted-foreground">{t('auth.haveAccount')}</Text>
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text className="text-sm font-semibold" style={{ color: ACCENT }}>
-                {t('auth.signInLink')}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <AnimatedEntry delay={580}>
+            <View
+              style={{
+                marginTop: 32,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 4,
+              }}>
+              <Text className="text-sm text-muted-foreground">{t('auth.haveAccount')}</Text>
+              <TouchableOpacity onPress={() => router.back()}>
+                <Text className="text-sm font-semibold" style={{ color: ACCENT }}>
+                  {t('auth.signInLink')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </AnimatedEntry>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

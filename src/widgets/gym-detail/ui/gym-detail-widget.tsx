@@ -7,6 +7,7 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -171,7 +172,9 @@ export function GymDetailWidget() {
             />
           }>
           {/* Hero card */}
-          <View style={{ borderRadius: 24, overflow: 'hidden' }}>
+          <Animated.View
+            entering={FadeInDown.delay(0).duration(420).springify().damping(18)}
+            style={{ borderRadius: 24, overflow: 'hidden' }}>
             <LinearGradient
               colors={
                 isDark
@@ -250,11 +253,13 @@ export function GymDetailWidget() {
                 ) : null}
               </View>
             </LinearGradient>
-          </View>
+          </Animated.View>
 
           {/* Quick stats */}
           {members !== undefined && (
-            <View style={{ flexDirection: 'row', gap: 10 }}>
+            <Animated.View
+              entering={FadeInDown.delay(70).duration(380).springify().damping(18)}
+              style={{ flexDirection: 'row', gap: 10 }}>
               <StatPill
                 label={t('gym.members')}
                 value={members.length}
@@ -275,37 +280,42 @@ export function GymDetailWidget() {
                   colors={colors}
                 />
               ) : null}
-            </View>
+            </Animated.View>
           )}
 
           {/* Browse routes CTA */}
-          <TouchableOpacity
-            onPress={() => router.push('/(tabs)/' as never)}
-            activeOpacity={0.85}
+          <Animated.View
+            entering={FadeInDown.delay(130).duration(380).springify().damping(18)}
             style={{ borderRadius: 18, overflow: 'hidden' }}>
-            <LinearGradient
-              colors={[ACCENT, '#5a9bbf']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                paddingVertical: 17,
-                paddingHorizontal: 20,
-                gap: 12,
-                borderRadius: 18,
-              }}>
-              <Dumbbell size={18} color="#fff" />
-              <Text style={{ fontSize: 15, fontWeight: '700', color: '#fff', flex: 1 }}>
-                {t('gym.browseRoutes')}
-              </Text>
-              <ChevronRight size={17} color="rgba(255,255,255,0.7)" />
-            </LinearGradient>
-          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => router.push('/(tabs)/' as never)}
+              activeOpacity={0.85}
+              style={{ borderRadius: 18, overflow: 'hidden' }}>
+              <LinearGradient
+                colors={[ACCENT, '#5a9bbf']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingVertical: 17,
+                  paddingHorizontal: 20,
+                  gap: 12,
+                  borderRadius: 18,
+                }}>
+                <Dumbbell size={18} color="#fff" />
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#fff', flex: 1 }}>
+                  {t('gym.browseRoutes')}
+                </Text>
+                <ChevronRight size={17} color="rgba(255,255,255,0.7)" />
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
 
           {/* Description */}
           {gym.description ? (
-            <View
+            <Animated.View
+              entering={FadeInDown.delay(190).duration(380).springify().damping(18)}
               style={{
                 borderRadius: 18,
                 padding: 18,
@@ -327,12 +337,14 @@ export function GymDetailWidget() {
               <Text style={{ fontSize: 15, color: colors.foreground, lineHeight: 23 }}>
                 {gym.description}
               </Text>
-            </View>
+            </Animated.View>
           ) : null}
 
           {/* Staff */}
           {staffMembers.length > 0 ? (
-            <View style={{ gap: 10 }}>
+            <Animated.View
+              entering={FadeInDown.delay(250).duration(380).springify().damping(18)}
+              style={{ gap: 10 }}>
               <Text
                 style={{
                   fontSize: 11,
@@ -401,7 +413,7 @@ export function GymDetailWidget() {
                   </View>
                 );
               })}
-            </View>
+            </Animated.View>
           ) : null}
         </ScrollView>
       )}

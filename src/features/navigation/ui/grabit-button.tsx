@@ -1,7 +1,11 @@
 import { ACCENT } from '@/shared/config/palette';
 import { Plus } from 'lucide-react-native';
-import { Pressable, View, Platform, StyleSheet, Animated } from 'react-native';
-import { useRef } from 'react';
+import { Pressable, View, Platform, StyleSheet } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
 
 interface FABProps {
   onPress: () => void;
@@ -10,30 +14,22 @@ interface FABProps {
 
 export function GrabitButton({ onPress, tabBarBg }: FABProps) {
   const size = 58;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const scale = useSharedValue(1);
 
-  const handlePressIn = () =>
-    Animated.spring(scaleAnim, {
-      toValue: 0.92,
-      useNativeDriver: true,
-      speed: 50,
-      bounciness: 0,
-    }).start();
-
-  const handlePressOut = () =>
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      useNativeDriver: true,
-      speed: 22,
-      bounciness: 12,
-    }).start();
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
 
   return (
-    <Animated.View style={[styles.shadowContainer, { transform: [{ scale: scaleAnim }] }]}>
+    <Animated.View style={[styles.shadowContainer, animStyle]}>
       <Pressable
         onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
+        onPressIn={() => {
+          scale.value = withSpring(0.88, { damping: 14, stiffness: 400 });
+        }}
+        onPressOut={() => {
+          scale.value = withSpring(1, { damping: 8, stiffness: 180 });
+        }}
         android_ripple={{ color: 'rgba(255,255,255,0.25)', radius: size / 2 }}
         style={{
           width: size,
@@ -56,13 +52,12 @@ export function GrabitButton({ onPress, tabBarBg }: FABProps) {
 const styles = StyleSheet.create({
   shadowContainer: {
     alignItems: 'center',
-    gap: 5,
     ...Platform.select({
       ios: {
         shadowColor: ACCENT,
         shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.55,
-        shadowRadius: 14,
+        shadowOpacity: 0.5,
+        shadowRadius: 12,
       },
       android: {
         elevation: 10,
